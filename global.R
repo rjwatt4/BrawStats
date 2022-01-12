@@ -34,3 +34,5 @@ allScatter<-"all"
 warn2Cat2<-FALSE
 warn3Cat2<-FALSE
 warnOrd<-FALSE
+warn3Ord<-FALSE
+

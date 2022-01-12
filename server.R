@@ -789,6 +789,13 @@ shinyServer(function(input, output, session) {
           }
         }
       }
+      if (DV$type=="Ordinal" && input$IV2choice!="none") {
+        if (warn3Ord==FALSE) {
+          hmm("Ordinal DV with more than 1 IV. It will be treated as Interval.")
+          warn3Ord<<-TRUE
+        }
+        
+      }
       if (debug) print("     updateDV - exit")
       DV        
     }
