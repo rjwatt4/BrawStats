@@ -1,6 +1,7 @@
 model2effect<-function(mF,DVvarType,variable=NULL){
   switch (DVvarType,
           "Interval"=     r<-lm2effect(mF,variable),
+          "Ordinal"=      r<-lm2effect(mF,variable),
           "Categorical"=  r<-glm2effect(mF,variable)
   )
   if (is.null(variable)){
@@ -14,6 +15,7 @@ model2partialeffect<-function(mF,DVvarType,variable=NULL){
 
   switch (DVvarType,
           "Interval"={DVgain<-sd(mF$model$dv)},
+          "Ordinal"={DVgain<-sd(mF$model$dv)},
           "Categorical"={DVgain<-sd(mF$fitted.values+mF$residuals)}
           )
 
@@ -266,7 +268,8 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
 analyseSample<-function(IV,IV2,DV,design,evidence,result){
   
   if (is.null(IV2)) {no_ivs<-1} else {no_ivs<-2}
-
+  if (!is.null(IV2) && DV$type=="Ordinal") {DV$type<-"Interval"}
+  
   # collect the data
   
   # remove duplicated rows (from covariates of within designs)
@@ -346,9 +349,24 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
         }
   }
   
+ 
   # get linear model and anova
   switch (DV$type,
           "Interval"={
+            lmU<-lm(formula=formula,data=resultUData)
+            if (!is.null(IV2)){
+              if (c1 || c2) {
+                lmU3<-lm(formula=formula,data=resultUData,contrasts=contrasts)
+              } else {
+                lmU3<-lmU
+              }
+            } else{ lmU3<-lmU}
+            lmF<-lm(formula=formula,data=resultData)
+            testMethod<-"F"
+            testMethod3<-"F"
+            pcol=4;prow=2;
+          },
+          "Ordinal"={
             lmU<-lm(formula=formula,data=resultUData)
             if (!is.null(IV2)){
               if (c1 || c2) {
@@ -391,6 +409,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   
   switch (DV$type,
           "Interval"={Df<-sum(an$Df)},
+          "Ordinal"={Df<-sum(an$Df)},
           "Categorical"={Df<-an$`Resid. Df`[1]}
   )
   switch (no_ivs,
@@ -522,9 +541,15 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 if (design$sIV1Use=="Within"){
                   an_name<-"t-test: Paired Samples"
                   df<-paste("(",format(an$Df[nrow(an)]),")")
+                  tv<-t.test(dv~iv1,paired=TRUE)
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
                 } else {
                   an_name<-"t-test: Independent Samples"
                   df<-paste("(",format(an$Df[nrow(an)]),")")
+                  tv<-t.test(dv~iv1)
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
                 }
                 t_name<-"t"
                 tval<-sqrt(an$`F value`[2])*sign(result$rIV)
@@ -537,6 +562,58 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 t_name<-"F"
                 df<-paste("(",format(an$Df[2]),",",format(an$Df[nrow(an)]),")",sep="")
                 tval<-an$`F value`[2]
+              }
+            },
+            "Interval Ordinal"={
+              an_name<-"Spearman Correlation"
+              t_name<-"rho"
+              df<-paste("(",format(an$Df[nrow(an)]),")",sep="")
+              op <- options(warn = (-1))
+              tv<-cor.test(iv1, dv, method="spearman")
+              options(op)
+              tval<-tv$estimate
+              result$pIV<-tv$p.value
+            },
+            "Categorical Ordinal"={
+              if (IV$ncats==2){
+                if (design$sIV1Use=="Within"){
+                  an_name<-"Wilcoxon signed-rank Test: Paired Samples"
+                  df<-paste("(",format(an$Df[nrow(an)]),")")
+                  t_name<-"T"
+                  op <- options(warn = (-1))
+                  tv<-wilcox.test(dv~iv1,paired=TRUE,exact=FALSE)
+                  options(op)
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
+                } else {
+                  an_name<-"Mann Whitney U test: Independent Samples"
+                  df<-paste("(",format(an$Df[nrow(an)]),")")
+                  t_name<-"U"
+                  op <- options(warn = (-1))
+                  tv<-wilcox.test(dv~iv1,exact=FALSE)
+                  options(op)
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
+                }
+              } else {
+                if (design$sIV1Use=="Within"){
+                  an_name<-"Friedman Test: Repeated Measures"
+                  op <- options(warn = (-1))
+                  tv<-friedman(dv~iv1);
+                  options(op)
+                  t_name='chi2'
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
+                } else {
+                  an_name<-"Kruskal Wallace Test: Independent Measures"
+                  op <- options(warn = (-1))
+                  tv<-kruskal.test(dv~iv1);
+                  options(op)
+                  t_name='chi2'
+                  tval<-tv$statistic
+                  result$pIV<-tv$p.value
+                }
+                df<-paste("(",format(an$Df[2]),",n=",format(length(dv)),")",sep="")
               }
             },
             "Interval Categorical"={

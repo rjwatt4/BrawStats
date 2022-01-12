@@ -60,7 +60,8 @@ reportInference<-function(IV,IV2,DV,effect,result){
     }
     outputText<-c(outputText,rep(" ",nc))
 
-    outputText<-c(outputText,"\bPower(w)", "\bObserved","\bActual",rep("",nc-3))    
+    outputText<-c(outputText,"\bPower(w)", "\bObserved","\bActual",rep("",nc-3))   
+    if (is.na(effect$rIV)) {effect$rIV<-0}
     outputText<-c(outputText," ",format(rn2w(result$rIV,result$nval),digits=3),
                                  format(rn2w(effect$rIV,result$nval),digits=3),
                   rep("",nc-3))

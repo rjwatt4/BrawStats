@@ -5,10 +5,10 @@ DesignTab <-
     fluidRow(headerText("Design the sample: size & method")),
     tabsetPanel(id="Design", type="tabs",
                 # sampling tab
-                tabPanel("Design:",
+                tabPanel("Design:",value="Design",
                          style = paste("background: ",subpanelcolours$designC)
                          ),
-                tabPanel("Sampling",
+                tabPanel("Sampling",value="Sampling",
                          style = paste("background: ",subpanelcolours$designC), 
                          wellPanel(
                            style = paste("background: ",subpanelcolours$designC,";"),
@@ -104,8 +104,8 @@ DesignTab <-
                 )
                 )
                 # help tab
-                ,tabPanel("?",
-                          style = paste("background: ",subpanelcolours$designC),
+                ,tabPanel(helpChar,value="?",
+                          style = paste("background: ",subpanelcolours$designC,";"),
                           wellPanel(
                             style = paste("background: ",subpanelcolours$designC,";"),
                             tags$table(width = "100%",class="myTable",
@@ -121,9 +121,9 @@ DesignTab <-
                                                   tags$br(HTML('&emsp;'), '1. add in outliers'),
                                                   tags$br(HTML('&emsp;'), '2. sample with non-independence'),
                                                   tags$br(HTML('&emsp;'), '3. apply heteroscedasticity (unequal variance)'),
-                                                  # tags$br(HTML("<b>"),"Range: ",HTML("</b>")),
-                                                  # tags$br(HTML('&emsp;'), '1. set the range of IV sampling'),
-                                                  # tags$br(HTML('&emsp;'), '2. set the range of DV values retained'),
+                                                  tags$br(HTML('&emsp;'), '4. apply limited range to IV or DV'),
+                                                  tags$br(HTML('&emsp;'),HTML('&emsp;'), 'a. set the range of IV sampling'),
+                                                  tags$br(HTML('&emsp;'),HTML('&emsp;'), 'b. set the range of DV values retained'),
                                          ),
                                        )
                             )

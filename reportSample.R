@@ -45,13 +45,27 @@ reportSample<-function(IV,IV2,DV,design,result){
     outputText<-c(outputText,"","\bInterval","\bmean","\bsd","\bskew","\bkurtosis",outputTextI)
   }
 
+  # Ordinal variables
+  outputTextO=c()
+  done_ordinal<-FALSE
+  if (DV$type=="Ordinal"){
+    outputTextO<-c(outputTextO,"",DV$name,
+                   format(mean(s2),digits=report_precision),  format(sd(s2),digits=report_precision),
+                   "",""
+    )
+    done_ordinal<-TRUE
+  }
+  if (done_ordinal){
+    outputText<-c(outputText,"","\bOrdinal","\bmean","\bsd","","",outputTextO)
+  }
+  
   # Categorical variables
   outputTextC=c()
   done_categorical<-FALSE
   if (IV$type=="Categorical"){
     counts<-""
     for (i in 1:IV$ncats){
-      counts<-paste(counts," ",  IV$cases[i],"=", sum(s1==IV$cases[i]),sep="")
+      counts<-paste(counts," ",  IV$cases[i],"=", format(sum(s1==IV$cases[i])),sep="")
       # counts<-paste(counts,sum(s1==IV$cases[i])," ")
     }
     outputTextC<-c(outputTextC,"",IV$name,counts,"","","")
@@ -62,7 +76,7 @@ reportSample<-function(IV,IV2,DV,design,result){
     if (IV2$type=="Categorical"){
       counts<-""
       for (i in 1:IV2$ncats){
-        counts<-paste(counts," ",  IV2$cases[i],"=", sum(s1a==IV2$cases[i]),sep="")
+        counts<-paste(counts," ",  IV2$cases[i],"=", format(sum(s1a==IV2$cases[i])),sep="")
         # counts<-paste(counts,sum(s1==IV$cases[i])," ")
       }
       outputTextC<-c(outputTextC,"",IV2$name,counts,"","","")
@@ -72,7 +86,7 @@ reportSample<-function(IV,IV2,DV,design,result){
   if (DV$type=="Categorical"){
     counts<-""
     for (i in 1:DV$ncats){
-      counts<-paste(counts," ",  DV$cases[i],"=", sum(s2==DV$cases[i]),sep="")
+      counts<-paste(counts," ",  DV$cases[i],"=", format(sum(s2==DV$cases[i])),sep="")
     }
     outputTextC<-c(outputTextC,"",DV$name,counts,"","","")
     done_categorical<-TRUE

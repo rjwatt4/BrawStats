@@ -38,26 +38,27 @@ reportPlot<-function(outputText,nc,nr){
 
   boldlabels<-grepl("\b",outputText)
   outputText<-sub("\b","",outputText)
-  pts<-data.frame(x=x_gap1,y=d$y,labels=outputText)
-  g<-ggplot(pts,aes(x=x,y=y))
+  pts<-data.frame(x=x_gap1,y=d$y)
+  g<-ggplot()
+  # print(c(sum(boldlabels),sum(!boldlabels)))
   
   if (any(boldlabels)){
     pts1<-data.frame(x=x_gap1[boldlabels],y=d$y[boldlabels],labels=outputText[boldlabels])
     g<-g+geom_text(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold")
+  }
+  if (any(!boldlabels)) {
     pts<-data.frame(x=x_gap1[!boldlabels],y=d$y[!boldlabels],labels=outputText[!boldlabels])
+    g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size)
   }
 
-  g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size)
-  g+labs(x="",y="")+
-    plotTheme+
-    theme(legend.position = "none")+
-    theme(axis.title.x=element_blank(),
+  g<-g+labs(x="",y="")+plotTheme+theme(legend.position = "none")
+  g<-g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
           axis.title.y=element_blank(),
           axis.text.y=element_blank(),
           axis.ticks.y=element_blank(),
           panel.background = element_rect(fill=maincolours$graphC, colour=maincolours$graphC)
-    )+
-    coord_cartesian(xlim = c(1-margin,25+margin), ylim = c(1-margin,top+margin))
+    )
+  g+coord_cartesian(xlim = c(1-margin,25+margin), ylim = c(1-margin,top+margin))
 }

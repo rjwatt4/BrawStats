@@ -7,7 +7,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   
   vals<-exploreResult$vals
   if (is.character(vals[1])){
-    vals<-factor(vals)
+    vals<-factor(vals,levels=vals)
     doLine=FALSE
   } else {doLine=TRUE}
   

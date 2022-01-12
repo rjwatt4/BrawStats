@@ -3,6 +3,7 @@ drawSample<-function(IV,DV,effect,design,result){
   # the scattered points
   x<-result$ivplot
   y<-result$dvplot
+  
   g<-drawPopulation(result$IVs,result$DVs,result,design,alpha=0.5)
 
   dotSize<-7

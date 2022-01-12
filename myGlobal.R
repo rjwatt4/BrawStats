@@ -5,7 +5,7 @@ switches<-list(do_explore=TRUE,do_files=FALSE)
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
 subpanelcolours<-list(hypothesisC="#FFD6DB",designC="#F6DFBD",simulateC="#CFF8CF",exploreC="#DDBBDD",filesC="#EEBB88",likelihoodC="#DDDDBB")
-panelcolours<-list(hypothesisC="#F3B6BB",designC="#E6CFAD",simulateC="#ADE6AD",exploreC="#BB99BB",filesC="#CC9988",likelihoodC="#BBBB99")
+panelcolours<-list(hypothesisC="#F3B6BB",designC="#E6CFAD",simulateC="#ADE6AD",exploreC="#BB99BB",filesC="#BE966D",likelihoodC="#BBBB99")
 
 plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   descriptionC1="#FF5533",descriptionC2="#CCBB33",
@@ -14,6 +14,7 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
 
 localStyle="font-size:8pt;font-weight:bold;text-align: right;"
 helpStyle=paste("font-size:7pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
+fullShowHelp<-FALSE
 
 report_precision<-3
 graph_precision<-2
@@ -33,10 +34,12 @@ plotBlankTheme=theme(panel.background = element_rect(fill=maincolours$graphC, co
                 axis.title=element_text(size=16,face="bold")
 )
 
+
 mergeVariables<-FALSE
 showInteractionOnly<-TRUE
 hideIV2Tab<-FALSE
 debug<-FALSE
+shiftKeyOn<-FALSE
 controlKeyOn<-FALSE
 
 validSample<-FALSE
@@ -56,12 +59,31 @@ anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
+                  nlevs=7,spread=1.5,centre=0,
                   ncats=2,cases="C1,C2",proportions="1,1",
                   deploy="Between",process="sim"){
-  list(name=name,type=type,
+  
+  var<-list(name=name,type=type,
        mu=mu,sd=sd,skew=skew,kurtosis=kurtosis,
+       nlevs=nlevs,spread=spread,centre=centre,
        ncats=ncats,cases=cases,proportions=proportions,
        deploy=deploy,process=process)
+  # check for cases
+  cs<-strsplit(var$cases,",")
+  cs<-cs[[1]]
+  if (length(cs)<var$ncats){
+    cs<-c(cs,paste("C",(length(cs)+1):var$ncats,sep=""))
+  }
+  var$cases<-paste(cs,sep='',collapse=',')
+  # check for proportions
+  pp<-strsplit(var$proportions,",")
+  pp<-pp[[1]]
+  if (length(pp)<var$ncats) {
+    pp<-c(pp,rep("1",var$ncats-length(pp)))
+  }
+  var$proportions<-paste(pp,sep='',collapse=',')
+  # return var
+  var
 }
 
 vars<-list(
@@ -103,8 +125,8 @@ simData<-TRUE
 getCases<-function(var) {
   cs<-strsplit(var$cases,",")
   cs<-cs[[1]]
-  if (length(cs)<IV$ncats){
-    cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
+  if (length(cs)<var$ncats){
+    cs<-c(cs,paste("C",(length(cs)+1):var$ncats,sep=""))
   }
 }
 
@@ -118,6 +140,11 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
              )    
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")
+
+varTypes<- c("Interval" = "Interval",
+             "Ordinal" = "Ordinal",
+             "Categorical" = "Categorical"
+)
 
 
 importedData<-c()

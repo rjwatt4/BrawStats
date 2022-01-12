@@ -19,12 +19,13 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
   
   switch (explore$Explore_type,
           "IVType"={vals<-c("Interval","Cat2","Cat3")},
-          "DVType"={vals<-c("Interval","Cat2")},
+          "DVType"={vals<-c("Interval","Ord7","Ord4","Cat2")},
           "IVIV2Type"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVDVType"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVprop"={vals<-seq(min_prop,1,length.out=npoints)},
           "IVskew"={vals<-seq(0,1,length.out=npoints)},
           "IVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
+          "DVlevels"={vals<-2:7},
           "DVprop"={vals<-seq(min_prop,1,length.out=npoints)},
           "DVskew"={vals<-seq(0,1,length.out=npoints)},
           "DVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
@@ -100,6 +101,14 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
                       #   DV$ncats<-3
                       #   DV$cases<-c("D1","D2","D3")
                       # },
+                      "Ord7"={
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
+                      },
+                      "Ord4"={
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-4
+                      },
                       "Interval"={DV$type<-"Interval"}
               )
             },
@@ -202,6 +211,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "DVprop"={
               DV$type<-"Categorical"
               DV$proportions<-paste(c(vals[i],1),collapse=",")
+            },
+            "DVlevels"={
+              DV$type<-"Ordinal"
+              DV$nlevs<-vals[i]
             },
             "DVskew"={
               DV$type<-"Interval"

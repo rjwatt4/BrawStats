@@ -10,6 +10,7 @@
 library(shiny)
 library(shinyWidgets)
 library(shinyjs)
+
 library(ggplot2)
 library(gridExtra)
 library(tools)
@@ -128,7 +129,7 @@ shinyUI(fluidPage(
             ".nav-tabs {font-size: 8pt; padding:0px; margin-bottom:0px;} ",
         )),
         tags$style(HTML( # well panels
-                ".well {padding:8px; margin:0px;margin-bottom:8px;margin-0px:0px;margin-right:0px;} ",
+                ".well {padding:8px; margin:0px;margin-bottom:8px;margin-left:0px;margin-right:0px;} ",
         )),
         tags$style(HTML(paste(".help-block b {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:12pt; font-weight:bold;}"))),
         tags$style(HTML(paste(".help-block a {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:8pt; font-weight:normal;font-style: italic;}"))),
@@ -163,7 +164,7 @@ shinyUI(fluidPage(
                          # Likelihood panel
                          # ,LikelihoodTab
                          # Files panel
-                         # ,FilesTab
+                         ,FilesTab
                      ),
                      width = 3
                  ),

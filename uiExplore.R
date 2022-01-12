@@ -5,6 +5,7 @@ hypothesisFullChoices=list("Variables"=list("IV type" = "IVType",
                                         "DV skew" = "DVskew",
                                         "IV kurtosis" = "IVkurtosis",
                                         "DV kurtosis" = "DVkurtosis",
+                                        "DV levels" = "DVlevels",
                                         "IV proptn" = "IVprop",
                                         "DV proptn" = "DVprop"),
                        "Effects"=list("Effect Size1" = "EffectSize1",
@@ -23,11 +24,12 @@ hypothesisChoices=list("Variables"=list("IV" = "IV",
                                       "Covariation" = "Covariation")
 )
 
-variableChoices=list("& Type"="Type",
-                     "& Skew"="skew",
-                     "& Kurtosis"="kurtosis",
+variableChoices=list("& type"="Type",
+                     "& skew"="skew",
+                     "& kurtosis"="kurtosis",
+                     "& levels"="levels",
                      "& proptn"="prop"
-                     )
+)
 
 designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                    "Sampling Method" = "Method",
@@ -79,7 +81,7 @@ ExploreTab <-
             fluidRow(headerText("Explore design decisions")),
             tabsetPanel(type="tabs",id="ExploreTab",
                         # sampling tab
-                        tabPanel("Explore:",
+                        tabPanel("Explore:",value="Explore",
                                  style = paste("background: ",subpanelcolours$exploreC)
                         ),
                         tabPanel("Hypothesis",id="ExH",
@@ -263,7 +265,7 @@ ExploreTab <-
                                    ))
                         )
                         # help tab
-                        ,tabPanel("?",
+                        ,tabPanel(helpChar,value="?",
                                   style = paste("background: ",subpanelcolours$exploreC),
                                   wellPanel(
                                     style = paste("background: ",subpanelcolours$exploreC,";"),

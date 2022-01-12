@@ -287,6 +287,16 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Interval"={
                dv<-dvr*DV$sd+DV$mu
              },
+             "Ordinal"={
+               pp<-OrdProportions(DV)
+               ng<-DV$nlevs
+               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+               proportions<-c(0,pp)
+               breaks<-qnorm(cumsum(proportions)/sum(proportions))
+               vals=dvr*0
+               for (i in 1:ng) {vals=vals+(dvr>breaks[i])}
+               dv<-vals
+             },
              "Categorical"={
                pp<-as.numeric(unlist(strsplit(DV$proportions,",")))
                ng<-DV$ncats
@@ -308,7 +318,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
              IVs<-list(mu=mean(iv),sd=sd(iv),name=IV$name,type=IV$type,vals=iv)
            },
            "Categorical"={
-             IVs<-list(mu=0, sd=1, name=IV$name,type=IV$type,ncats=IV$ncats,cases=IV$cases,vals=iv)
+             IVs<-list(mu=0, sd=1, name=IV$name,type=IV$type,ncats=IV$ncats,cases=IV$cases,proportions=IV$proportions,vals=iv)
            }
     )
     
@@ -319,7 +329,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
              IV2s<-list(name=IV2$name,type=IV2$type,mu=mean(iv2),sd=sd(iv2),vals=iv2)
            },
            "Categorical"={
-             IV2s<-list(name=IV2$name,type=IV2$type,mu=0, sd=1, ncats=IV2$ncats,cases=IV2$cases,vals=iv2)
+             IV2s<-list(name=IV2$name,type=IV2$type,mu=0, sd=1, ncats=IV2$ncats,cases=IV2$cases,proportions=IV2$proportions,vals=iv2)
            }
     )
     } else{
@@ -330,8 +340,11 @@ makeSample<-function(IV,IV2,DV,effect,design){
            "Interval"={
              DVs<-list(mu=mean(dv),sd=sd(dv),name=DV$name,type=DV$type,vals=dv)
            },
+           "Ordinal"={
+             DVs<-list(mu=0, sd=1, name=DV$name,type=DV$type,nlevs=DV$nlevs,centre=DV$centre,spread=DV$spread,vals=dv)
+           },
            "Categorical"={
-             DVs<-list(mu=0, sd=1, name=DV$name,type=DV$type,ncats=DV$ncats,cases=DV$cases,vals=dv)
+             DVs<-list(mu=0, sd=1, name=DV$name,type=DV$type,ncats=DV$ncats,cases=DV$cases,proportions=DV$proportions,vals=dv)
            }
     )
   
@@ -350,9 +363,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
         if (DV$type=="Interval"){
           mn1=mean(dv[use1])
           sd1=sd(dv[use1])
-          xplot[use1]<-xpos[i]+rnorm(length(xplot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
+          xplot[use1]<-i-1+rnorm(length(xplot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
         } else {
-          xplot[use1]<-xpos[i]+rnorm(length(xplot[use1]))*mean(use1)*0.3
+          xplot[use1]<-i-1+rnorm(length(xplot[use1]))*mean(use1)*0.3
         }
       }
       # xplot<-xplot-(IV$ncats+1)/2
@@ -370,9 +383,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
           if (DV$type=="Interval"){
             mn1=mean(dv[use1])
             sd1=sd(dv[use1])
-            x2plot[use1]<-xpos[i]+rnorm(length(x2plot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
+            x2plot[use1]<-i-1+rnorm(length(x2plot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
           } else {
-            x2plot[use1]<-xpos[i]+rnorm(length(x2plot[use1]))*mean(use1)*0.3
+            x2plot[use1]<-i-1+rnorm(length(x2plot[use1]))*mean(use1)*0.3
           }
         }
       }
@@ -380,6 +393,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
     
     switch(DV$type,
            "Interval"={yplot<-dv},
+           "Ordinal"={yplot<-dv},
            "Categorical"={yplot<-match(dv,levels(dv))}
     )
     
@@ -391,10 +405,10 @@ makeSample<-function(IV,IV2,DV,effect,design){
           mn1<-mean(iv[use1])
           sd1<-sd(iv[use1])
           jitter<-rnorm(length(yplot[use1]),mean=0,sd=exp(-0.5*((iv[use1]-mn1)/sd1)^2))*0.15
-          yplot[use1]<-ypos[i]+jitter
+          yplot[use1]<-i-1+jitter
         } else{
           jitter<-rnorm(length(yplot[use1]),0,1)*mean(use1)*0.3
-          yplot[use1]<-ypos[i]+jitter
+          yplot[use1]<-i-1+jitter
         }
       }
       # yplot<-yplot-(DV$ncats+1)/2

@@ -1,10 +1,14 @@
-readSample<-function(raw_data){
+readSample<-function(raw_data,header=c()){
   if (is.null(raw_data)) {return(NULL)}
   if (nrow(raw_data)==0) {return(NULL)}
   
+  if (is.null(header)) {
   vars<-colnames(raw_data)
-  
-  # check for data type row
+  } else {
+    vars<-header
+  }
+
+    # check for data type row
   if (all(is.element(raw_data[1,],c("Type","type","Interval","interval","Categorical","categorical")))){
     dataTypes<-raw_data[1,]
     raw_data<-raw_data[2:nrow(raw_data),]
@@ -29,26 +33,30 @@ readSample<-function(raw_data){
     IVs<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
     z<-raw_data
     for (iDV in 1:length(DVs)){
-      z<-gather_(raw_data,paste("Minions",iDV,sep=""),DVs[iDV],vars[startsWith(vars,paste(DVs[iDV],"|",sep=""))])
+      tempName<-paste("Minions",iDV,sep="")
+      
+      z<-gather_(raw_data, tempName, DVs[iDV], vars[startsWith(vars,paste(DVs[iDV],"|",sep=""))])
       # pull out the new column "DVname|IVname=Cname|IV2name=C2name"
-      v<-z[paste("Minions",iDV,sep="")]
+      v<-z[tempName]
       # remove the "DVname"
       v1<-sapply(v,function(x) sub(paste(DVs[iDV],"|",sep=""),"",x))
       while (any(str_length(v1)>0)){
         # "|IVname=Cname"
         # find the "|IVname" bit
         IVlocal<-str_extract(v1,"[^=|]+|[^=|]+")
-        # now the "=Cname" bit
+        # now the "=Cname" bits
         IVlocalcases<-str_match(v1,"=([^=|]+)")[,2]
-        # add this variable at the end of z
-        z<-cbind(z,IVlocalcases)
+        # add this variable to z
+        # column 1 is participants the last column is the DV
+        z<-cbind(z[1],IVlocalcases,z[2:ncol(z)])
         # and change its name
-        colnames(z)[ncol(z)]<-IVlocal[1]
+        colnames(z)[2]<-IVlocal[1]
         added<-added+1
+        # remove the part we have just dealt with
         v1<-sub("[|].[^|]+","",v1)
       }
       # now remove the temporary column
-      z[paste("Minions",iDV,sep="")]<-NULL
+      z[tempName]<-NULL
       raw_data<-z
     }
     vars<-colnames(raw_data)
@@ -96,7 +104,11 @@ readSample<-function(raw_data){
     } else {
       data<-sapply(data,as.numeric)
       importedData[[ivar+1]]<<-importedData[[i]]
-      vartype<-"Interval"
+      if (all(data==round(data))) {
+        vartype<-"Ordinal"
+      } else {
+        vartype<-"Interval"
+      }
       varcases<-"C1,C2"
       varncats<-2
       varnprop<-paste(c(1,1),collapse=",")

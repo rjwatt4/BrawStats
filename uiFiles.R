@@ -4,9 +4,9 @@ wellPanel(
   style = paste("background: ",panelcolours$filesC), 
   # h5("Evidence"),
   fluidRow(headerText("Import and export files")),
-  tabsetPanel(type="tabs",
+  tabsetPanel(type="tabs",id="FileTab",
               # single tab
-              tabPanel("Files:",
+              tabPanel("Files:",id="Files",
                        style = paste("background: ",subpanelcolours$filesC), 
                        fluidRow(
                        )
@@ -85,7 +85,7 @@ wellPanel(
                          ))
               )
               # help tab
-              ,tabPanel("?",
+              ,tabPanel(helpChar,value="?",
                         style = paste("background: ",subpanelcolours$filesC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$filesC,";"),
@@ -94,8 +94,9 @@ wellPanel(
                                        tags$div(style = helpStyle, 
                                                 tags$br("Import/export workspace/sample:"),
                                                 tags$br(HTML('<b>'),"Importing:",HTML('</b>')),
-                                                tags$br(HTML('&emsp;'), '1. select the file (.xls .xlsx)'),
-                                                tags$br(HTML('&emsp;'), '2. go to Hypothesis:Variables to set up hypothesis'),
+                                                tags$br(HTML('&emsp;'), '1. select the file (.xls .xlsx) and sheet'),
+                                                tags$br(HTML('&emsp;'), '2. Press "Load"'),
+                                                tags$br(HTML('&emsp;'), '3. go to Hypothesis:Variables to set up hypothesis'),
                                                 tags$br(HTML('<b>'),"Exporting:",HTML('</b>')),
                                                 tags$br(HTML('&emsp;'), '1. provide a file name (.xlsx)'),
                                                 tags$br(HTML('&emsp;'), '2. press "Save"'),

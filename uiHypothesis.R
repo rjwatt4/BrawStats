@@ -6,12 +6,15 @@ HypothesisTab <-
     fluidRow(headerText("Build a hypothesis: variables & effect-size")),
     tabsetPanel(id="Hypothesis",
                 # Hypothesis tab
-                tabPanel("Hypothesis:",
-                         style = paste("background: ",subpanelcolours$hypothesisC)
+                tabPanel("Hypothesis:",value="Hypothesis",
+                         style = paste("background: ",subpanelcolours$hypothesisC),
+                conditionalPanel("1==2",
+                                 checkboxInput("hidden","hidden",value=FALSE)
+                                 )
                 ),
                 
                 # variables tab
-                tabPanel("Variables",id="Variables",
+                tabPanel("Variables",value="Variables",
                          style = paste("background: ",subpanelcolours$hypothesisC), 
                          wellPanel(
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),
@@ -65,7 +68,7 @@ HypothesisTab <-
                                         tags$td(width = "20%", numericInput("rIV", label = NULL,
                                                                             min = -1,
                                                                             max = 1,
-                                                                            step = 0.01,
+                                                                            step = 0.05,
                                                                             value = effect$rIV
                                         )),
                                         tags$td(width = "45%", tags$div(style = localStyle, " "))
@@ -81,7 +84,7 @@ HypothesisTab <-
                                                                  numericInput("rIV2", label = NULL,
                                                                             min = -1,
                                                                             max = 1,
-                                                                            step = 0.01,
+                                                                            step = 0.05,
                                                                             value = effect$rIV2
                                         ))),
                                         tags$td(width = "45%", 
@@ -99,7 +102,7 @@ HypothesisTab <-
                                                                  numericInput("rIVIV2", label = NULL,
                                                                             min = -1,
                                                                             max = 1,
-                                                                            step = 0.01,
+                                                                            step = 0.05,
                                                                             value = effect$rIVIV2
                                         ))),
                                         tags$td(width = "45%", tags$div(style = localStyle, " "))
@@ -115,7 +118,7 @@ HypothesisTab <-
                                                                  numericInput("rIVIV2DV", label = NULL,
                                                                             min = -1,
                                                                             max = 1,
-                                                                            step = 0.01,
+                                                                            step = 0.05,
                                                                             value = effect$rIVIV2DV
                                         ))),
                                         tags$td(width = "45%", tags$div(style = localStyle, " "))
@@ -125,7 +128,7 @@ HypothesisTab <-
                          )
                 )
                 # help tab
-                ,tabPanel("?",
+                ,tabPanel(helpChar,value="?",
                           style = paste("background: ",subpanelcolours$hypothesisC),
                           wellPanel(
                             style = paste("background: ",subpanelcolours$hypothesisC,";"),
@@ -134,7 +137,7 @@ HypothesisTab <-
                                          tags$div(style = helpStyle, 
                                                   tags$br(HTML("<b>"),"Variables:",HTML("</b>")),
                                                   tags$br(HTML('&emsp;'), '1. choose one or two IVs and a DV by name'),
-                                                  tags$br(HTML('&emsp;'), '2. edit the variable type/details if needed'),
+                                                  tags$br(HTML('&emsp;'), '2. edit the variable name/type/details if needed'),
                                                   tags$br(HTML('&emsp;'),HTML('&emsp;'), 'eg. mean, sd , skew, kurtosis'),
                                                   tags$br(HTML('&emsp;'),HTML('&emsp;'), 'or no cases, case names, proportions'),
                                                   tags$br(HTML('&emsp;'),HTML('&emsp;'), '(watch the Hypothesis diagram)'),

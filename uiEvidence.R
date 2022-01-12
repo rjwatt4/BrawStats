@@ -5,10 +5,10 @@ wellPanel(
   fluidRow(headerText("Make a simulated sample; run multiple samples")),
   # h5("Evidence"),
   tabsetPanel(id="Evidence", type="tabs",
-              tabPanel("Evidence:"
+              tabPanel("Evidence:",value="Evidence",
               ),
               # single tab
-              tabPanel("Single",
+              tabPanel("Single",value="Single",
                        style = paste("background: ",subpanelcolours$simulateC), 
                        # fluidRow(h1("  ")),
                        tags$table(width = "100%",class="myTable",
@@ -76,7 +76,7 @@ wellPanel(
                        )
               )
               # options tab
-              ,tabPanel("#",
+              ,tabPanel("#",id="EvidenceOptions",
                         style = paste("background: ",subpanelcolours$simulateC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$simulateC,";"),
@@ -101,10 +101,13 @@ wellPanel(
                           ),
                           tags$table(width = "100%",class="myTable",
                                      tags$tr(
-                                       tags$td(width = "25%", tags$div(style = localStyle, "Case order:")),
-                                       tags$td(width = "25%", selectInput("evidenceCaseOrder", choices = c("Alphabetic"="Alphabetic","As Found"="AsFound","Frequency"="Frequency"),selected="Alphabetic", label=NULL, selectize=FALSE)),
                                        tags$td(width = "25%", tags$div(style = localStyle, "SSQ Type")),
                                        tags$td(width = "25%", selectInput("ssqType", label=NULL, c("Type1"="Type1","Type2"="Type2","Type3"="Type3","Type3wrong"="Type3w"), selected="Type3", selectize=FALSE))
+                                     )),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "25%", tags$div(style = localStyle, "Case order:")),
+                                       tags$td(width = "25%", selectInput("evidenceCaseOrder", choices = c("Alphabetic"="Alphabetic","As Found"="AsFound","Frequency"="Frequency"),selected="Alphabetic", label=NULL, selectize=FALSE)),
                                      )),
                           tags$table(width = "100%",class="myTable",
                                      tags$tr(
@@ -117,11 +120,18 @@ wellPanel(
                                        tags$td(width = "25%", selectInput("wScale", label=NULL, c("linear"="linear","log10"="log10"), selected="linear", selectize=FALSE)),
                                        tags$td(width = "50%", tags$div(style = localStyle, " ")),
                                        )
+                          ),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "25%", tags$div(style = localStyle, "scatter:")),
+                                       tags$td(width = "50%", selectInput("allScatter", label=NULL, c("none"="none","all"="all","corr"="corr"), selected="all", selectize=FALSE)),
+                                       tags$td(width = "25%", tags$div(style = localStyle, "")),
+                                     )
                           )
                         )
               )
               # help tab
-              ,tabPanel("?",
+              ,tabPanel(helpChar,value="?",
                         style = paste("background: ",subpanelcolours$simulateC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$simulateC,";"),

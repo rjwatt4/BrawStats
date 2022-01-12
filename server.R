@@ -8,7 +8,6 @@
 #
 
 source("plotStatistic.R")
-source("plotVariable.R")
 source("plotES.R")
 source("plotReport.R")
 
@@ -43,7 +42,6 @@ source("wsRead.R")
 simCycles=20
 simPeriod=1000
 
-# Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
   source("myGlobal.R")
@@ -56,57 +54,253 @@ shinyServer(function(input, output, session) {
 
   #KEYBOARD: capture keyboard events
   keyrespond<-observeEvent(input$pressedKey,{
+     # print(input$keypress)
+    
+    if (input$keypress==16) shiftKeyOn<<-TRUE
     if (input$keypress==17) controlKeyOn<<-TRUE
+    
     # control-V
     if (input$keypress==86 && controlKeyOn){
       mergeVariables<<-FALSE
       # get the raw data
+      header<-strsplit(raw_h1[1],"\t")[[1]]
       raw_data<-read_clip_tbl()
+      # read_clip_tbl doesn't like some characters like | and =
+      colnames(raw_data)<-header
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
         getNewVariables(raw_data)
     } 
-    # control-x
+    
+    # control-c
     if (input$keypress==67 && controlKeyOn){
       data<-exportData()      
       write_clip(data)
     }
+    
+    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && !shiftKeyOn){
+      updateCheckboxInput(session,"hidden",value=FALSE)
+      IV<-variables[1,]
+      IV2<-variables[2,]
+      DV<-variables[3,]
+      switch (input$keypress-48,
+              { print(1)
+                IV$type<-"Interval"
+                DV$type<-"Interval"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+              {print(2)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                DV$type<-"Interval"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+              {print(3)
+                IV$type<-"Interval"
+                DV$type<-"Ordinal"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+              {print(4)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                DV$type<-"Ordinal"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+              {print(5)
+                IV$type<-"Interval"
+                DV$type<-"Categorical"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+              {print(6)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                DV$type<-"Categorical"
+                updateSelectInput(session,"IV2choice",choice="none")
+              },
+      )
+      localVariables<-variables
+      localVariables[1,]<-IV
+      localVariables[3,]<-DV
+      variables<<-localVariables
+      # updateSelectInput(session,"IVchoice",choice="IV")
+      # updateSelectInput(session,"DVchoice",choice="DV")
+      updateNumericInput(session,"rIV",value=input$rIV+0.01)
+      updateCheckboxInput(session,"hidden",value=TRUE)
+    }
+    
+    if (input$keypress>=49 && input$keypress<=56 && shiftKeyOn){
+      updateCheckboxInput(session,"hidden",value=FALSE)
+      IV<-variables[1,]
+      IV2<-variables[2,]
+      IV2$name<-"IV2"
+      DV<-variables[3,]
+      updateSelectInput(session,"IV2choice",choice="IV2")
+      switch (input$keypress-48,
+              {print(11)
+                IV$type<-"Interval"
+                IV2$type<-"Interval"
+                DV$type<-"Interval"
+              },
+              {print(12)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                IV2$type<-"Interval"
+                DV$type<-"Interval"
+              },
+              {print(13)
+                IV$type<-"Interval"
+                IV2$type<-"Categorical"
+                IV2$ncats<-3
+                IV2$cases<-"D1,D2,D3"
+                IV2$proportions<-"1,1,1"
+                DV$type<-"Interval"
+              },
+              {print(14)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                IV2$type<-"Categorical"
+                IV2$ncats<-3
+                IV2$cases<-"D1,D2,D3"
+                IV2$proportions<-"1,1,1"
+                DV$type<-"Interval"
+              },
+              {print(15)
+                IV$type<-"Interval"
+                IV2$type<-"Interval"
+                DV$type<-"Categorical"
+                DV$ncats<-2
+                DV$cases<-"E1,E2"
+                DV$proportions<-"1,1"
+              },
+              {print(16)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                IV2$type<-"Interval"
+                DV$type<-"Categorical"
+                DV$ncats<-2
+                DV$cases<-"E1,E2"
+                DV$proportions<-"1,1"
+              },
+              {print(17)
+                IV$type<-"Interval"
+                IV2$type<-"Categorical"
+                IV2$ncats<-3
+                IV2$cases<-"C1,C2,C3"
+                IV2$proportions<-"1,1,1"
+                DV$type<-"Categorical"
+                DV$ncats<-2
+                DV$cases<-"E1,E2"
+                DV$proportions<-"1,1"
+              },
+              {print(18)
+                IV$type<-"Categorical"
+                IV$ncats<-3
+                IV$cases<-"C1,C2,C3"
+                IV$proportions<-"1,1,1"
+                IV2$type<-"Categorical"
+                IV2$ncats<-3
+                IV2$cases<-"C1,C2,C3"
+                IV2$proportions<-"1,1,1"
+                DV$type<-"Categorical"
+                DV$ncats<-2
+                DV$cases<-"E1,E2"
+                DV$proportions<-"1,1"
+              },
+      )
+      localVariables<-variables
+      localVariables[1,]<-IV
+      localVariables[2,]<-IV2
+      localVariables[3,]<-DV
+      variables<<-localVariables
+      # updateSelectInput(session,"IVchoice",choice="IV")
+      # updateSelectInput(session,"DVchoice",choice="DV")
+      updateNumericInput(session,"rIV",value=input$rIV+0.01)
+      updateCheckboxInput(session,"hidden",value=TRUE)
+    }
   })
+  
   keyrespondUp<-observeEvent(input$releasedKey,{
     if (input$keypress==17) controlKeyOn<<-FALSE
+    if (input$keypress==16) shiftKeyOn<<-FALSE
+  })
+
+  # other housekeeping
+  allScatterRespond<-observeEvent(input$allScatter,{
+    allScatter<<-input$allScatter
+  }
+  )
+
+  observeEvent(input$Explore_VtypeH, {
+      if (input$Explore_VtypeH=="levels") {
+        updateSelectInput(session,"Explore_typeH",selected="DV")
+      }
+  }
+  )
+  
+  observeEvent(input$HypothesisClick,{
+    print(input$HypothesisClick)
   })
 
 ####################################
 #  Help Tab
   
-  # observeEvent(input$Help,
-  #              {
-  #                switch(input$Help,
-  #                       "Step 1"={
-  #                         updateTabsetPanel(session, "Hypothesis",selected = "?")
-  #                         updateTabsetPanel(session, "Design",selected = "Design:")
-  #                         updateTabsetPanel(session, "Evidence",selected = "Evidence:")
-  #                         updateTabsetPanel(session, "ExploreTab",selected = "Explore:")
-  #                       },
-  #                       "Step 2"={
-  #                         updateTabsetPanel(session, "Design",selected = "?")
-  #                         updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis:")
-  #                         updateTabsetPanel(session, "Evidence",selected = "Evidence:")
-  #                         updateTabsetPanel(session, "ExploreTab",selected = "Explore:")
-  #                       },
-  #                       "Step 3"={
-  #                         updateTabsetPanel(session, "Evidence",selected = "?")
-  #                         updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis:")
-  #                         updateTabsetPanel(session, "Design",selected = "Design:")
-  #                         updateTabsetPanel(session, "ExploreTab",selected = "Explore:")
-  #                       },
-  #                       "Step 4"={
-  #                         updateTabsetPanel(session, "ExploreTab",selected = "?")
-  #                         updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis:")
-  #                         updateTabsetPanel(session, "Design",selected = "Design:")
-  #                         updateTabsetPanel(session, "Evidence",selected = "Evidence:")
-  #                       }
-  #                )
-  #                })
+  observeEvent(input$Help,
+               { 
+                 if (fullShowHelp)
+                 switch(input$Help,
+                        "Help:"={
+                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
+                          updateTabsetPanel(session, "Design",selected = "Design")
+                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
+                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
+                          updateTabsetPanel(session, "FileTab", selected="Files")
+                        },
+                        "Step 1"={
+                          updateTabsetPanel(session, "Hypothesis",selected = "?")
+                          updateTabsetPanel(session, "Design",selected = "Design")
+                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
+                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
+                        },
+                        "Step 2"={
+                          updateTabsetPanel(session, "Design",selected = "?")
+                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
+                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
+                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
+                        },
+                        "Step 3"={
+                          updateTabsetPanel(session, "Evidence",selected = "?")
+                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
+                          updateTabsetPanel(session, "Design",selected = "Design")
+                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
+                        },
+                        "Step 4"={
+                          updateTabsetPanel(session, "ExploreTab",selected = "?")
+                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
+                          updateTabsetPanel(session, "Design",selected = "Design")
+                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
+                        },
+                        "Data"={
+                          print(input$Help)
+                          
+                          updateTabsetPanel(session, "FileTab", selected="?")
+                          updateTabsetPanel(session, "ExploreTab",selected = "ExploreTab")
+                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
+                          updateTabsetPanel(session, "Design",selected = "Design")
+                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
+                        }
+                 )
+                 })
 # VARIABLES  
   # make basic variables    
   IV<-makeVar(name="IV",type="Interval",mu=0,sd=1,deploy="Between",process="sim")
@@ -125,8 +319,9 @@ shinyServer(function(input, output, session) {
     MV<<-makeVar(name=input$MVname, type=input$MVtype,
                  mu=input$MVmu, sd=input$MVsd,
                  skew=input$MVskew, kurtosis=input$MVkurt,
+                 nlevs=input$MVnlevs,centre=input$MVcentre,spread=input$MVspread,
                  ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,
-              deploy="Between",process="sim")
+                 deploy="Between",process="sim")
     switch (modalVar,
             "IV" ={setIVanyway(MV)},
             "IV2"={setIV2anyway(MV)},
@@ -135,6 +330,27 @@ shinyServer(function(input, output, session) {
     validSample<<-FALSE
     validExpected<<-FALSE
     validExplore<<-FALSE
+    removeModal()
+    
+  })
+
+  hmm<-function (cause) {
+      showModal(
+        modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
+                                  "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
+                    title="Alert!",
+                    size="s",
+                    cause,
+                    
+                    footer = tagList( 
+                      modalButton("Cancel"),
+                      actionButton("MVproceed", "OK")
+                    )
+        )
+      )
+  }
+  
+  observeEvent(input$MVproceed, {
     removeModal()
   })
   
@@ -146,23 +362,36 @@ shinyServer(function(input, output, session) {
               modalVar<<-"IV"
               IV<-updateIV()
               MV<<-IV
+              varTypes<<- c("Interval" = "Interval",
+                         "Categorical" = "Categorical"
+              )
+              updateSelectInput(session,"MVtype",choices=varTypes)
             },
             "editIV2"={
               modalVar<<-"IV2"
               IV2<-updateIV2()
               MV<<-IV2
+              varTypes<<- c("Interval" = "Interval",
+                            "Categorical" = "Categorical"
+              )
+              updateSelectInput(session,"MVtype",choices=varTypes)
             },
             "editDV"={   
               modalVar<<-"DV"
               DV<-updateDV()
               MV<<-DV
+              varTypes<<- c("Interval" = "Interval",
+                            "Ordinal" = "Ordinal",
+                            "Categorical" = "Categorical"
+              )
+              updateSelectInput(session,"MVtype",choices=varTypes)
             }
             )
     
     showModal(
       modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
                                 "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
-                  title="IV",
+                  title=modalVar,
                   size="s",
                   variableDialog,
                   
@@ -182,6 +411,9 @@ shinyServer(function(input, output, session) {
     updateNumericInput(session,"MVncats",value=MV$ncats)
     updateTextInput(session,"MVcases",value=MV$cases)
     updateTextInput(session,"MVprop",value=MV$proportions)
+    updateNumericInput(session,"MVnlevs",value=MV$nlevs)
+    updateTextInput(session,"MVcentre",value=MV$centre)
+    updateTextInput(session,"MVspread",value=MV$spread)
     
   })
 
@@ -216,10 +448,12 @@ shinyServer(function(input, output, session) {
                  })
   observeEvent(c(input$DVname,input$DVtype,
                  input$DVmu,input$DVsd,
+                 input$DVnlevs,input$DVcentre,input$DVspread,
                  input$DVncats,input$DVcases,input$DVprop), {
                    
                    MV<<-makeVar(name=input$DVname, type=input$DVtype,
                                 mu=input$DVmu, sd=input$DVsd,
+                                spread=input$DVspread,centre=input$DVcentre,
                                 ncats=input$DVncats,cases=input$DVcases,proportions=input$DVprop,
                                 deploy="Between",process="sim")
                    setDVanyway(MV)
@@ -257,7 +491,6 @@ shinyServer(function(input, output, session) {
     validSample<<-FALSE
     validExpected<<-FALSE
     validExplore<<-FALSE
-    
     
     updateTextInput(session, "IVname", value=newMV$name)
     updateSelectInput(session, "IVtype", selected=newMV$type)
@@ -390,6 +623,11 @@ shinyServer(function(input, output, session) {
               updateNumericInput(session, "DVmu", value=newMV$mu)
               updateNumericInput(session, "DVsd", value=newMV$sd)
             },
+            "Ordinal"={
+              updateNumericInput(session, "DVnlevs", value=newMV$nlevs)
+              updateTextInput(session, "DVcases", value=newMV$cases)
+              updateTextInput(session, "DVprop", value=newMV$proportions)
+            },
             "Categorical"={
               updateNumericInput(session, "DVncats", value=newMV$ncats)
               updateTextInput(session, "DVcases", value=newMV$cases)
@@ -427,6 +665,13 @@ shinyServer(function(input, output, session) {
       MV<-variables[use,]
       IV$name<-MV$name
       IV$type<-MV$type
+      if (IV$type=="Ordinal") {
+        if (warnOrd==FALSE) {
+          hmm("Ordinal IV treated as Interval.")
+          warnOrd<<-TRUE
+        }
+      }
+      if (IV$type=="Ordinal") IV$type<-"Interval"
       switch (MV$type,
                 "Interval"={
                   IV$mu<-MV$mu
@@ -447,7 +692,7 @@ shinyServer(function(input, output, session) {
                 }
         )
       IV$process<-MV$process
-
+      
       if (debug) print("     updateIV - exit")
       IV        
     }
@@ -466,6 +711,13 @@ shinyServer(function(input, output, session) {
       MV<-variables[use,]
       IV2$name<-MV$name
       IV2$type<-MV$type
+      if (IV2$type=="Ordinal") {
+        if (warnOrd==FALSE) {
+          hmm("Ordinal IV2 treated as Interval.")
+          warnOrd<<-TRUE
+        }
+      }
+      if (IV2$type=="Ordinal") IV2$type<-"Interval"
       switch (MV$type,
               "Interval"={
                 IV2$mu<-MV$mu
@@ -506,6 +758,11 @@ shinyServer(function(input, output, session) {
                 DV$skew<-MV$skew
                 DV$kurtosis<-MV$kurtosis
               },
+              "Ordinal"={
+                DV$nlevs<-MV$nlevs
+                DV$centre<-MV$centre
+                DV$spread<-MV$spread
+              },
               "Categorical"={
                 DV$ncats<-MV$ncats
                 cs<-MV$cases
@@ -519,6 +776,19 @@ shinyServer(function(input, output, session) {
               }
       )
       DV$process<-MV$process
+      if (DV$type=="Categorical" && DV$ncats>2) {
+        if (input$IV2choice=="none") {
+          if (warn2Cat2==FALSE) {
+            hmm("Categorical DV with more than 2 cases. Graphs not complete.")
+            warn2Cat2<<-TRUE
+          }
+        } else {
+          if (warn3Cat2==FALSE) {
+            hmm("Categorical DV with more than 2 cases. Analysis & graphs not complete.")
+            warn3Cat2<<-TRUE
+          }
+        }
+      }
       if (debug) print("     updateDV - exit")
       DV        
     }
@@ -529,11 +799,11 @@ shinyServer(function(input, output, session) {
       if (debug) print("     effectChanged")
       
       # check effect sizes for over-determination
-      if (input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2 > 1){
-        showModal(modalDialog(title="Effect sizes too high!",
-                              paste("r1^2 + r2^2 + r1:r2^2 + 2*r1*r2*r12 = ",format(input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2,digits=3))
-        ))
-      }
+      # if (input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2 > 1){
+      #   showModal(modalDialog(title="Effect sizes too high!",
+      #                         paste("r1^2 + r2^2 + r1:r2^2 + 2*r1*r2*r12 = ",format(input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2,digits=3))
+      #   ))
+      # }
       
       # remove out of date sample and other 
       validSample<<-FALSE
@@ -639,13 +909,17 @@ shinyServer(function(input, output, session) {
     
     # hypothesis diagram
     output$HypothesisPlot<-renderPlot({
+      makeHypothesisPlot()
+    })
+    
+    makeHypothesisPlot<-function(){
       doIt<-input$MVok
       if (debug) print("HypothesisPlot")
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
       effect<-updatePrediction()
-      
+
       PlotNULL<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.1,0,0,"cm"))+
         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
         
@@ -672,7 +946,7 @@ shinyServer(function(input, output, session) {
       )
       if (debug) print("HypothesisPlot - exit")
       g
-    })
+    }
 
     # population diagram
     output$PopulationPlot <- renderPlot({
@@ -797,26 +1071,47 @@ shinyServer(function(input, output, session) {
     sampleAnalysis<-eventReactive(c(input$newSample,input$hypothesisApply),{
       if (any(c(input$newSample,input$hypothesisApply)>0)){
         validSample<<-TRUE
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      
-      result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
-      # set the result into likelihood: populations
-      updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
-      
-      result
+        IV<-updateIV()
+        IV2<-updateIV2()
+        DV<-updateDV()
+        
+        effect<-updatePrediction()
+        design<-updateDesign()
+        evidence<-updateEvidence()
+        
+        result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
+        # set the result into likelihood: populations
+        updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
+        
+        result
       }
     })
-
-# SINGLE graphs
+    
+    sampleAnalysisH<-eventReactive(input$hidden,{
+      if (input$hidden) {
+        validSample<<-TRUE
+        IV<-updateIV()
+        IV2<-updateIV2()
+        DV<-updateDV()
+        
+        effect<-updatePrediction()
+        design<-updateDesign()
+        evidence<-updateEvidence()
+        
+        result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
+        # set the result into likelihood: populations
+        updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
+        
+        result
+      }
+    })
+    
+    # SINGLE graphs
     # single simulation graph
     output$SamplePlot <- renderPlot({
       doIt<-input$MVok
+      doIt1<-input$hidden
+      
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -828,8 +1123,9 @@ shinyServer(function(input, output, session) {
 
       # make the sample
         result<-sampleAnalysis()
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
-        
+
         # draw the sample
         switch (no_ivs,{
           drawSample(IV,DV,effect,design,result)
@@ -860,7 +1156,8 @@ shinyServer(function(input, output, session) {
     # single simulation graph
     output$DescriptivePlot <- renderPlot({
       doIt<-input$MVok
-        IV<-updateIV()
+      doIt1<-input$hidden
+      IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
@@ -871,8 +1168,9 @@ shinyServer(function(input, output, session) {
         
         # make the sample
         result<-sampleAnalysis()
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {
-          validate("Sample is faulty")
+          validate("Sample is empty")
           return(ggplot()+plotBlankTheme)
           }
         
@@ -920,7 +1218,8 @@ shinyServer(function(input, output, session) {
     # single simulation graph
     output$InferentialPlot <- renderPlot({
       doIt<-input$MVok
-        IV<-updateIV()
+      doIt1<-input$hidden
+      IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
@@ -930,6 +1229,7 @@ shinyServer(function(input, output, session) {
         evidence<-updateEvidence()
         
         result<-sampleAnalysis()
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         
         result$showType<-evidence$showType
@@ -972,23 +1272,26 @@ shinyServer(function(input, output, session) {
     # single simulation report
     output$SampleReport <- renderPlot({
       doIt<-input$MVok
-        IV<-updateIV()
+      doIt1<-input$hidden
+      IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
         effect<-updatePrediction()
         design<-updateDesign()
-
+        
         result<-sampleAnalysis()        
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
 
-        reportSample(IV,IV2,DV,design,result)        
+        reportSample(IV,IV2,DV,design,result)     
     })
     
     # single simulation report
     output$DescriptiveReport <- renderPlot({
       doIt<-input$MVok
+      doIt1<-input$hidden
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -999,6 +1302,7 @@ shinyServer(function(input, output, session) {
       evidence<-updateEvidence()
       
         result<-sampleAnalysis()
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         result$showType<-evidence$showType
         
@@ -1008,7 +1312,8 @@ shinyServer(function(input, output, session) {
     # single simulation report
     output$InferentialReport <- renderPlot({
       doIt<-input$MVok
-        IV<-updateIV()
+      doIt1<-input$hidden
+      IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
@@ -1018,6 +1323,7 @@ shinyServer(function(input, output, session) {
         evidence<-updateEvidence()
         
         result<-sampleAnalysis()
+        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         
         result$showType<-evidence$showType
@@ -1521,11 +1827,11 @@ shinyServer(function(input, output, session) {
 ##################################################################################    
 #  IMPORT/EXPORT data and workspace
     
-    getNewVariables<-function(raw_data){
+    getNewVariables<-function(raw_data,header=c()){
       keep<-!apply(is.na(raw_data),2,all)
       raw_data<-raw_data[,keep]
 
-      newVariables<-readSample(raw_data)
+      newVariables<-readSample(raw_data,header)
 
       # store the variables in global workspace
       if (mergeVariables){
@@ -1564,12 +1870,13 @@ shinyServer(function(input, output, session) {
     inspectDataFile<-observeEvent(input$dataInputFile, {
       sheet_names<-excel_sheets(input$dataInputFile$datapath)
       updateSelectInput(session, "dataInputSheet", choices = sheet_names)
-      mergeVariables<<-FALSE
       # get the raw data
-      if (length(sheet_names)==1){
-        raw_data<-read_excel(input$dataInputFile$datapath,sheet = sheet_names[1])
-      getNewVariables(raw_data) 
-      }
+      # if (length(sheet_names)==1){
+      #   mergeVariables<<-FALSE
+      #   raw_data<-read_excel(input$dataInputFile$datapath,sheet = sheet_names[1])
+      #   if (nrow(raw_data)>0 && ncol(raw_data)>0)
+      #     getNewVariables(raw_data) 
+      # }
     })
     
     # data input    
@@ -1577,13 +1884,18 @@ shinyServer(function(input, output, session) {
       mergeVariables<<-FALSE
       # get the raw data
       raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
-      getNewVariables(raw_data) 
+      if (nrow(raw_data)>0 && ncol(raw_data)>0)
+        getNewVariables(raw_data) 
     })
     
     readCLipDataFile<-observeEvent(input$dPaste, {
       mergeVariables<<-FALSE
       # get the raw data
+      raw_h1<-read_clip()
+      header<-strsplit(raw_h1[1],"\t")[[1]]
       raw_data<-read_clip_tbl()
+      # read_clip_tbl doesn't like some characters like | and =
+      colnames(raw_data)<-header
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
       getNewVariables(raw_data)
     })

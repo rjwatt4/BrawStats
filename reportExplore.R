@@ -1,8 +1,9 @@
 reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
-  rho<-effect$rIV
+
+  max_cols<-8
   
   vals<-exploreResult$vals
-  if (length(vals)>4)  {
+  if (length(vals)>max_cols)  {
     use<-seq(1,length(vals),2)
   } else {
     use<-1:length(vals)

@@ -9,9 +9,7 @@ variableDialog<-wellPanel(
                tags$td(width = "30%", div(style = localStyle, "Type:")),
                tags$td(width = "70%", 
                        selectInput("MVtype", label= NULL,
-                                   c("Interval" = "Interval",
-                                     "Categorical" = "Categorical"
-                                   ),selected=MV$type,
+                                   varTypes,selected=MV$type,
                                    selectize=FALSE
                        )
                )
@@ -22,35 +20,50 @@ variableDialog<-wellPanel(
                               tags$tr(id="MVIntVal1",
                                       tags$td(width = "30%",  tags$div(style = localStyle, "Mean:")),
                                       tags$td(width = "20%", numericInput("MVmu", value = MV$mu, label = NULL)),
-                                      tags$td(width = "10%",  tags$div(style = localStyle, "Sd:")),
-                                      tags$td(width = "20%", numericInput("MVsd", value = MV$sd, label = NULL)),
-                                      tags$td(width = "20%",  tags$div(style = localStyle, " "))
+                                      tags$td(width = "30%",  tags$div(style = localStyle, "Sd:")),
+                                      tags$td(width = "20%", numericInput("MVsd", value = MV$sd, label = NULL))
                               ),
                               tags$tr(id="MVIntVal2",
                                       tags$td(width = "30%",  tags$div(style = localStyle, "Skew:")),
                                       tags$td(width = "20%",  numericInput("MVskew", value = MV$skew, step=0.1, label = NULL)),
-                                      tags$td(width = "10%",  tags$div(style = localStyle, "Kurtosis:")),
-                                      tags$td(width = "20%",  numericInput("MVkurt", value = MV$kurtosis, step=0.1, label = NULL)),
-                                      tags$td(width = "20%",  tags$div(style = localStyle, " "))
+                                      tags$td(width = "30%",  tags$div(style = localStyle, "Kurtosis:")),
+                                      tags$td(width = "20%",  numericInput("MVkurt", value = MV$kurtosis, step=0.1, label = NULL))
                               ),
                    )),
-  conditionalPanel(condition="input.MVtype == 'Categorical'",
+  conditionalPanel(condition="input.MVtype == 'Ordinal'",
                    tags$table(width = "100%",class="myTable",
-                              tags$tr(id="MVCatVal1",
-                                      tags$td(width = "30%",  tags$div(style = localStyle, "No cases:")),
-                                      tags$td(width = "20%", numericInput("MVncats", value = MV$ncats, label = NULL,step=1,min=2)),
-                                      tags$td(width = "30%",  tags$div(style = localStyle, "Proportions:")),
-                                      tags$td(width = "20%", textInput("MVprop", value = MV$proportions, label = NULL)),
+                              tags$tr(id="MVOrdVal1",
+                                      tags$td(width = "30%",  tags$div(style = localStyle, "No levels:")),
+                                      tags$td(width = "20%", numericInput("MVnlevs", value = MV$nlevs, label = NULL,step=1,min=2)),
+                                      # tags$td(width = "30%",  tags$div(style = localStyle, "Spread:")),
+                                      # tags$td(width = "20%", textInput("MVspread", value = MV$spread, label = NULL)),
                                       # tags$td(width = "10%",  tags$div(style = localStyle, " "))
                               ),
-                   ),
-                   tags$table(width = "100%",class="myTable",
-                              tags$tr(id="MVCatVal2",
-                                      tags$td(width = "30%",  tags$div(style = localStyle, "Cases:")),
-                                      tags$td(width = "60%", textInput("MVcases", value = MV$cases, label = NULL)),
-                                      tags$td(width = "10%",  tags$div(style = localStyle, " "))
-                              )
+                              tags$tr(id="MVOrdVal2",
+                                      tags$td(width = "30%",  tags$div(style = localStyle, "Offset:")),
+                                      tags$td(width = "20%", numericInput("MVcentre", value = MV$centre, label = NULL,step=1)),
+                                      tags$td(width = "30%",  tags$div(style = localStyle, "Spread:")),
+                                      tags$td(width = "20%", numericInput("MVspread", value = MV$spread, label = NULL,step=0.5)),
+                                      # tags$td(width = "10%",  tags$div(style = localStyle, " "))
+                              ),
                    )),
-  width="100%")
+conditionalPanel(condition="input.MVtype == 'Categorical'",
+                 tags$table(width = "100%",class="myTable",
+                            tags$tr(id="MVCatVal1",
+                                    tags$td(width = "30%",  tags$div(style = localStyle, "No cases:")),
+                                    tags$td(width = "20%", numericInput("MVncats", value = MV$ncats, label = NULL,step=1,min=2)),
+                                    tags$td(width = "30%",  tags$div(style = localStyle, "Proportions:")),
+                                    tags$td(width = "20%", textInput("MVprop", value = MV$proportions, label = NULL)),
+                                    # tags$td(width = "10%",  tags$div(style = localStyle, " "))
+                            ),
+                 ),
+                 tags$table(width = "100%",class="myTable",
+                            tags$tr(id="MVCatVal2",
+                                    tags$td(width = "30%",  tags$div(style = localStyle, "Cases:")),
+                                    tags$td(width = "60%", textInput("MVcases", value = MV$cases, label = NULL)),
+                                    tags$td(width = "10%",  tags$div(style = localStyle, " "))
+                            )
+                 )),
+width="100%")
 
 
