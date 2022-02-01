@@ -48,6 +48,7 @@ shinyServer(function(input, output, session) {
   source("myGlobal.R")
   source("testDebug.R")
   
+  
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
   shinyjs::hideElement(id= "hypothesisApply")
