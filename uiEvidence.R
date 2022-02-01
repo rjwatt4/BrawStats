@@ -46,7 +46,9 @@ wellPanel(
                                               selectInput("Effect_type",label=NULL,
                                                           c("direct" = "direct",
                                                             "unique" = "unique",
-                                                            "total" = "total"),
+                                                            "total" = "total",
+                                                            "all" = "all",
+                                                            "coefficients" = "coefficients"),
                                                           selectize=FALSE)
                                       )
                                     )),
@@ -54,11 +56,7 @@ wellPanel(
                                       tags$td(width = "15%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "50%", 
                                               selectInput("Expected_length",label=NULL,
-                                                          c("1" = "1",
-                                                            "2" = "2",
-                                                            "3" = "3",
-                                                            "5" = "5",
-                                                            "10" = "10",
+                                                          c("10" = "10",
                                                             "50" = "50",
                                                             "100" = "100",
                                                             "250" = "250",
@@ -80,54 +78,62 @@ wellPanel(
                         style = paste("background: ",subpanelcolours$simulateC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$simulateC,";"),
+                          conditionalPanel(condition="input.IV2choice != 'none'",
+                                           tags$table(width = "100%",class="myTable",
+                                                      tags$tr(
+                                                        tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Analysis")),
+                                                      ),
+                                                      tags$tr(
+                                                        tags$td(width = "30%", tags$div(style = localPlainStyle, "Interaction:")),
+                                                        tags$td(width = "25%", tags$div(style = localPlainStyle, "analyse")),
+                                                        tags$td(width = "10%",checkboxInput("rInteractionOn",label=NULL,value=evidence$rInteractionOn)),
+                                                        tags$td(width = "25%", tags$div(style = localPlainStyle, "show only")),
+                                                        tags$td(width = "10%", checkboxInput("evidenceInteractionOnly", value=TRUE, label=NULL)),
+                                                      ))),
+                          conditionalPanel(condition="input.IV2choice != 'none'",
+                                           tags$table(width = "100%",class="myTable",
+                                                      tags$tr(
+                                                        tags$td(width = "30%", tags$div(style = localPlainStyle, "SSQ Type:")),
+                                                        tags$td(width = "25%", selectInput("ssqType", label=NULL, c("Type1"="Type1","Type2"="Type2","Type3"="Type3","Type3wrong"="Type3w"), selected="Type3", selectize=FALSE)),
+                                                        tags$td(width = "45%", tags$div(style = localStyle, " ")),
+                                                      ))),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Display")),
+                                     ),
+                                     tags$tr(
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "case order:")),
+                                       tags$td(width = "40%", selectInput("evidenceCaseOrder", choices = c("Alphabetic"="Alphabetic","As Found"="AsFound","Frequency"="Frequency"),selected="Alphabetic", label=NULL, selectize=FALSE)),
+                                       tags$td(width = "30%", tags$div(style = localStyle, " ")),
+                                     )),
                           tags$table(width = "100%",class="myTable",
                                      # tags$tr(
-                                     #   tags$td(width = "50%",tags$div(style = localStyle, "Effect:")),
-                                     #   tags$td(width = "50%", 
-                                     #           selectInput("Effect_type",label=NULL,
-                                     #                       c("direct" = "direct",
-                                     #                         "unique" = "unique",
-                                     #                         "total" = "total"),
-                                     #                       selectize=FALSE)
-                                     #   )
+                                     #   tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Describe")),
                                      # ),
                                      tags$tr(
-                                       tags$td(width = "30%", tags$div(style = localStyle, "Interaction:")),
-                                       tags$td(width = "25%", tags$div(style = localStyle, "analyse")),
-                                       tags$td(width = "10%",checkboxInput("rInteractionOn",label=NULL,value=evidence$rInteractionOn)),
-                                       tags$td(width = "25%", tags$div(style = localStyle, "show only")),
-                                       tags$td(width = "10%", checkboxInput("evidenceInteractionOnly", value=TRUE, label=NULL)),
-                                     )
-                          ),
-                          tags$table(width = "100%",class="myTable",
-                                     tags$tr(
-                                       tags$td(width = "25%", tags$div(style = localStyle, "SSQ Type")),
-                                       tags$td(width = "25%", selectInput("ssqType", label=NULL, c("Type1"="Type1","Type2"="Type2","Type3"="Type3","Type3wrong"="Type3w"), selected="Type3", selectize=FALSE))
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "scatter plots:")),
+                                       tags$td(width = "40%", selectInput("allScatter", label=NULL, c("none"="none","all"="all","corr only"="corr"), selected="all", selectize=FALSE)),
+                                       tags$td(width = "30%", tags$div(style = localStyle, "")),
                                      )),
                           tags$table(width = "100%",class="myTable",
+                                     # tags$tr(
+                                     #   tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Infer")),
+                                     # ),
                                      tags$tr(
-                                       tags$td(width = "25%", tags$div(style = localStyle, "Case order:")),
-                                       tags$td(width = "25%", selectInput("evidenceCaseOrder", choices = c("Alphabetic"="Alphabetic","As Found"="AsFound","Frequency"="Frequency"),selected="Alphabetic", label=NULL, selectize=FALSE)),
-                                     )),
-                          tags$table(width = "100%",class="myTable",
-                                     tags$tr(
-                                       tags$td(width = "25%", tags$div(style = localStyle, "p-scale:")),
-                                       tags$td(width = "25%", selectInput("pScale", label=NULL, c("linear"="linear","log10"="log10"), selected="log10", selectize=FALSE)),
-                                       tags$td(width = "50%", tags$div(style = localStyle, " ")),
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "p-scale:")),
+                                       tags$td(width = "40%", selectInput("pScale", label=NULL, c("linear"="linear","log10"="log10"), selected="log10", selectize=FALSE)),
+                                       tags$td(width = "30%", tags$div(style = localStyle, " ")),
                                      ),
-                                       tags$tr(
-                                         tags$td(width = "25%", tags$div(style = localStyle, "w-scale:")),
-                                       tags$td(width = "25%", selectInput("wScale", label=NULL, c("linear"="linear","log10"="log10"), selected="linear", selectize=FALSE)),
-                                       tags$td(width = "50%", tags$div(style = localStyle, " ")),
-                                       )
-                          ),
-                          tags$table(width = "100%",class="myTable",
                                      tags$tr(
-                                       tags$td(width = "25%", tags$div(style = localStyle, "scatter:")),
-                                       tags$td(width = "50%", selectInput("allScatter", label=NULL, c("none"="none","all"="all","corr"="corr"), selected="all", selectize=FALSE)),
-                                       tags$td(width = "25%", tags$div(style = localStyle, "")),
-                                     )
-                          )
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "w-scale:")),
+                                       tags$td(width = "25%", selectInput("wScale", label=NULL, c("linear"="linear","log10"="log10"), selected="linear", selectize=FALSE)),
+                                       tags$td(width = "45%", tags$div(style = localStyle, " ")),
+                                     ),
+                                     tags$tr(
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "show sig/ns:")),
+                                       tags$td(width = "40%", checkboxInput("sig_ns", label=NULL, value=TRUE)),
+                                       tags$td(width = "30%", tags$div(style = localStyle, " ")),
+                                     )),
                         )
               )
               # help tab

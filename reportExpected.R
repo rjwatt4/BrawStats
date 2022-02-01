@@ -25,8 +25,20 @@ reportExpected<-function(IV,IV2,DV,evidence,result,expectedType){
             "unique"={rs<-result$r$unique
                       ps<-result$p$unique},
             "total"={rs<-result$r$total
-                      ps<-result$p$total}
-            )
+                     ps<-result$p$total},
+            "all"={
+                  rs<-c()
+                  ps<-c()
+                  xoff<-c()
+                  for (jk in 1:ncol(result$r$direct)) {
+                    rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
+                    ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
+                    xoff<-cbind(xoff,c(0,0.2,0.4)+(jk-1))
+                  }
+                },
+            "coefficients"={rs<-result$r$coefficients
+                      ps<-result$p$direct}
+    )
   }
   
   # column labels

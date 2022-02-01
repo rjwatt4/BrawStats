@@ -7,10 +7,7 @@ HypothesisTab <-
     tabsetPanel(id="Hypothesis",
                 # Hypothesis tab
                 tabPanel("Hypothesis:",value="Hypothesis",
-                         style = paste("background: ",subpanelcolours$hypothesisC),
-                conditionalPanel("1==2",
-                                 checkboxInput("hidden","hidden",value=FALSE)
-                                 )
+                         style = paste("background: ",subpanelcolours$hypothesisC)
                 ),
                 
                 # variables tab
@@ -122,6 +119,13 @@ HypothesisTab <-
                                                                             value = effect$rIVIV2DV
                                         ))),
                                         tags$td(width = "45%", tags$div(style = localStyle, " "))
+                                      ),
+                                      tags$tr(
+                                        tags$td(width = "35%", tags$div(style = localStyle, "Heteroscedasticity:")),
+                                        tags$td(width = "20%", 
+                                                numericInput("Heteroscedasticity",label=NULL,value=effect$Heteroscedasticity,min=-2, max=2, step=0.1),
+                                                tags$td(width = "45%", tags$div(style = localStyle, " "))
+                                        )
                                       )
                            ),
                            width="100%"

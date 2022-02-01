@@ -3,6 +3,7 @@ min_n=10
 max_n=250
 min_prop=0.2
 effectSizeRange=0.8
+absRange<-FALSE
 quants=0.25
 n_logscale=FALSE
 
@@ -17,23 +18,25 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
   
   showNotification(paste(format(0),format(npoints),sep="/"),id="counting",duration=Inf,closeButton = FALSE,type = "message")
   
+  if (absRange) {vals<-seq(0,1,length.out=npoints)}
+  else          {vals<-seq(-1,1,length.out=npoints)}
   switch (explore$Explore_type,
           "IVType"={vals<-c("Interval","Cat2","Cat3")},
           "DVType"={vals<-c("Interval","Ord7","Ord4","Cat2")},
           "IVIV2Type"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVDVType"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVprop"={vals<-seq(min_prop,1,length.out=npoints)},
-          "IVskew"={vals<-seq(0,1,length.out=npoints)},
+          "IVskew"={vals<-vals},
           "IVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
           "DVlevels"={vals<-2:7},
           "DVprop"={vals<-seq(min_prop,1,length.out=npoints)},
-          "DVskew"={vals<-seq(0,1,length.out=npoints)},
+          "DVskew"={vals<-vals},
           "DVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
-          "EffectSize"={vals<-seq(0,1,length.out=npoints)*effectSizeRange},
-          "EffectSize1"={vals<-seq(-1,1,length.out=npoints)*effectSizeRange},
-          "EffectSize2"={vals<-seq(-1,1,length.out=npoints)*effectSizeRange},
-          "Covariation"={vals<-seq(-1,1,length.out=npoints)*effectSizeRange},
-          "Interaction"={vals<-seq(-1,1,length.out=npoints)*effectSizeRange},
+          "EffectSize"={vals<-vals*effectSizeRange},
+          "EffectSize1"={vals<-vals*effectSizeRange},
+          "EffectSize2"={vals<-vals*effectSizeRange},
+          "Covariation"={vals<-vals*effectSizeRange},
+          "Interaction"={vals<-vals*effectSizeRange},
           
           "SampleSize"={
             if (n_logscale){
@@ -229,12 +232,12 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "EffectSize2"={effect$rIV2<-vals[i]},
             "Covariation"={effect$rIVIV2<-vals[i]},
             "Interaction"={effect$rIVIV2DV<-vals[i]},
+            "Heteroscedasticity"={effect$Heteroscedasticity<-vals[i]},
             "SampleSize"={design$sN<-round(vals[i])},
             "Method"={design$sMethod<-vals[i]},
             "Usage"={design$sIV1Use<-vals[i]},
             "Dependence"={design$sDependence<-vals[i]},
             "Outliers"={design$sOutliers<-vals[i]},
-            "Heteroscedasticity"={design$sHeteroscedasticity<-vals[i]},
             "IVRange"={
               design$sRangeOn<-TRUE
               design$sIVRange<-vals[i]*c(-1,1)
@@ -250,7 +253,8 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
       effect$rIV2<-0
       effect$rIVIV2DV<-0
     }
-    res<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE,showProgress=FALSE)
+
+      res<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE,showProgress=FALSE)
       
     main_res$rval<-cbind(main_res$rval,res$rIV)
     main_res$pval<-cbind(main_res$pval,res$pIV)

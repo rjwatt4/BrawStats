@@ -11,7 +11,7 @@ wellPanel(
                        fluidRow(
                        )
               ),
-              tabPanel("Workspace",
+              tabPanel("Hypothesis",
                        style = paste("background: ",subpanelcolours$filesC), 
                        wellPanel(
                          style = paste("background: ",subpanelcolours$filesC,";"),
@@ -41,9 +41,9 @@ wellPanel(
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
                                       tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
-                                              actionButton("wsPaste","Paste")),
+                                              actionButton("wsPaste","Import")),
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
-                                              actionButton("wsCopy","Copy")),
+                                              actionButton("wsCopy","Export")),
                                     )
                                     
                          ))
@@ -78,9 +78,9 @@ wellPanel(
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
                                       tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
-                                              actionButton("dPaste","Paste")),
+                                              actionButton("dPaste","Import")),
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
-                                              actionButton("dCopy","Copy")),
+                                              actionButton("dCopy","Export")),
                                     )
                          ))
               )

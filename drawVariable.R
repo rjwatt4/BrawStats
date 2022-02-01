@@ -5,6 +5,19 @@ darkYellow<-"#FFCC00"
 
 
 drawVar<-function(pts,var){
+  if (is.null(pts)) {
+    pts<-data.frame(x=0,y=0.5,t=var$name)
+    ggplot()+geom_label(data=pts,aes(x=x,y=y,label=t),hjust=0.5, vjust=0.5, size=11, fontface="bold",label.size = NA)+
+      labs(x="",y="")+
+      plotTheme+
+      theme(axis.text.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank()
+      )+
+      theme(plot.margin=varplotMargins)+
+    coord_cartesian(xlim = c(-1,1), ylim = c(0, 1))
+  } else {
   xlim<-c(-1,1)*3*var$sd+var$mu
   ggplot(pts,aes(x=r,y=dens))+geom_area(fill=plotcolours$sampleC)+
     # geom_line(lwd=0.5)+
@@ -15,7 +28,7 @@ drawVar<-function(pts,var){
     theme(plot.margin=varplotMargins)+
     geom_line(aes(x=r,y=dens*0),color=plotcolours$sampleC,lwd=0.5)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
-  
+}
 }
 
 
@@ -91,7 +104,8 @@ drawVariable<-function(var){
   switch(var$type,
          "Interval"={drawInterval(var)},
          "Ordinal"={drawOrdinal(var)},
-         "Categorical"={drawCategorical(var)}
+         "Categorical"={drawCategorical(var)},
+         "empty"={drawVar(NULL,var)}
   )
   
 }

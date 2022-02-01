@@ -122,8 +122,8 @@ reportDescription<-function(IV,IV2,DV,result){
   an_vars<-sub("iv1",paste(IV$name,"|",sep=""),an_vars)
   
   an_model<-makeFormula(IV,IV2,DV,result,an_vars)
-  outputText<-c(outputText,paste("Formula:",an_model),"","","")
-  outputText<-c(outputText,paste("R^2=",format(result$rFull^2,digits=report_precision),sep=""),"","","")
+  outputText<-c(outputText,"Formula:",paste(an_model),"","")
+  outputText<-c(outputText,"R^2",paste(format(result$rFull^2,digits=report_precision),sep=""),"","")
   
   switch (no_ivs,
           {

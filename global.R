@@ -11,6 +11,7 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   infer_err="#333333",infer_nerr="#00CCFF")
 
 localStyle="font-size:8pt;font-weight:bold;text-align: right;"
+localPlainStyle="font-size:8pt;font-weight:normal;text-align: right;"
 helpStyle=paste("font-size:7pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
 helpChar=HTML("<span style=\"color:#005E86;\"><b>?</b></span>")
 
@@ -18,11 +19,10 @@ IV<-list(name="IV",type="Interval",mu=0,sd=1,ncats=2,cases="C1,C2",proportions="
 IV2<-list(name="none",type="Interval",mu=0,sd=1,ncats=2,cases="D1,D2",proportions="1,1")
 DV<-list(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2",proportions="1,1")
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0)
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0)
 
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
-             sHeteroscedasticity=0,
              sDependence=0, sOutliers=0, sClustering=0
              )    
 
@@ -31,8 +31,8 @@ evidence<-list(rInteractionOn=TRUE,showType="direct")
 fullRange<-3
 allScatter<-"all"
 
-warn2Cat2<-FALSE
 warn3Cat2<-FALSE
 warnOrd<-FALSE
 warn3Ord<-FALSE
+
 

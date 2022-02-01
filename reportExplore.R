@@ -16,6 +16,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     pVals<-exploreResult$pIVs
   } else {
     if (explore$Explore_extraShow=="all") {explore$Explore_extraShow<-"direct"}
+    if (explore$Explore_whichShow=="All") {explore$Explore_whichShow<-"Main 1"}
     switch (explore$Explore_whichShow,
             "Main 1"={
               rVals<-exploreResult$r1[[explore$Explore_extraShow]]

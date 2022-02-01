@@ -38,6 +38,7 @@ source("runExplore.R")
 source("runLikelihood.R")
 
 source("wsRead.R")
+source("typeCombinations.R")
 
 simCycles=20
 simPeriod=1000
@@ -45,24 +46,31 @@ simPeriod=1000
 shinyServer(function(input, output, session) {
 
   source("myGlobal.R")
-
-  # BASIC SET UP that cannot be done inside ui.R  
+  source("testDebug.R")
+  
+####################################
+# BASIC SET UP that cannot be done inside ui.R  
   shinyjs::hideElement(id= "hypothesisApply")
   updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
 
-  #KEYBOARD: capture keyboard events
+####################################
+#KEYBOARD: capture keyboard events
+  
+
   keyrespond<-observeEvent(input$pressedKey,{
      # print(input$keypress)
     
     if (input$keypress==16) shiftKeyOn<<-TRUE
     if (input$keypress==17) controlKeyOn<<-TRUE
+    if (input$keypress==18) altKeyOn<<-TRUE
     
     # control-V
     if (input$keypress==86 && controlKeyOn){
       mergeVariables<<-FALSE
       # get the raw data
+      raw_h1<-read_clip()
       header<-strsplit(raw_h1[1],"\t")[[1]]
       raw_data<-read_clip_tbl()
       # read_clip_tbl doesn't like some characters like | and =
@@ -77,170 +85,113 @@ shinyServer(function(input, output, session) {
       write_clip(data)
     }
     
-    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && !shiftKeyOn){
+    if (quickHypos) {
+    # control-1-6 set 2 variable types
+    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && altKeyOn && shiftKeyOn){
       updateCheckboxInput(session,"hidden",value=FALSE)
-      IV<-variables[1,]
-      IV2<-variables[2,]
-      DV<-variables[3,]
-      switch (input$keypress-48,
-              { print(1)
-                IV$type<-"Interval"
-                DV$type<-"Interval"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-              {print(2)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                DV$type<-"Interval"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-              {print(3)
-                IV$type<-"Interval"
-                DV$type<-"Ordinal"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-              {print(4)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                DV$type<-"Ordinal"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-              {print(5)
-                IV$type<-"Interval"
-                DV$type<-"Categorical"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-              {print(6)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                DV$type<-"Categorical"
-                updateSelectInput(session,"IV2choice",choice="none")
-              },
-      )
-      localVariables<-variables
-      localVariables[1,]<-IV
-      localVariables[3,]<-DV
-      variables<<-localVariables
-      # updateSelectInput(session,"IVchoice",choice="IV")
-      # updateSelectInput(session,"DVchoice",choice="DV")
-      updateNumericInput(session,"rIV",value=input$rIV+0.01)
-      updateCheckboxInput(session,"hidden",value=TRUE)
+      result<-get2combination(input$keypress)
+      setIVanyway(result$IV)
+      setIV2anyway(result$IV2)
+      setDVanyway(result$DV)
+      editVar$data<<-editVar$data+1
     }
     
-    if (input$keypress>=49 && input$keypress<=56 && shiftKeyOn){
+    # control-shift-1-8 set 3 variable types
+    if (input$keypress>=49 && input$keypress<=56 && controlKeyOn && altKeyOn && !shiftKeyOn){
       updateCheckboxInput(session,"hidden",value=FALSE)
-      IV<-variables[1,]
-      IV2<-variables[2,]
-      IV2$name<-"IV2"
-      DV<-variables[3,]
-      updateSelectInput(session,"IV2choice",choice="IV2")
-      switch (input$keypress-48,
-              {print(11)
-                IV$type<-"Interval"
-                IV2$type<-"Interval"
-                DV$type<-"Interval"
-              },
-              {print(12)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                IV2$type<-"Interval"
-                DV$type<-"Interval"
-              },
-              {print(13)
-                IV$type<-"Interval"
-                IV2$type<-"Categorical"
-                IV2$ncats<-3
-                IV2$cases<-"D1,D2,D3"
-                IV2$proportions<-"1,1,1"
-                DV$type<-"Interval"
-              },
-              {print(14)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                IV2$type<-"Categorical"
-                IV2$ncats<-3
-                IV2$cases<-"D1,D2,D3"
-                IV2$proportions<-"1,1,1"
-                DV$type<-"Interval"
-              },
-              {print(15)
-                IV$type<-"Interval"
-                IV2$type<-"Interval"
-                DV$type<-"Categorical"
-                DV$ncats<-2
-                DV$cases<-"E1,E2"
-                DV$proportions<-"1,1"
-              },
-              {print(16)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                IV2$type<-"Interval"
-                DV$type<-"Categorical"
-                DV$ncats<-2
-                DV$cases<-"E1,E2"
-                DV$proportions<-"1,1"
-              },
-              {print(17)
-                IV$type<-"Interval"
-                IV2$type<-"Categorical"
-                IV2$ncats<-3
-                IV2$cases<-"C1,C2,C3"
-                IV2$proportions<-"1,1,1"
-                DV$type<-"Categorical"
-                DV$ncats<-2
-                DV$cases<-"E1,E2"
-                DV$proportions<-"1,1"
-              },
-              {print(18)
-                IV$type<-"Categorical"
-                IV$ncats<-3
-                IV$cases<-"C1,C2,C3"
-                IV$proportions<-"1,1,1"
-                IV2$type<-"Categorical"
-                IV2$ncats<-3
-                IV2$cases<-"C1,C2,C3"
-                IV2$proportions<-"1,1,1"
-                DV$type<-"Categorical"
-                DV$ncats<-2
-                DV$cases<-"E1,E2"
-                DV$proportions<-"1,1"
-              },
-      )
-      localVariables<-variables
-      localVariables[1,]<-IV
-      localVariables[2,]<-IV2
-      localVariables[3,]<-DV
-      variables<<-localVariables
-      # updateSelectInput(session,"IVchoice",choice="IV")
-      # updateSelectInput(session,"DVchoice",choice="DV")
-      updateNumericInput(session,"rIV",value=input$rIV+0.01)
-      updateCheckboxInput(session,"hidden",value=TRUE)
+      beforeIVs<-input$IV2choice
+      
+      result<-get3combination(input$keypress)
+      setIV2anyway(result$IV2)
+      setIVanyway(result$IV)
+      setDVanyway(result$DV)
+      if (beforeIVs==IV2$name) {
+      editVar$data<<-editVar$data+1
+      }
     }
+    
+      # control-alt-n set sample size to big (500)
+      if (input$keypress==78 && controlKeyOn && altKeyOn){
+        updateNumericInput(session,"sN",value=1000)    
+      }
+      
+      # control-alt-e set effects to test case
+      if (input$keypress==69 && controlKeyOn && altKeyOn){
+        updateNumericInput(session,"rIV",value=0.3)    
+        updateNumericInput(session,"rIV2",value=-0.3)    
+        updateNumericInput(session,"rIVIV2DV",value=0.5)    
+      }
+      
+      # control-alt-d do debug
+    if (input$keypress==68 && controlKeyOn && altKeyOn){
+      toggleModal(session, modalId = "testedOutput", toggle = "open")
+      IV<-updateIV()
+      IV2<-updateIV2()
+      DV<-updateDV()
+      
+      effect<-updatePrediction()
+      design<-updateDesign()
+      evidence<-updateEvidence()
+      expected<-updateExpected()
+      
+      validSample<<-TRUE
+      
+      if (is.null(IV2)) {
+        nc=7
+        effect$rIV=0.3
+      } else {
+        nc=12
+        effect$rIV=0.3
+        effect$rIV2=-0.3
+        effect$rIVIV2DV=0.5
+      }
+      design$sN<-1000
+      
+      expected$nSims<-100
+      expected$Expected_type<-"EffectSize"
+      expected$append<-FALSE
+      
+      if (is.null(IV2)) {
+        result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
+      } 
+      doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
+      op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold)
+      
+      if (!is.null(IV2)) {
+        effect$rIVIV2=0.25
+        doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
+        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
+        
+        effect$rIVIV2=-0.25
+        doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
+        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
+      }
+      
+      output$plotPopUp<-renderPlot(reportPlot(op,nc,length(op)/nc,2))
+      return()
+    }
+      
+    } # end of quick hypos
   })
   
   keyrespondUp<-observeEvent(input$releasedKey,{
+    if (input$keypress==18) altKeyOn<<-FALSE
     if (input$keypress==17) controlKeyOn<<-FALSE
     if (input$keypress==16) shiftKeyOn<<-FALSE
   })
 
-  # other housekeeping
-  allScatterRespond<-observeEvent(input$allScatter,{
+####################################
+# other housekeeping
+  observeEvent(input$allScatter,{
     allScatter<<-input$allScatter
   }
   )
 
+  observeEvent(input$sig_ns,{
+    useSignificanceCols<<-input$sig_ns
+  }
+  )
+  
   observeEvent(input$Explore_VtypeH, {
       if (input$Explore_VtypeH=="levels") {
         updateSelectInput(session,"Explore_typeH",selected="DV")
@@ -248,10 +199,29 @@ shinyServer(function(input, output, session) {
   }
   )
   
-  observeEvent(input$HypothesisClick,{
-    print(input$HypothesisClick)
+####################################
+# generic warning dialogue
+  
+  hmm<-function (cause) {
+    showModal(
+      modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
+                                "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
+                  title="Alert!",
+                  size="s",
+                  cause,
+                  
+                  footer = tagList( 
+                    modalButton("Cancel"),
+                    actionButton("MVproceed", "OK")
+                  )
+      )
+    )
+  }
+  
+  observeEvent(input$MVproceed, {
+    removeModal()
   })
-
+  
 ####################################
 #  Help Tab
   
@@ -301,18 +271,26 @@ shinyServer(function(input, output, session) {
                         }
                  )
                  })
+####################################
 # VARIABLES  
   # make basic variables    
-  IV<-makeVar(name="IV",type="Interval",mu=0,sd=1,deploy="Between",process="sim")
-  IV2<-makeVar(name="IV2",type="Interval",mu=0,sd=1,deploy="Between",process="sim")
-  DV<-makeVar(name="DV",type="Interval",mu=0,sd=1,deploy="Between",process="sim")
+  if (startBlank) {
+    variables[1,]$type="empty"
+    variables[3,]$type="empty"
+  }
+  IV<-variables[1,]
+  IV2<-variables[2,]
+  DV<-variables[3,]
   MV<-IV
+  
   
   # modalDialog to edit each variable
   # all of this code only gets used if the modalDialog mechanism is set up in ui.R
   # if we are using the older tabs mechanism, then this code never gets called
   source("uiVariable.R")
   modalVar<-c()
+  editVar<-reactiveValues(data=0)
+  oldName<-""
   
   #Press "OK": make the new variable
   observeEvent(input$MVok, {
@@ -322,36 +300,20 @@ shinyServer(function(input, output, session) {
                  nlevs=input$MVnlevs,centre=input$MVcentre,spread=input$MVspread,
                  ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,
                  deploy="Between",process="sim")
+    
     switch (modalVar,
             "IV" ={setIVanyway(MV)},
             "IV2"={setIV2anyway(MV)},
             "DV" ={setDVanyway(MV)}
     )
-    validSample<<-FALSE
-    validExpected<<-FALSE
-    validExplore<<-FALSE
     removeModal()
-    
-  })
-
-  hmm<-function (cause) {
-      showModal(
-        modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
-                                  "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
-                    title="Alert!",
-                    size="s",
-                    cause,
-                    
-                    footer = tagList( 
-                      modalButton("Cancel"),
-                      actionButton("MVproceed", "OK")
-                    )
-        )
-      )
-  }
-  
-  observeEvent(input$MVproceed, {
-    removeModal()
+    # a change of name looks after itself
+    # when the uiHypothesis is updated
+    # no other types of change are registered
+    # so we trigger a reactiveValue events
+    if (oldName==MV$name) {
+    editVar$data<<-editVar$data+1
+    }
   })
   
   # create the modalDialog for each variable 
@@ -365,7 +327,6 @@ shinyServer(function(input, output, session) {
               varTypes<<- c("Interval" = "Interval",
                          "Categorical" = "Categorical"
               )
-              updateSelectInput(session,"MVtype",choices=varTypes)
             },
             "editIV2"={
               modalVar<<-"IV2"
@@ -374,7 +335,6 @@ shinyServer(function(input, output, session) {
               varTypes<<- c("Interval" = "Interval",
                             "Categorical" = "Categorical"
               )
-              updateSelectInput(session,"MVtype",choices=varTypes)
             },
             "editDV"={   
               modalVar<<-"DV"
@@ -384,11 +344,24 @@ shinyServer(function(input, output, session) {
                             "Ordinal" = "Ordinal",
                             "Categorical" = "Categorical"
               )
-              updateSelectInput(session,"MVtype",choices=varTypes)
             }
             )
-    
-    showModal(
+    # now set up the controls in the dialogue with up to date values
+    updateTextInput(session,"MVname",value=MV$name)
+    updateSelectInput(session,"MVtype",choices=varTypes,selected=MV$type)
+    updateNumericInput(session,"MVmu",value=MV$mu)
+    updateNumericInput(session,"MVsd",value=MV$sd)
+    updateNumericInput(session,"MVskew",value=MV$skew)
+    updateNumericInput(session,"MVkurt",value=MV$kurtosis)
+    updateNumericInput(session,"MVnlevs",value=MV$nlevs)
+    updateNumericInput(session,"MVcentre",value=MV$centre)
+    updateNumericInput(session,"MVspread",value=MV$spread)
+    updateNumericInput(session,"MVncats",value=MV$ncats)
+    updateTextInput(session,"MVcases",value=MV$cases)
+    updateTextInput(session,"MVprop",value=MV$proportions)
+
+    # now show the dialog
+      showModal(
       modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
                                 "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
                   title=modalVar,
@@ -401,71 +374,14 @@ shinyServer(function(input, output, session) {
                   )
       )
     )
+      oldName<<-MV$name
     # make sure we get the current values
-    updateTextInput(session,"MVname",value=MV$name)
-    updateSelectInput(session,"MVtype",selected=MV$type)
-    updateNumericInput(session,"MVmu",value=MV$mu)
-    updateNumericInput(session,"MVsd",value=MV$sd)
-    updateNumericInput(session,"MVskew",value=MV$skew)
-    updateNumericInput(session,"MVkurt",value=MV$kurtosis)
-    updateNumericInput(session,"MVncats",value=MV$ncats)
-    updateTextInput(session,"MVcases",value=MV$cases)
-    updateTextInput(session,"MVprop",value=MV$proportions)
-    updateNumericInput(session,"MVnlevs",value=MV$nlevs)
-    updateTextInput(session,"MVcentre",value=MV$centre)
-    updateTextInput(session,"MVspread",value=MV$spread)
-    
   })
 
-  # use tabs to edit each variable
-  observeEvent(c(input$IVname,input$IVtype,
-                 input$IVmu,input$IVsd,
-                 input$IVncats,input$IVcases,input$IVprop), {
-                   
-                   MV<<-makeVar(name=input$IVname, type=input$IVtype,
-                                mu=input$IVmu, sd=input$IVsd,
-                                ncats=input$IVncats,cases=input$IVcases,proportions=input$IVprop,
-                                deploy="Between",process="sim")
-                   setIVanyway(MV)
 
-                   validSample<<-FALSE
-                   validExpected<<-FALSE
-                   validExplore<<-FALSE
-                 })
-  observeEvent(c(input$IV2name,input$IV2type,
-                 input$IV2mu,input$IV2sd,
-                 input$IV2ncats,input$IV2cases,input$IV2prop), {
-                   
-                   MV<<-makeVar(name=input$IV2name, type=input$IV2type,
-                                mu=input$IV2mu, sd=input$IV2sd,
-                                ncats=input$IV2ncats,cases=input$IV2cases,proportions=input$IV2prop,
-                                deploy="Between",process="sim")
-                   setIV2anyway(MV)
-
-                   validSample<<-FALSE
-                   validExpected<<-FALSE
-                   validExplore<<-FALSE
-                 })
-  observeEvent(c(input$DVname,input$DVtype,
-                 input$DVmu,input$DVsd,
-                 input$DVnlevs,input$DVcentre,input$DVspread,
-                 input$DVncats,input$DVcases,input$DVprop), {
-                   
-                   MV<<-makeVar(name=input$DVname, type=input$DVtype,
-                                mu=input$DVmu, sd=input$DVsd,
-                                spread=input$DVspread,centre=input$DVcentre,
-                                ncats=input$DVncats,cases=input$DVcases,proportions=input$DVprop,
-                                deploy="Between",process="sim")
-                   setDVanyway(MV)
-                   
-                   validSample<<-FALSE
-                   validExpected<<-FALSE
-                   validExplore<<-FALSE
-                 })
-  
-  
-  
   setIVanyway<-function(newMV=NULL){
+    if (debug) {print(setIVanyway)}
+    newName<-FALSE
     if (is.null(newMV)) {
       use<-match(input$IVchoice,variables$name)
       if (!is.na(use)){
@@ -473,28 +389,27 @@ shinyServer(function(input, output, session) {
       }
       else return(NULL)
     } else {
-      use<-match(newMV$name,variables$name)
-      if (is.na(use)){
-        use<-nrow(variables)+1
+      if (any(newMV$name==variables$name)) {
+        use<-which(newMV$name==variables$name)
+        variables[use,]<<-newMV
+      } else {
+        variables<<-rbind(variables,newMV)
+        newName<-TRUE
       }
-      variables[use,]<<-newMV
-    }
-    updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
-    switch (newMV$type,
-            "Interval"={
-              shinyjs::disable(id= "sIV1Use")
-            },
-            "Categorical"={
-              shinyjs::enable(id= "sIV1Use")
-            }
-    )
-    validSample<<-FALSE
-    validExpected<<-FALSE
-    validExplore<<-FALSE
-    
-    updateTextInput(session, "IVname", value=newMV$name)
-    updateSelectInput(session, "IVtype", selected=newMV$type)
-    switch (newMV$type,
+
+      if (newName) {
+        if (debug) print(paste("IV new name detected",newMV$name))
+        updateSelectInput(session, "IVchoice", choices=variables$name)
+        updateSelectInput(session, "IV2choice", choices = c("none",variables$name))
+        if (input$IV2choice!="none") {updateSelectInput(session, "IV2choice", selected=input$IV2choice)}
+        updateSelectInput(session, "DVchoice", choices = variables$name, selected=input$DVchoice)
+      }
+      if (newMV$name!=input$IVchoice) {
+        if (debug) print(paste("IV changed name detected",newMV$name))
+        updateSelectInput(session, "IVchoice", selected=newMV$name)
+      }
+      
+      switch (newMV$type,
             "Interval"={
               updateNumericInput(session, "IVmu", value=newMV$mu)
               updateNumericInput(session, "IVsd", value=newMV$sd)
@@ -505,25 +420,29 @@ shinyServer(function(input, output, session) {
               updateTextInput(session, "IVprop", value=newMV$proportions)
             }
     )
+    
+    updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
+    switch (newMV$type,
+            "Interval"={
+              shinyjs::disable(id= "sIV1Use")
+            },
+            "Categorical"={
+              shinyjs::enable(id= "sIV1Use")
+            }
+    )
+    }
+    
+    validSample<<-FALSE
+    validExpected<<-FALSE
+    validExplore<<-FALSE
   }
   
   setIV2anyway<-function(newMV=NULL){
+    if (debug) {print(setIV2anyway)}
+    newName<-FALSE
     if (is.null(newMV)) {
       if (input$IV2choice=="none") {
         no_ivs<<-1
-        # updateSelectInput(session,"Explore_typeH",
-        #                   choices=list("Variables"=list("IV type" = "IVType",
-        #                                                 "DV type" = "DVType",
-        #                                                 "IV/DV type" = "IVDVType",
-        #                                                 "IV skew" = "IVskew",
-        #                                                 "DV skew" = "DVskew",
-        #                                                 "IV kurtosis" = "IVkurtosis",
-        #                                                 "DV kurtosis" = "DVkurtosis",
-        #                                                 "IV proptn" = "IVprop",
-        #                                                 "DV proptn" = "DVprop"),
-        #                                "Effects"=list("Effect Size" = "EffectSize")
-        #                   )
-        # )
         updateSelectInput(session,"Explore_typeH",
                           choices=list("Variables"=list("IV" = "IV",
                                                         "DV" = "DV",
@@ -537,15 +456,6 @@ shinyServer(function(input, output, session) {
       else {
         no_ivs<<-2
         updateSelectInput(session,"Explore_typeH",
-                          # choices=list("Variables"=list("IV/IV2 type" = "IVIV2Type",
-                          #                               "DV Type" = "DVType",
-                          #                               "IV proptn" = "IVprop",
-                          #                               "DV proptn" = "DVprop"),
-                          #              "Effects"=list("Effect Size1" = "EffectSize1",
-                          #                                "Effect Size2" = "EffectSize2",
-                          #                                "Interaction" = "Interaction",
-                          #                                "Covariation" = "Covariation")
-                          # )
                           choices=list("Variables"=list("IV" = "IV",
                                                         "IV2" = "IV2",
                                                         "DV" = "DV",
@@ -564,11 +474,14 @@ shinyServer(function(input, output, session) {
         newMV<-variables[use,]
       } else {return(NULL)}
     } else {
-      use<-match(newMV$name,variables$name)
-      if (is.na(use)){
-        use<-nrow(variables)+1
+      if (newMV$name !="none") {
+        use<-match(newMV$name,variables$name)
+        if (is.na(use)){
+          use<-nrow(variables)+1
+          newName<-TRUE
+        }
+        variables[use,]<<-newMV
       }
-      variables[use,]<<-newMV
     }
     updateSelectInput(session,"sI21Use", selected=newMV$deploy)
     switch (newMV$type,
@@ -579,9 +492,19 @@ shinyServer(function(input, output, session) {
               shinyjs::enable(id= "sIV2Use")
             }
     )
+     
+    if (newName) {
+      if (debug) print(paste("IV2 new name detected",newMV$name))
+      updateSelectInput(session, "IVchoice", choices=variables$name, selected=input$IVchoice)
+      updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected=newMV$name)
+      updateSelectInput(session, "DVchoice", choices = variables$name, selected=input$DVchoice)
+    } else {
+      if (newMV$name!=input$IV2choice) {
+        if (debug)   print(paste("IV2 changed name detected",newMV$name))
+      updateSelectInput(session, "IV2choice", selected=newMV$name)
+      }
+    }
     
-    updateTextInput(session, "IV2name", value=newMV$name)
-    updateSelectInput(session, "IV2type", selected=newMV$type)
     switch (newMV$type,
             "Interval"={
               updateNumericInput(session, "IV2mu", value=newMV$mu)
@@ -599,6 +522,8 @@ shinyServer(function(input, output, session) {
   }
   
   setDVanyway<-function(newMV=NULL){
+    if (debug) {print(setDVanyway)}
+    newName<-FALSE
     if (is.null(newMV)) {
       use<-match(input$DVchoice,variables$name)
       if (!is.na(use)){
@@ -609,15 +534,27 @@ shinyServer(function(input, output, session) {
       use<-match(newMV$name,variables$name)
       if (is.na(use)){
         use<-nrow(variables)+1
+        newName<-TRUE
       }
       variables[use,]<<-newMV
     }
+
     validSample<<-FALSE
     validExpected<<-FALSE
     validExplore<<-FALSE
 
-    updateTextInput(session, "DVname", value=newMV$name)
-    updateSelectInput(session, "DVtype", selected=newMV$type)
+    if (newName) {
+      if (debug)       print(paste("DV new name detected",newMV$name))
+      updateSelectInput(session, "IVchoice", choices=variables$name, selected=input$IVchoice)
+      updateSelectInput(session, "IV2choice", choices = c("none",variables$name))
+      if (input$IV2choice!="none") {updateSelectInput(session, "IV2choice", selected=input$IV2choice)}
+      updateSelectInput(session, "DVchoice", choices = variables$name)
+    }
+    if (newMV$name!=input$DVchoice) {
+      if (debug)       print(paste("DV changed name detected",newMV$name))
+    updateSelectInput(session, "DVchoice", selected=newMV$name)
+    }
+    
     switch (newMV$type,
             "Interval"={
               updateNumericInput(session, "DVmu", value=newMV$mu)
@@ -636,24 +573,6 @@ shinyServer(function(input, output, session) {
     )
   }
   
-  # manage ui when variable is selected from list    
-  setIV<-observeEvent(input$IVchoice, {
-    if (debug) print("     setIV")
-    setIVanyway()
-  },priority=100
-  )
-  
-  setIV2<-observeEvent(input$IV2choice, {
-    if (debug) print("     setIV2")
-    setIV2anyway()
-  },priority=100
-  )
-  
-    setDV<-observeEvent(input$DVchoice, {
-      if (debug) print("     setDV")
-      setDVanyway()
-    },priority=100
-    )
 
 # update variables functions
     updateIV<-function(){
@@ -667,7 +586,7 @@ shinyServer(function(input, output, session) {
       IV$type<-MV$type
       if (IV$type=="Ordinal") {
         if (warnOrd==FALSE) {
-          hmm("Ordinal IV treated as Interval.")
+          hmm("Ordinal IV will be treated as Interval.")
           warnOrd<<-TRUE
         }
       }
@@ -700,6 +619,7 @@ shinyServer(function(input, output, session) {
       if (debug) print("     updateIV2")
       if (input$IV2choice=="none"){
         no_ivs<<-1
+        if (debug) print("     updateIV2 - exit unused")
         return(NULL)
       } else {
         no_ivs<<-2
@@ -777,14 +697,9 @@ shinyServer(function(input, output, session) {
       )
       DV$process<-MV$process
       if (DV$type=="Categorical" && DV$ncats>2) {
-        if (input$IV2choice=="none") {
-          if (warn2Cat2==FALSE) {
-            hmm("Categorical DV with more than 2 cases. Graphs not complete.")
-            warn2Cat2<<-TRUE
-          }
-        } else {
+        if (input$IV2choice!="none") {
           if (warn3Cat2==FALSE) {
-            hmm("Categorical DV with more than 2 cases. Analysis & graphs not complete.")
+            hmm("Categorical DV with more than 2 cases. Graphs not complete.")
             warn3Cat2<<-TRUE
           }
         }
@@ -817,7 +732,7 @@ shinyServer(function(input, output, session) {
       validExpected<<-FALSE
       validExplore<<-FALSE
       
-      expectedResultHold<-c()
+      # expectedResultHold<-c()
       exploreResultHold<-c()
       likelihoodPResultHold<-c()
       likelihoodSResultHold<-c()
@@ -830,66 +745,33 @@ shinyServer(function(input, output, session) {
       if (debug) print("     effectChanged - exit")
     },priority=100)
     
-    IVTypeChanged<-observeEvent(c(input$IVtype),{
-      if (debug) print("     IVTypeChanged")
-      switch (input$IVtype,
-              "Interval"={
-                updateSelectInput(session,"sIV1Use",selected="Between")
-                shinyjs::disable(id = "sIV1Use")
-              },
-              "Categorical"={
-                shinyjs::enable(id = "sIV1Use")
-              }
-      )
-      if (debug) print("     IVTypeChanged - exit")
-    },priority=100)
-    
-    IV2TypeChanged<-observeEvent(c(input$IV2type),{
-      if (debug) print("     IV2TypeChanged")
-      if (input$IV2name!="none") {
-      switch (input$IV2type,
-              "Interval"={
-                updateSelectInput(session,"sIV2Use",selected="Between")
-                shinyjs::disable(id = "sIV2Use")
-              },
-              "Categorical"={
-                shinyjs::enable(id = "sIV2Use")
-              }
-      )
-      }
-      if (debug) print("     IV2TypeChanged - exit")
-    },priority=100)
-    
-    DVTypeChanged<-observeEvent(c(input$DVtype),{
-      if (debug) print("     DVTypeChanged")
-      if (debug) print("     DVTypeChanged - exit")
-    },priority=100)
-    
 
 ################################################################        
 # SYSTEM diagrams   
-    # gobal variables
+    # global variables
     # set prediction, design, evidence variables from UI
     # hypothesis diagram
     # population diagram
     # prediction diagram
 #
-    EvidenceOption1<-observeEvent(input$evidenceInteractionOnly,{
+# housekeeping    
+    observeEvent(input$evidenceInteractionOnly,{
       showInteractionOnly<<-input$evidenceInteractionOnly
     })
     
-    EvidenceOption2<-observeEvent(input$pScale,{
+    observeEvent(input$pScale,{
       pPlotScale<<-input$pScale
     })
     
-    EvidenceOption3<-observeEvent(input$wScale,{
+    observeEvent(input$wScale,{
       wPlotScale<<-input$wScale
     })
     
 # PREDICTION & DESIGN & EVIDENCE
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
-      prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV)
+      prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
+                       Heteroscedasticity=input$Heteroscedasticity)
       if (debug) print("     updatePrediction - exit")
       prediction
     }
@@ -898,7 +780,6 @@ shinyServer(function(input, output, session) {
       if (debug) print("     updateDesign")
       design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
-                   sHeteroscedasticity=input$sHeteroscedasticity,
                    sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering)
       if (debug) print("     updateDesign - exit")
       design
@@ -914,14 +795,11 @@ shinyServer(function(input, output, session) {
       evidence
     }
     
-    # hypothesis diagram
+# hypothesis diagram
     output$HypothesisPlot<-renderPlot({
-      makeHypothesisPlot()
-    })
-    
-    makeHypothesisPlot<-function(){
-      doIt<-input$MVok
+      doIt<-editVar$data
       if (debug) print("HypothesisPlot")
+      
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -954,22 +832,23 @@ shinyServer(function(input, output, session) {
       if (debug) print("HypothesisPlot - exit")
       g
     }
+    )
 
-    # population diagram
+# population diagram
     output$PopulationPlot <- renderPlot({
-      doIt<-input$MVok
+      doIt<-editVar$data
       if (debug) print("PopulationPlot")
+      
         IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
         effect<-updatePrediction()
-        design<-updateDesign()
 
         switch (no_ivs,
                 {
-                  g<-drawPopulation(IV,DV,effect,design,alpha=1)
+                  g<-drawPopulation(IV,DV,effect,alpha=1)
                   },
                 { 
                   effect1<-effect
@@ -983,19 +862,20 @@ shinyServer(function(input, output, session) {
                   g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                     scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                     
-                    annotation_custom(grob=ggplotGrob(drawPopulation(IV,DV,effect1,design,alpha=1)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)+
-                    annotation_custom(grob=ggplotGrob(drawPopulation(IV2,DV,effect2,design,alpha=1)+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=5)+
-                    annotation_custom(grob=ggplotGrob(drawPopulation(IV,IV2,effect3,design,alpha=1)+gridTheme),xmin=3,xmax=7,ymin=5,ymax=10)
+                    annotation_custom(grob=ggplotGrob(drawPopulation(IV,DV,effect1,alpha=1)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)+
+                    annotation_custom(grob=ggplotGrob(drawPopulation(IV2,DV,effect2,alpha=1)+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=5)+
+                    annotation_custom(grob=ggplotGrob(drawPopulation(IV,IV2,effect3,alpha=1)+gridTheme),xmin=3,xmax=7,ymin=5,ymax=10)
                 }
         )
         if (debug) print("PopulationPlot - exit")
         g
     })  
     
-    # prediction diagram
+# prediction diagram
     output$PredictionPlot <- renderPlot({
-      doIt<-input$MVok
+      doIt<-editVar$data
       if (debug) print("PredictionPlot")
+      
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -1074,6 +954,7 @@ shinyServer(function(input, output, session) {
       analyseSample(IV,IV2,DV,design,evidence,sample)
       
     }
+    
     # eventReactive wrapper
     sampleAnalysis<-eventReactive(c(input$newSample,input$hypothesisApply),{
       if (any(c(input$newSample,input$hypothesisApply)>0)){
@@ -1094,31 +975,12 @@ shinyServer(function(input, output, session) {
       }
     })
     
-    sampleAnalysisH<-eventReactive(input$hidden,{
-      if (input$hidden) {
-        validSample<<-TRUE
-        IV<-updateIV()
-        IV2<-updateIV2()
-        DV<-updateDV()
-        
-        effect<-updatePrediction()
-        design<-updateDesign()
-        evidence<-updateEvidence()
-        
-        result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
-        # set the result into likelihood: populations
-        updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
-        
-        result
-      }
-    })
-    
-    # SINGLE graphs
-    # single simulation graph
+  # SINGLE graphs
+    # single sample graph
     output$SamplePlot <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
-      
+      if (debug) print("SamplePlot")
+      doIt<-editVar$data
+
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -1129,13 +991,12 @@ shinyServer(function(input, output, session) {
       evidence<-updateEvidence()
 
       # make the sample
-        result<-sampleAnalysis()
-        if (doIt1) result<-sampleAnalysisH()
+      result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
 
-        # draw the sample
+      # draw the sample
         switch (no_ivs,{
-          drawSample(IV,DV,effect,design,result)
+          drawSample(IV,DV,effect,result)
         },
         { 
           effect1<-effect
@@ -1153,17 +1014,18 @@ shinyServer(function(input, output, session) {
           ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
             scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
             
-            annotation_custom(grob=ggplotGrob(drawSample(IV,DV,effect1,design,result1)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)+
-            annotation_custom(grob=ggplotGrob(drawSample(IV2,DV,effect2,design,result2)+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=5)+
-            annotation_custom(grob=ggplotGrob(drawSample(IV,IV2,effect3,design,result3)+gridTheme),xmin=3,xmax=7,ymin=5,ymax=10)
+            annotation_custom(grob=ggplotGrob(drawSample(IV,DV,effect1,result1)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)+
+            annotation_custom(grob=ggplotGrob(drawSample(IV2,DV,effect2,result2)+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=5)+
+            annotation_custom(grob=ggplotGrob(drawSample(IV,IV2,effect3,result3)+gridTheme),xmin=3,xmax=7,ymin=5,ymax=10)
         }
         )
     })
     
-    # single simulation graph
+    # single descriptive graph
     output$DescriptivePlot <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
+      if (debug) print("DescriptivePlot")
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
@@ -1175,7 +1037,6 @@ shinyServer(function(input, output, session) {
         
         # make the sample
         result<-sampleAnalysis()
-        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {
           validate("Sample is empty")
           return(ggplot()+plotBlankTheme)
@@ -1201,7 +1062,67 @@ shinyServer(function(input, output, session) {
                   }
                   else{
                     if (showInteractionOnly){
-                      g<-drawDescription(IV,IV2,DV,effect,design,result)
+                      if (DV$type=="Categorical") {
+                          if (IV2$type=="Interval") {
+                        effect1<-effect
+                        result1<-result
+                        use<-result1$iv2<median(result$iv2)
+                        result1$iv<-result$iv[use]
+                        result1$dv<-result$dv[use]
+                        result1$IVs$vals<-result$iv[use]
+                        result1$DVs$vals<-result$dv[use]
+                        
+                        effect2<-effect
+                        result2<-result
+                        result2$iv<-result$iv[!use]
+                        result2$dv<-result$dv[!use]
+                        result2$IVs$vals<-result$iv[!use]
+                        result2$DVs$vals<-result$dv[!use]
+                        
+                        gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
+                                         axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                        g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
+                          scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+                        g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect1,design,result1)+gridTheme+ggtitle(paste0(IV2$name,">",format(median(result$iv2),digits=3)))),xmin=0.5,xmax=4.5,ymin=0,ymax=5)
+                        g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect2,design,result2)+gridTheme+ggtitle(paste0(IV2$name,"<",format(median(result$iv2),digits=3)))),xmin=5.5,xmax=9.5,ymin=0,ymax=5)
+                          } else {
+                            gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
+                                             axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                            g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
+                              scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+                            switch (IV2$ncats,
+                                    {},
+                                    {xmin<-c(0.5,5.5)
+                                     xmax<-c(4.5,9.5)
+                                     ymin<-c(0,0)
+                                     ymax<-c(5,5)},
+                                    {xmin<-c(0.5,5.5,3)
+                                    xmax<-c(4.5,9.5,7)
+                                    ymin<-c(0,0,5)
+                                    ymax<-c(4.25,4.25,9.25)},
+                                    {xmin<-c(0.5,5.5,0.5,5.5)
+                                    xmax<-c(4.5,9.5,4.5,9.5)
+                                    ymin<-c(0,0,5,5)
+                                    ymax<-c(4.25,4.25,9.25,9.25)},
+                                    {}
+                            )
+                            for (i in 1:IV2$ncats) {
+                            effect1<-effect
+                            result1<-result
+                            use<-result1$iv2<-as.numeric(result$iv2)==i
+                            result1$iv<-result$iv[use]
+                            result1$dv<-result$dv[use]
+                            result1$IVs$vals<-result$iv[use]
+                            result1$DVs$vals<-result$dv[use]
+                            
+                            g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect1,design,result1)+gridTheme+ggtitle(paste0(IV2$name,"==",IV2$cases[i]))),xmin=xmin[i],xmax=xmax[i],ymin=ymin[i],ymax=ymax[i])
+                            }
+                          }
+                        # effect2<-effect
+                        # result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, ivplot=result$iv2plot,dvplot=result$dvplot)
+                      } else {
+                        g<-drawDescription(IV,IV2,DV,effect,design,result)
+                      }
                     } else{
                       effect2<-effect
                       effect2$rIV<-effect2$rIV2
@@ -1222,10 +1143,11 @@ shinyServer(function(input, output, session) {
         g
     })
     
-    # single simulation graph
+    # single inferential graph
     output$InferentialPlot <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
+      if (debug) print("InferentialPlot")
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
@@ -1236,7 +1158,6 @@ shinyServer(function(input, output, session) {
         evidence<-updateEvidence()
         
         result<-sampleAnalysis()
-        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         
         result$showType<-evidence$showType
@@ -1250,9 +1171,11 @@ shinyServer(function(input, output, session) {
         
     })
     
-    # single simulation second plot
+    # single second inferential plot
     output$InferentialPlot2 <- renderPlot({
-      doIt<-input$MVok
+      if (debug) print("Inferential2Plot")
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -1276,10 +1199,12 @@ shinyServer(function(input, output, session) {
     })
     
 # SINGLE reports    
-    # single simulation report
+    # single sample report
     output$SampleReport <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
+      if (debug) print("SampleReport")
+
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
@@ -1289,16 +1214,16 @@ shinyServer(function(input, output, session) {
         design<-updateDesign()
         
         result<-sampleAnalysis()        
-        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
 
         reportSample(IV,IV2,DV,design,result)     
     })
     
-    # single simulation report
+    # single descriptive report
     output$DescriptiveReport <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
+      if (debug) print("DescriptiveReport")
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -1309,17 +1234,17 @@ shinyServer(function(input, output, session) {
       evidence<-updateEvidence()
       
         result<-sampleAnalysis()
-        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         result$showType<-evidence$showType
         
         reportDescription(IV,IV2,DV,result)
     })
     
-    # single simulation report
+    # single inferential report
     output$InferentialReport <- renderPlot({
-      doIt<-input$MVok
-      doIt1<-input$hidden
+      if (debug) print("InferentialReport")
+      doIt<-editVar$data
+      # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
@@ -1330,7 +1255,6 @@ shinyServer(function(input, output, session) {
         evidence<-updateEvidence()
         
         result<-sampleAnalysis()
-        if (doIt1) result<-sampleAnalysisH()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
         
         result$showType<-evidence$showType
@@ -1345,6 +1269,14 @@ shinyServer(function(input, output, session) {
     # calculations
     # outputs (2 graphs and report)
 # 
+    expectedResultHold<-reactiveValues()
+    expectedResultHold$result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c())
+    expectedResultHold$count<-0
+    
+    expectedResultNullHold<-reactiveValues()
+    expectedResultNullHold$result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c())
+    expectedResultNullHold$count<-0
+    
 
 # UI changes
     # go to the expected tabs 
@@ -1365,119 +1297,133 @@ shinyServer(function(input, output, session) {
       list(type=input$Expected_type,nsims=as.numeric(input$Expected_length),append=input$expectedAppend)
     }    
     
-# main expected calculations
-    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,nsims,append){
-      # multipleAnalysis(IV,IV2,DV,effect,design,evidence,simCycles,TRUE)
-      multipleAnalysis(IV,IV2,DV,effect,design,evidence,nsims,append)
+# make this a stand-alone function to be called from observEvent
+    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected) {
+      
+      effectNull<-effect
+      effectNull$rIV<-0
+      effectNull$rIV2<-0
+      effectNull$rIVIV2DV<-0
+
+      showProgress<-TRUE
+      append<-expected$append
+      if (showProgress) {showNotification(paste0(format(0),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
+      for (i in 1:expected$nsims) {
+        expectedResultHold$result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,append,expectedResultHold$result)
+        expectedResultHold$count<-length(expectedResultHold$result$rIV)
+        if (expected$Expected_type=="NHSTErrors"){
+          expectedResultNullHold$result<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,1,append,expectedResultNullHold$result)
+          expectedResultNullHold$count<-length(expectedResultNullHold$result$rIV)
+        }
+        append<-TRUE
+        if (showProgress && (expected$nsims<=50 || (expected$nsims>50 && i==round(i/25)*25))) {
+          showNotification(paste0(format(i),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
+        }
+      }
+      if (showProgress) {removeNotification(id = "counting")}
+      expectedResultHold
+      
     }
-
-    # do expected simulations
-    expectedAnalysis<-eventReactive(input$expectedRun,{
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-
-      expected<-updateExpected()
-
-      # doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected$nsims,expected$append)
-      multipleAnalysis(IV,IV2,DV,effect,design,evidence,expected$nsims,expected$append)
-    })
-    # null simulations for NHST
-      # keep this separate for catch-up when switching to NHST
-    expectedNullAnalysis<-eventReactive(input$expectedRun,{
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      
-      expected<-updateExpected()
-      
-      effect$rIV<-0
-      effect$rIV2<-0
-      effect$rIVIV2DV<-0
-      
-      multipleAnalysis(IV,IV2,DV,effect,design,evidence,expected$nsims,expected$append)
-    })
     
+# main expected calculations
+    expectedAnalysis<-observeEvent(input$expectedRun,{
+      IV<-updateIV()
+      IV2<-updateIV2()
+      DV<-updateDV()
+
+      effect<-updatePrediction()
+      design<-updateDesign()
+      evidence<-updateEvidence()
+      
+      effectNull<-effect
+      effectNull$rIV<-0
+      effectNull$rIV2<-0
+      effectNull$rIVIV2DV<-0
+  
+      expected<-updateExpected()
+
+      showProgress<-TRUE
+      append<-expected$append
+      if (showProgress) {showNotification(paste0(format(0),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
+      for (i in 1:expected$nsims) {
+        expectedResultHold$result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,append,expectedResultHold$result)
+        expectedResultHold$count<-length(expectedResultHold$result$rIV)
+        if (input$Expected_type=="NHSTErrors"){
+          expectedResultNullHold$result<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,1,append,expectedResultNullHold$result)
+          expectedResultNullHold$count<-length(expectedResultNullHold$result$rIV)
+        }
+        append<-TRUE
+        if (showProgress && (expected$nsims<=50 || (expected$nsims>50 && i==round(i/25)*25))) {
+          showNotification(paste(format(i),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
+        }
+      }
+      if (showProgress) {removeNotification(id = "counting")}
+      expectedResultHold
+    })
+
 # Expected outputs
     # show expected result    
     output$ExpectedPlot <- renderPlot({
-      doIt<-input$expectedRun
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
-
+      
       effect<-updatePrediction()
       design<-updateDesign()
-      evidence<-updateEvidence()
-      expected<-updateExpected()
-      if (!validExpected)  {return(ggplot()+plotBlankTheme)}
-
-      # if (length(expectedResultHold$rIV)<expected$nsims-simCycles) {
-      #   invalidateLater(simPeriod)      
-      # }
-
-      expResult<-expectedAnalysis()
-      # expResult<-doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected$nsims,expected$append)
-      expResult$showType<-evidence$showType
-      # if (!validExpected) {return(ggplot()+plotBlankTheme)}
       
-      # if (length(expResult$rIV)>simCycles){
-      switch (expected$type,
-              "EffectSize"=drawInference(IV,IV2,DV,effect,design,expResult,"r"),
-              "Power"= drawInference(IV,IV2,DV,effect,design,expResult,"w"),
-              "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expResult,"e2"),
-              "CILimits"=drawInference(IV,IV2,DV,effect,design,expResult,"ci1")
-      )
-        # print(paste("Plot1",format(Sys.time())))
-      # } else {return(ggplot()+plotBlankTheme)}
+      expected<-updateExpected()
+      expectedResultHold$result$showType<-input$Effect_type
+
+      if (expectedResultHold$count>1) {
+        switch (input$Expected_type,
+                "EffectSize"=g<-r_plot(expectedResultHold$result),
+                "Power"=     g<-w_plot(expectedResultHold$result),
+                "NHSTErrors"=g<-e2_plot(expectedResultHold$result),
+                "CILimits"=  g<-ci1_plot(expectedResultHold$result)
+                # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"r"),
+                # "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"w"),
+                # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"e2"),
+                # "CILimits"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"ci1")
+        )
+        return(g)
+      } else {
+        return(ggplot()+plotBlankTheme)
+      }
     })
 
     # second graph    
     output$ExpectedPlot2 <- renderPlot({
-      doIt<-input$expectedRun
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
 
       effect<-updatePrediction()
       design<-updateDesign()
-      evidence<-updateEvidence()
-      expected<-updateExpected()
-      if (!validExpected)  {return(ggplot()+plotBlankTheme)}
-      
-      # if (length(expectedResultHold$rIV)<expected$nsims) {
-      #   invalidateLater(simPeriod)      
-      # }
 
-      expResult<-expectedAnalysis()
-      # expResult<-getExpectedAnalysis(IV,IV2,DV,effect,design,evidence)
-      expResult$showType<-evidence$showType
-      # if (!validExpected) {return(ggplot()+plotBlankTheme)}
+      expected<-updateExpected()
+      expectedResultHold$result$showType<-input$Effect_type
       
-      # if (length(expResult$rIV)>simCycles){
-        switch (expected$type,
-              "EffectSize"=drawInference(IV,IV2,DV,effect,design,expResult,"p"),
-              "Power"= drawInference(IV,IV2,DV,effect,design,expResult,"nw"),
-              "NHSTErrors"={
-                resultNull<-expectedNullAnalysis()
-                drawInference(IV,IV2,DV,effect,design,resultNull,"e1")
-              },
-              "CILimits"=drawInference(IV,IV2,DV,effect,design,expResult,"ci2")
-        )
-      # } else {return(ggplot()+plotBlankTheme)}
+      if (input$Expected_type=="NHSTErrors" && expectedResultNullHold$count<=1) 
+        {return(ggplot()+plotBlankTheme)}
+      if (expectedResultHold$count>1) {
+        switch (input$Expected_type,
+                "EffectSize"=g<-p_plot(expectedResultHold$result),
+                "Power"=     g<-nw_plot(expectedResultHold$result),
+                "NHSTErrors"=g<-e1_plot(expectedResultHold$result),
+                "CILimits"=  g<-ci2_plot(expectedResultHold$result)
+                # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"p"),
+                #   "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"nw"),
+                # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultNullHold$result,"e1"),
+                # "CILimits"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"ci2")
+      )
+        return(g)
+      } else {
+        return(ggplot()+plotBlankTheme)
+      }
     })
     
     # expected report
     output$ExpectedReport <- renderPlot({
-      doIt<-input$expectedRun
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -1485,26 +1431,15 @@ shinyServer(function(input, output, session) {
       effect<-updatePrediction()
       design<-updateDesign()
       evidence<-updateEvidence()
+
       expected<-updateExpected()
-      if (!validExpected)  {return(ggplot()+plotBlankTheme)}
+      expectedResultHold$result$showType<-input$Effect_type
       
-      # if (length(expectedResultHold$rIV)<expected$nsims) {
-      #   invalidateLater(simPeriod)      
-      # }
-      
-      expResult<-expectedAnalysis()
-      # expResult<-getExpectedAnalysis(IV,IV2,DV,effect,design,evidence)
-      expResult$showType<-evidence$showType
-      
-      # if (length(expResult$rIV)>simCycles){
-        if (input$Expected_type=="NHSTErrors"){
-          resultNull<-expectedNullAnalysis()
-          expResult$e1IV=resultNull$pIV
-        }
-        
-        reportExpected(IV,IV2,DV,evidence,expResult,input$Expected_type)
-        # print(paste("Report",format(Sys.time())))
-      # } else {return(ggplot()+plotBlankTheme)}
+            if (expectedResultHold$count>1) {
+        reportExpected(IV,IV2,DV,evidence,expectedResultHold$result,input$Expected_type)
+      } else {
+        return(ggplot()+plotBlankTheme)
+      }
     })
     
     
@@ -1533,41 +1468,34 @@ shinyServer(function(input, output, session) {
       }
     },priority=100)
     
-    # set explore options    
-    observeEvent(c(input$Explore_typeH,input$Explore_typeD,input$Explore_typeA),{
-      
-      if (is.element(input$Explore_typeH,c("EffectSize","EffectSize1","EffectSize2","Interaction","Covariation"))) {
-        shinyjs::showElement(id= "Explore_esRange")
-        shinyjs::showElement(id= "Explore_esRangeLabel")
-      } else {
-        shinyjs::hideElement(id= "Explore_esRange")
-        shinyjs::hideElement(id= "Explore_esRangeLabel")
-      }
-      
-      if (is.element(input$Explore_typeD,c("SampleSize","Dependence","Outliers","Heteroscedasticity","IVRange","DVRange"))) {
-        shinyjs::showElement(id= "Explore_nRange")
-        shinyjs::showElement(id= "Explore_nRangeLabel")
-        if (input$Explore_typeD=="SampleSize"){ 
-          updateNumericInput(session,"Explore_nRange",value=input$Explore_nRange2)
-        } else {
-          if (is.element(input$Explore_typeD,c("IVRange","DVRange"))) {
-            updateNumericInput(session,"Explore_nRange",value=3)
-          } else { updateNumericInput(session,"Explore_nRange",value=input$Explore_anomRange2) }
-        }
-      } else {
-        shinyjs::hideElement(id= "Explore_nRange")
-        shinyjs::hideElement(id= "Explore_nRangeLabel")
-      }
-      
-      # if (is.element(input$Explore_typeA,c("Dependence","Outliers","Heteroscedasticity"))) {
-      #   shinyjs::showElement(id= "Explore_anomRange")
-      #   shinyjs::showElement(id= "Explore_anomRangeLabel")
-      # } else {
-      #   shinyjs::hideElement(id= "Explore_anomRange")
-      #   shinyjs::hideElement(id= "Explore_anomRangeLabel")
-      # }
-      validExplore<<-FALSE
-    })
+    # # set explore options    
+    # observeEvent(c(input$Explore_typeH,input$Explore_typeD,input$Explore_typeA),{
+    #   
+    #   if (is.element(input$Explore_typeH,c("EffectSize","EffectSize1","EffectSize2","Interaction","Covariation"))) {
+    #     shinyjs::showElement(id= "Explore_esRange")
+    #     shinyjs::showElement(id= "Explore_esRangeLabel")
+    #   } else {
+    #     shinyjs::hideElement(id= "Explore_esRange")
+    #     shinyjs::hideElement(id= "Explore_esRangeLabel")
+    #   }
+    #   
+    #   if (is.element(input$Explore_typeD,c("SampleSize","Dependence","Outliers","Heteroscedasticity","IVRange","DVRange"))) {
+    #     shinyjs::showElement(id= "Explore_nRange")
+    #     shinyjs::showElement(id= "Explore_nRangeLabel")
+    #     if (input$Explore_typeD=="SampleSize"){ 
+    #       updateNumericInput(session,"Explore_nRange",value=input$Explore_nRange2)
+    #     } else {
+    #       if (is.element(input$Explore_typeD,c("IVRange","DVRange"))) {
+    #         updateNumericInput(session,"Explore_nRange",value=3)
+    #       } else { updateNumericInput(session,"Explore_nRange",value=input$Explore_anomRange2) }
+    #     }
+    #   } else {
+    #     shinyjs::hideElement(id= "Explore_nRange")
+    #     shinyjs::hideElement(id= "Explore_nRangeLabel")
+    #   }
+    #   
+    #   validExplore<<-FALSE
+    # })
     
 # set explore variable from UI    
     # update explore values    
@@ -2012,19 +1940,19 @@ shinyServer(function(input, output, session) {
       
       if (length(sheet_names)==1){
       readWS(session,input$wsInputFile$datapath,sheet_names[1])
-      setIVanyway()
-      setIV2anyway()
-      setDVanyway()
       }
     })
     
     importWSFile<-observeEvent(input$wsInputFileLoad, {
       readWS(session,input$wsInputFile$datapath,input$wsInputSheet)
-      setIVanyway()
-      setIV2anyway()
-      setDVanyway()
+      editVar$data<<-editVar$data+1
     })
     
-# end of everything        
+    importWSClip<-observeEvent(input$wsPaste, {
+      readWS(session,"clip")
+      editVar$data<<-editVar$data+1
+    })
+    
+    # end of everything        
 })
 

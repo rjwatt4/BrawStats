@@ -66,7 +66,8 @@ extraShowChoices=c("direct"="direct",
 
 whichShowChoices=c("Main 1" = "Main 1",
                    "Main 2" = "Main 2",
-                   "Interaction" = "Interaction")
+                   "Interaction" = "Interaction",
+                   "All" = "All")
 
 exploreLengthChoices=c("10" = "10",
                        "50" = "50",
@@ -236,31 +237,31 @@ ExploreTab <-
                                    style = paste("background: ",subpanelcolours$exploreC,";"),
                                    tags$table(width = "100%",class="myTable",
                                               tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localStyle, "no points:")),
+                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "no points:")),
                                                 tags$td(width = "15%", 
                                                         numericInput("Explore_npoints", label=NULL,value=13)
                                                 ),
-                                                tags$td(width = "35%", tags$div(style = localStyle, "r-range:")),
+                                                tags$td(width = "35%", id="Explore_esRangeLabel", tags$div(style = localPlainStyle, "r-range:")),
                                                 tags$td(width = "25%", 
-                                                        numericInput("Explore_esRange2", label=NULL,value=0.8)
+                                                        numericInput("Explore_esRange", label=NULL,value=0.8)
                                                 ),
                                               ),
                                               tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localStyle, "quantiles:")),
+                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "quantiles:")),
                                                 tags$td(width = "15%", 
                                                         numericInput("Explore_quants", label=NULL,value=0.95, step = 0.01,min=0.01,max=0.99)
                                                 ),
-                                                tags$td(width = "35%", tags$div(style = localStyle, "n-range:")),
+                                                tags$td(width = "35%", id="Explore_nRangeLabel", tags$div(style = localPlainStyle, "n-range:")),
                                                 tags$td(width = "25%", 
-                                                        numericInput("Explore_nRange2", label=NULL,value=250)
+                                                        numericInput("Explore_nRange", label=NULL,value=250)
                                                 ),
                                               ),
                                               tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localStyle, "full y-lim:")),
+                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "full y-lim:")),
                                                 tags$td(width = "15%", checkboxInput("full_ylim", label=NULL,value=FALSE)),
-                                                tags$td(width = "35%", tags$div(style = localStyle, "anom-range:")),
+                                                tags$td(width = "35%", tags$div(style = localPlainStyle, "anom-range:")),
                                                 tags$td(width = "25%", 
-                                                        numericInput("Explore_anomRange2", label=NULL,value=0.9)
+                                                        numericInput("Explore_anomRange", label=NULL,value=0.9)
                                                 )                                              )
                                    ))
                         )

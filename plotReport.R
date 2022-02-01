@@ -1,12 +1,12 @@
 
-reportPlot<-function(outputText,nc,nr){
-  
+reportPlot<-function(outputText,nc,nr,rd=1){
+
   margin=0.5
-  top=12.5
   colSpace=2
-  font_size=3.5
+  font_size=4
+  top=12*rd
   font_size_extra=0
-  characterWidth=1/14
+  characterWidth=1/14/sqrt(rd)
   
   oT<-matrix(outputText,ncol=nc,byrow=TRUE)
   nT<-nchar(oT)
@@ -38,6 +38,10 @@ reportPlot<-function(outputText,nc,nr){
 
   boldlabels<-grepl("\b",outputText)
   outputText<-sub("\b","",outputText)
+  redlabels<-grepl("\r",outputText)
+  outputText<-sub("\r","",outputText)
+  greenlabels<-grepl("!g",outputText)
+  outputText<-sub("!g","",outputText)
   pts<-data.frame(x=x_gap1,y=d$y)
   g<-ggplot()
   # print(c(sum(boldlabels),sum(!boldlabels)))
@@ -46,12 +50,28 @@ reportPlot<-function(outputText,nc,nr){
     pts1<-data.frame(x=x_gap1[boldlabels],y=d$y[boldlabels],labels=outputText[boldlabels])
     g<-g+geom_text(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold")
   }
+  if (any(redlabels)) {
+    pts1<-data.frame(x=x_gap1[redlabels],y=d$y[redlabels],labels=outputText[redlabels])
+    g<-g+geom_text(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold", color="black",fill="red",label.size=NA)
+  }
+  if (any(greenlabels)) {
+    pts1<-data.frame(x=x_gap1[greenlabels],y=d$y[greenlabels],labels=outputText[greenlabels])
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold", color="black",fill="green",label.size = NA)
+  }
   if (any(!boldlabels)) {
-    pts<-data.frame(x=x_gap1[!boldlabels],y=d$y[!boldlabels],labels=outputText[!boldlabels])
+    x1<-x_gap1[!boldlabels & !redlabels & !greenlabels]
+    y1<-d$y[!boldlabels & !redlabels & !greenlabels]
+    t1<-outputText[!boldlabels & !redlabels & !greenlabels]
+    mathlabels<-grepl("['^']{1}[0-9.{}]",t1)
+    pts<-data.frame(x=x1[!mathlabels],y=y1[!mathlabels],labels=t1[!mathlabels])
     g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size)
+    if (any(mathlabels)) {
+    pts<-data.frame(x=x1[mathlabels],y=y1[mathlabels],labels=t1[mathlabels])
+    g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size,parse=TRUE)
+    }
   }
 
-  g<-g+labs(x="",y="")+plotTheme+theme(legend.position = "none")
+  g<-g+labs(x="  ",y="  ")+plotTheme+theme(legend.position = "none")
   g<-g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),

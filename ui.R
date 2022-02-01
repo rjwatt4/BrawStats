@@ -10,19 +10,23 @@
 library(shiny)
 library(shinyWidgets)
 library(shinyjs)
+library(shinyBS)
 
 library(ggplot2)
-library(gridExtra)
-library(tools)
-library(mnormt)
-library(readxl)
-library(writexl)
 library(tidyr)
-library(car)
-library(stringr)
-library(clipr)
-library(SuppDists)
-library(e1071)
+library(tools)       # system
+
+# library(gridExtra)   # not sure any longer
+library(mnormt)      # pmnorm for logistic
+library(readxl)      # excel
+library(writexl)     # x excel
+library(car)         # Anova type 3 correct
+library(stringr)     # for str_* functions
+library(clipr)       # for clipboard functions
+library(SuppDists)   # for Johnson distributions
+library(e1071)       # for skewness and kurtosis
+library(pracma)      # for meshgrid
+
 
 source("uiHeaderText.R") # headers to each tab
 
@@ -33,6 +37,7 @@ source("uiEvidence.R")
 source("uiExplore.R")
 source("uiFiles.R")
 source("uiLikelihood.R")
+
 
 source("uiHypothesisDiagram.R")
 source("uiPopulationDiagram.R")
@@ -180,6 +185,7 @@ shinyUI(fluidPage(
                             MainGraphs,
                             MainReports
                      ),
+                     bsModal("testedOutput", "tested Outputs", "testedOutputButton", size = "large",plotOutput("plotPopUp")),
                      width = 9
                  ),
         ),

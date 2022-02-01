@@ -11,6 +11,7 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   descriptionC1="#FF5533",descriptionC2="#CCBB33",
                   infer_sigC="#22FF00",infer_nsigC="#FF2222",
                   infer_err="#333333",infer_nerr="#00CCFF")
+useSignificanceCols<-FALSE
 
 localStyle="font-size:8pt;font-weight:bold;text-align: right;"
 helpStyle=paste("font-size:7pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
@@ -39,8 +40,16 @@ mergeVariables<-FALSE
 showInteractionOnly<-TRUE
 hideIV2Tab<-FALSE
 debug<-FALSE
+
+is_local <- Sys.getenv('SHINY_PORT') == ""
+if (is_local) {
+  quickHypos<-TRUE
+} else {
+  quickHypos<-FALSE
+}
 shiftKeyOn<-FALSE
 controlKeyOn<-FALSE
+altKeyOn<-FALSE
 
 validSample<-FALSE
 validExpected<-FALSE
@@ -74,12 +83,18 @@ makeVar<-function(name,type="Interval",
   if (length(cs)<var$ncats){
     cs<-c(cs,paste("C",(length(cs)+1):var$ncats,sep=""))
   }
+  if (length(cs)>var$ncats){
+    cs<-cs[1:var$ncats]
+  }
   var$cases<-paste(cs,sep='',collapse=',')
   # check for proportions
   pp<-strsplit(var$proportions,",")
   pp<-pp[[1]]
   if (length(pp)<var$ncats) {
     pp<-c(pp,rep("1",var$ncats-length(pp)))
+  }
+  if (length(pp)>var$ncats){
+    pp<-pp[1:var$ncats]
   }
   var$proportions<-paste(pp,sep='',collapse=',')
   # return var
@@ -118,6 +133,7 @@ IV<-variables[1,]
 IV2<-emptyVariable
 DV<-variables[3,]
 MV<-IV
+startBlank=TRUE
 
 no_ivs<-1
 simData<-TRUE
@@ -130,12 +146,11 @@ getCases<-function(var) {
   }
 }
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0)
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0)
 # effect<-list(rIV=0.3,rIV2=0.3,rIVIV2=0,rIVIV2DV=0)
 
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
-             sHeteroscedasticity=0,
              sDependence=0, sOutliers=0, sClustering=0
              )    
 
@@ -151,7 +166,7 @@ importedData<-c()
 lastSample<-c()
 
 expectedRunning<-FALSE
-expectedResultHold<-c()
+
 exploreResultHold<-c()
 likelihoodPResultHold<-c()
 likelihoodSResultHold<-c()
@@ -159,5 +174,5 @@ likelihoodSResultHold<-c()
 allInputs=c("DVname", "DVtype", "DVmu", "DVsd", "DVncats", "DVcases", 
             "IVname", "IVtype", "IVmu", "IVsd", "IVncats", "IVcases", 
             "IV2name", "IV2type", "IV2mu", "IV2sd", "IV2ncats", "IV2cases", 
-            "rIV2DV", "rIVDV", "rIVIV2", "rIVIV2DV", 
-            "sMethod", "sN", "sIV1Use", "sIV2Use", "sDependence", "sOutliers", "sHeteroscedasticity", "sIVRange", "sDVRange", "sRangeOn" )
+            "rIV2DV", "rIVDV", "rIVIV2", "rIVIV2DV", "Heteroscedasticity", 
+            "sMethod", "sN", "sIV1Use", "sIV2Use", "sDependence", "sOutliers", "sIVRange", "sDVRange", "sRangeOn" )

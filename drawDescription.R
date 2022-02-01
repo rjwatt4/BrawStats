@@ -20,7 +20,7 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
   
   dotSize<-3.5
   if (length(x)>100) {
-    dotSize<-3.5*sqrt(100/length(x))
+    dotSize<-max(3.5*sqrt(100/length(x)),2)
   }
   switch (hypothesisType,
           "Interval Interval"={
@@ -152,7 +152,6 @@ drawCatInterDescription<-function(IV,IV2,DV,effect,design,result,g=NULL){
   rho<-result$rIV+seq(-1,1,length.out=IV2$ncats)*result$rIVIV2DV
   
   if (is.null(g)) {
-    print("ggplot")
     g<-ggplot()
     }
   for (i in 1:IV2$ncats){

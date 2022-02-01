@@ -24,10 +24,8 @@ drawCatPositions<-function(ncats){
 }
 
 
-drawParParPopulation<-function(IV,DV,rho,design,alpha){
+drawParParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   theta=seq(0,2*pi,2*pi/101)
-  if (is.null(design)) {Heteroscedasticity<-0} 
-  else {Heteroscedasticity=design$sHeteroscedasticity}
   d<-acos(rho)
   x=cos(theta+d/2)
   y=cos(theta-d/2)
@@ -38,7 +36,7 @@ drawParParPopulation<-function(IV,DV,rho,design,alpha){
   
 }
 
-drawCatParPopulation<-function(IV,DV,rho,design,alpha){
+drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats<-IV$ncats
   l<-IV$cases
   pp<-CatProportions(IV)
@@ -66,7 +64,7 @@ drawCatParPopulation<-function(IV,DV,rho,design,alpha){
     mu_order<-1:ncats
     if (rho<0) {mu_order<-rev(mu_order)}
   }
-  hsy<-1+seq(-1,1,length.out=ncats)*design$sHeteroscedasticity
+  hsy<-1+seq(-1,1,length.out=ncats)*Heteroscedasticity
   for (id in 1:ncats) {
     use<-mu_order[id]
         x<-mv2dens(y,abs(rho),ebreaks[use],ebreaks[use+1])
@@ -80,7 +78,7 @@ drawCatParPopulation<-function(IV,DV,rho,design,alpha){
 
 }
 
-drawParOrdPopulation<-function(IV,DV,rho,design,alpha){
+drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ng<-DV$nlevs
   l=paste(1:ng,sep="")
   b<-1:ng
@@ -104,7 +102,7 @@ drawParOrdPopulation<-function(IV,DV,rho,design,alpha){
   
 }
 
-drawCatOrdPopulation<-function(IV,DV,rho,design,alpha){
+drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats1<-IV$ncats
   pp1<-CatProportions(IV)
   l1=IV$cases
@@ -136,7 +134,7 @@ drawCatOrdPopulation<-function(IV,DV,rho,design,alpha){
   g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
 }
 
-drawParCatPopulation<-function(IV,DV,rho,design,alpha){
+drawParCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats<-DV$ncats
   pp<-CatProportions(DV)
   l=DV$cases
@@ -151,7 +149,7 @@ drawParCatPopulation<-function(IV,DV,rho,design,alpha){
   xshape<-c(x,rev(x))
   for (id in 1:ncats) {
     y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])
-    y<-y/max(y)/2
+    y<-y/max(y)/2.5
     
     yshape<-c(-y,rev(y))*pp[id]
     pts<-data.frame(x=xshape*IV$sd+IV$mu,y=yshape+b[id])
@@ -162,7 +160,7 @@ drawParCatPopulation<-function(IV,DV,rho,design,alpha){
 
 }
 
-drawCatCatPopulation<-function(IV,DV,rho,design,alpha){
+drawCatCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats1<-IV$ncats
   pp1<-CatProportions(IV)
   b1<-(1:ncats1)-1
@@ -193,32 +191,74 @@ drawCatCatPopulation<-function(IV,DV,rho,design,alpha){
   g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
 }
 
-drawPopulation<-function(IV,DV,effect,design,alpha=1){
+drawPopulation<-function(IV,DV,effect,alpha=1){
   rho<-effect$rIV
   if (is.na(rho)) {rho<-0}
   
   hypothesisType=paste(IV$type,DV$type,sep=" ")
+  heteroscedasticity<-effect$Heteroscedasticity[1]
   
+  if (IV$type=="empty" || DV$type=="empty") {
+    pts<-data.frame(x=100,y=100)
+    g<-ggplot(pts,aes(x=x,y=y))
+    if (IV$type!="empty") {
+      switch (IV$type, 
+              "Categorical"={
+                ncats1<-IV$ncats
+                b1<-(1:ncats1)-1
+                l1=IV$cases
+                g<-g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(0,ncats1+1)-1,ylim=c(0,1))
+                },
+              "Interval"={
+                g<-g+scale_x_continuous()+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu,ylim=c(0,1))
+                }
+      )
+    }
+    if (DV$type!="empty") {
+      switch (DV$type, 
+              "Categorical"={
+                ncats1<-DV$ncats
+                b1<-(1:ncats1)-1
+                l1=DV$cases
+                g<-g+scale_y_continuous(breaks=b1,labels=l1)+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(0,ncats1+1)-1,xlim=c(0,1))
+              },
+              "Ordinal"={
+                ncats1<-DV$nlevs
+                b1<-(1:ncats1)
+                l1=b1
+                g<-g+scale_y_continuous(breaks=b1,labels=l1)+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(0,ncats1+1)-1,xlim=c(0,1))
+              },
+              "Interval"={
+                g<-g+scale_y_continuous()+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(-1,1)*fullRange*DV$sd+DV$mu,xlim=c(0,1))
+              }
+      )
+    }
+    if (IV$type=="empty" && DV$type=="empty") {
+      g<-g+scale_x_continuous(breaks=NULL)+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(0,1),ylim=c(0,1))
+    }
+  } else {
+    
   switch (hypothesisType,
           "Interval Interval"={
-            g<-drawParParPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
+            g<-drawParParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
           "Categorical Interval"={
-            g<-drawCatParPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
+            g<-drawCatParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
           "Interval Ordinal"={
-            g<-drawParOrdPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
+            g<-drawParOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
           },
           "Categorical Ordinal"={
-            g<-drawCatOrdPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$nlevs+1))
+            g<-drawCatOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$nlevs+1))
           },
           "Interval Categorical"={
-            g<-drawParCatPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
+            g<-drawParCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
           },
           "Categorical Categorical"={
-            g<-drawCatCatPopulation(IV,DV,rho,design,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$ncats+1)-1)
+            g<-drawCatCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$ncats+1)-1)
           }
   )
+}
   g+plotTheme+theme(plot.margin=popplotMargins)+
     labs(x=IV$name,y=DV$name)
   

@@ -67,12 +67,6 @@ DesignTab <-
                                         )
                                       ),
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Heteroscedasticity:")),
-                                        tags$td(width = "70%", 
-                                                numericInput("sHeteroscedasticity",label=NULL,value=design$sHeteroscedasticity,min=-1, max=1, step=0.1)
-                                        )
-                                      ),
-                                      tags$tr(
                                         tags$td(width = "30%", tags$div(style = localStyle, "Limited Ranges:")),
                                         tags$td(width = "70%", 
                                                 checkboxInput("sRangeOn",label=NULL,value=design$sRangeOn)

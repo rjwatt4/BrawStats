@@ -1,3 +1,4 @@
+convert2Cat="end"
 outlierValue=4
 dependenceVal=0.1
 clusterVal=0.25
@@ -8,7 +9,7 @@ make_debug=FALSE
 
 makeSampleVar<-function(n,sdv,MV){
   if (MV$type=="Interval" && (MV$skew!=0 || MV$kurtosis!=3)){
-    
+    print('Johnson')
     a<-f_johnson_M(0,sdv,MV$skew,MV$kurtosis)
     ivr<-rJohnson(n,parms=a)
   } else {
@@ -123,17 +124,17 @@ makeSample<-function(IV,IV2,DV,effect,design){
         ivr<-makeSampleVar(n,1,IV)
       }
       
-      if (IV$type=="Categorical"){
-        pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
-        ng<-IV$ncats
-        if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
-        proportions<-c(0,pp)
-        breaks<-qnorm(cumsum(proportions)/sum(proportions))
-        vals=ivr*0
-        cases=1:ng
-        for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
-        ivr<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
-      }
+      # if (IV$type=="Categorical"){
+      #   pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+      #   ng<-IV$ncats
+      #   if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+      #   proportions<-c(0,pp)
+      #   breaks<-qnorm(cumsum(proportions)/sum(proportions))
+      #   vals=ivr*0
+      #   cases=1:ng
+      #   for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
+      #   ivr<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
+      # }
       
       # make iv2 (if needed)
       if (!is.null(IV2)){
@@ -143,17 +144,17 @@ makeSample<-function(IV,IV2,DV,effect,design){
         iv2r<-ivr*rho12+ivr2_resid
         if (make_debug) {print(cor(ivr,iv2r))}
         
-        if (IV2$type=="Categorical"){
-          pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
-          ng<-IV2$ncats
-          if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
-          proportions<-c(0,pp)
-          breaks<-qnorm(cumsum(proportions)/sum(proportions))
-          vals=iv2r*0
-          cases=1:ng
-          for (i in 1:ng) {vals=vals+(iv2r>breaks[i])}
-          iv2r<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
-        }
+        # if (IV2$type=="Categorical"){
+        #   pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+        #   ng<-IV2$ncats
+        #   if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+        #   proportions<-c(0,pp)
+        #   breaks<-qnorm(cumsum(proportions)/sum(proportions))
+        #   vals=iv2r*0
+        #   cases=1:ng
+        #   for (i in 1:ng) {vals=vals+(iv2r>breaks[i])}
+        #   iv2r<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
+        # }
       } else {
         rho2<-0
         rho12<-0
@@ -165,9 +166,34 @@ makeSample<-function(IV,IV2,DV,effect,design){
         rhoInter<-effect$rIVIV2DV
         iv12r<-ivr*iv2r
       } else {
-        iv12r<-0
+        iv12r<-ivr*0
         rhoInter<-0
       }
+      
+      # if (convert2Cat=="middle") {
+      # if (IV$type=="Categorical"){
+      #   pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+      #   ng<-IV$ncats
+      #   if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+      #   proportions<-c(0,pp)
+      #   breaks<-qnorm(cumsum(proportions)/sum(proportions))
+      #   vals=ivr*0
+      #   cases=1:ng
+      #   for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
+      #   ivr<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
+      # }
+      # if (!is.null(IV2) && IV2$type=="Categorical"){
+      #   pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+      #   ng<-IV2$ncats
+      #   if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+      #   proportions<-c(0,pp)
+      #   breaks<-qnorm(cumsum(proportions)/sum(proportions))
+      #   vals=iv2r*0
+      #   cases=1:ng
+      #   for (i in 1:ng) {vals=vals+(iv2r>breaks[i])}
+      #   iv2r<-(vals-mean(cases))/(sd(cases)*sqrt((ng-1)/ng))
+      # }
+      # }
       
       # make residuals
       variance_explained=rho^2+rho2^2+rhoInter^2+2*rho*rho2*rho12
@@ -225,9 +251,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
         n<-n*IV2$ncats
       } 
       
-      if (design$sHeteroscedasticity!=0){
+      if (effect$Heteroscedasticity!=0){
         localVar<- abs(ivr/3)^hsyConstant * sign(ivr)
-        residual<-residual*(1+localVar*design$sHeteroscedasticity)
+        residual<-residual*(1+localVar*effect$Heteroscedasticity)
       }
       
       # make dv  
@@ -238,7 +264,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       # sampleRho<-cor(ivr,dvr)
       # p<-cor.test(ivr,dvr)
       # samplePval<-p$p.value
-      
+
       
       # outliers - as errors
       if (design$sOutliers>0) {
@@ -266,7 +292,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
              }
       )
-      
+
       if (!is.null(IV2)) {
       switch(IV2$type,
              "Interval"={
@@ -357,7 +383,6 @@ makeSample<-function(IV,IV2,DV,effect,design){
     
     if (IV$type=="Categorical"){
       xp<-xplot
-      xpos<-drawCatPositions(IV$ncats)
       for (i in 1:IV$ncats) {
         use1=(xp==i)
         if (DV$type=="Interval"){
@@ -377,7 +402,6 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Categorical"={x2plot<-match(iv2,levels(iv2))}
       )
       if (IV2$type=="Categorical"){
-        xpos<-drawCatPositions(IV2$ncats)
         for (i in 1:IV2$ncats) {
           use1=(x2plot==i)
           if (DV$type=="Interval"){
@@ -398,7 +422,6 @@ makeSample<-function(IV,IV2,DV,effect,design){
     )
     
     if (DV$type=="Categorical"){
-      ypos<-drawCatPositions(DV$ncats)
       for (i in 1:DV$ncats) {
         use1=(yplot==i)
         if (IV$type=="Interval"){

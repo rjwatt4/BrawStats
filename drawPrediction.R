@@ -6,6 +6,7 @@ drawBars<-TRUE
 drawBaseline<-TRUE
 
 source("varUtilities.R")
+source("getLogisticR.R")
 
 
 drawParParPrediction<-function(g,IV,DV,rho,n,offset=1){
@@ -163,7 +164,7 @@ drawParCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
   if (offset==1) {
     col<- plotcolours$descriptionC1
     xoff=0
-    barwidth=0.75
+    barwidth=2/(DV$ncats+1)
   } else {
     off=offset-2
     col<- col2rgb(plotcolours$descriptionC1)*(1-off)+col2rgb(plotcolours$descriptionC2)*off
@@ -177,24 +178,25 @@ drawParCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
   b<-(1:ncats)-1
 
   x<-seq(-fullRange,fullRange,0.01)
-  y<-x*rho
-  se=sqrt((1+x^2)/n)*qnorm(0.975)
-  
-  y_lower<-y-se
-  y_upper<-y+se
-  yv_lower<-pnorm(y_lower)
-  yv_upper<-pnorm(y_upper)
-  
-  x<-x*IV$sd+IV$mu
-  y<-pnorm(y)
-  
-  xv<-c(x,rev(x))
-  
-  pts2<-data.frame(x=x,y=y)
-  pts1<-data.frame(x=xv,y=c(yv_lower,rev(yv_upper)))
-  g<-g+
-    geom_polygon(data=pts1,aes(x=x,y=y),fill = col, alpha=0.5)+
-    geom_line(data=pts2,aes(x=x,y=y),colour=col,lwd=2)
+  yv<-get_logistic_r(rho,ncats,x)
+  for (i in 1:ncats) {
+    y<-yv[,i]
+    se=sqrt((1+x^2)/n)*qnorm(0.975)
+    
+    y_lower<-pnorm(qnorm(y)-se)
+    y_upper<-pnorm(qnorm(y)+se)
+
+    x<-x*IV$sd+IV$mu
+
+    xv<-c(x,rev(x))
+    
+    pts2<-data.frame(x=x,y=y)
+    pts1<-data.frame(x=xv,y=c(y_lower,rev(y_upper)))
+    col<-CatCatcols[i]
+    g<-g+
+      geom_polygon(data=pts1,aes(x=x,y=y),fill = col, alpha=0.5)+
+      geom_line(data=pts2,aes(x=x,y=y),colour=col,lwd=2)
+  }
   
   if (drawBars) {
     if (length(IV$vals)>0)  {
@@ -226,9 +228,9 @@ drawParCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
       full_x<-c()
       full_y<-c()
       full_f<-c()
+      dens<-get_logistic_r(rho,ncats,bins)
       for (i2 in 1:DV$ncats){
-        dens1<-pnorm(bins*rho)
-        if (i2-1==0)dens1<-1-dens1
+        dens1<-dens[,i2]
         densities<-dens1/dens2
         xoff<-(i2-1)/(DV$ncats-1)-(DV$ncats-1)/2
         full_x<-c(full_x,bins[2:(length(bins)-1)]+xoff/4)
@@ -262,7 +264,7 @@ drawCatCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
   if (offset==1) {
     col<- plotcolours$descriptionC
     xoff=0
-    barwidth=0.75
+    barwidth=2/(DV$ncats+1)
   } else {
     off=offset-2
     col<- col2rgb(plotcolours$descriptionC1)*(1-off)+col2rgb(plotcolours$descriptionC2)*off
@@ -334,7 +336,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
   
   if (is.null(IV2)){
     doLegendBars<<-TRUE
-    if (is.null(CatCatcols) && DV$type=="Categorical") {
+    if (DV$type=="Categorical" && (is.null(CatCatcols) || length(CatCatcols)<DV$ncats)) {
       CatCatcols <<- c()
       cols<-c()
       for (i2 in 1:DV$ncats) {
@@ -349,6 +351,48 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
     
     rho<-effect$rIV
     if (is.na(rho)) {rho<-0}
+    
+    if (IV$type=="empty" || DV$type=="empty") {
+      pts<-data.frame(x=100,y=100)
+      g<-ggplot(pts,aes(x=x,y=y))
+      if (IV$type!="empty") {
+        switch (IV$type, 
+                "Categorical"={
+                  ncats1<-IV$ncats
+                  b1<-(1:ncats1)-1
+                  l1=IV$cases
+                  g<-g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(0,ncats1+1)-1,ylim=c(0,1))
+                },
+                "Interval"={
+                  g<-g+scale_x_continuous()+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu,ylim=c(0,1))
+                }
+        )
+      }
+      if (DV$type!="empty") {
+        switch (DV$type, 
+                "Categorical"={
+                  ncats1<-DV$ncats
+                  b1<-(1:ncats1)-1
+                  l1=DV$cases
+                  g<-g+scale_y_continuous(breaks=b1,labels=l1)+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(0,ncats1+1)-1,xlim=c(0,1))
+                },
+                "Ordinal"={
+                  ncats1<-DV$nlevs
+                  b1<-(1:ncats1)
+                  l1=b1
+                  g<-g+scale_y_continuous(breaks=b1,labels=l1)+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(0,ncats1+1)-1,xlim=c(0,1))
+                },
+                "Interval"={
+                  g<-g+scale_y_continuous()+scale_x_continuous(breaks=NULL)+coord_cartesian(ylim = c(-1,1)*fullRange*DV$sd+DV$mu,xlim=c(0,1))
+                }
+        )
+      }
+      if (IV$type=="empty" && DV$type=="empty") {
+        g<-g+scale_x_continuous(breaks=NULL)+scale_y_continuous(breaks=NULL)+coord_cartesian(xlim = c(0,1),ylim=c(0,1))
+      }
+    } else {
+      
+      
     
     switch (hypothesisType,
             "Interval Interval"={
@@ -370,7 +414,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-drawCatCatPrediction(g,IV,DV,rho,n,offset)
             }
     )
-    
+    }
   } else {
     doLegendBars<<-FALSE
     roff=0.82
@@ -419,7 +463,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-g+scale_y_continuous(breaks=b,labels=l)
             },
             "Interval Categorical"={
-              g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0.75,DV$ncats+0.25)-1)
+              g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-0.1,1.1))
               g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
             },
             "Categorical Categorical"={

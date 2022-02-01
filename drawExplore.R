@@ -1,4 +1,6 @@
 no_se_multiple<-TRUE
+multiOverlap<-FALSE
+valsGap<-1.4
 
 all_cols<-c()
 
@@ -30,20 +32,35 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   }
   
   markersize<-7
-  ni_max<-1
-  if (use_col_names && explore$Explore_extraShow=="all"){
+  ni_max1<-1
+  ni_max2<-1
+  multi="none"
+  if (explore$Explore_extraShow=="all") {
     markersize<-4
-    ni_max<-3
+    ni_max1<-3
+    multi<-"extra"
+  } 
+  if (explore$Explore_whichShow=="All") {
+    markersize<-4
+    ni_max2<-3
+    multi<-"which"
   } 
   
-  for (ni in 1:ni_max){
-    if (ni_max>1) {
-      switch (ni,
+  for (ni1 in 1:ni_max1){
+    for (ni2 in 1:ni_max2){
+      if (ni_max1>1) {
+      switch (ni1,
             {explore$Explore_extraShow<-"direct"},
             {explore$Explore_extraShow<-"unique"},
             {explore$Explore_extraShow<-"total"})
-    }
-    
+      } 
+      if (ni_max2>1) {
+      switch (ni2,
+              {explore$Explore_whichShow<-"Main 1"},
+              {explore$Explore_whichShow<-"Main 2"},
+              {explore$Explore_whichShow<-"Interaction"})
+      }
+
     extra_y_label<-""
     if (is.null(IV2)){
       rVals<-exploreResult$rIVs
@@ -181,17 +198,27 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       }
     }
 
-    pts1<-data.frame(vals=vals,y50=y50,y25=y25,y75=y75)
+    vals_offset<-0
+    valsRange<-1
+    if (vals[1]<0) valsRange<-2
+    if (multi=="extra") {
+      vals_offset<-(ni1-1)*(valsRange*valsGap)
+    } 
+    if (multi=="which") {
+      vals_offset<-(ni2-1)*(valsRange*valsGap)
+    }
+
+    pts1<-data.frame(vals=vals+vals_offset,y50=y50,y25=y25,y75=y75)
     
     if (explore$Explore_show=="NHSTErrors") {
-      pts2<-data.frame(vals=vals,y50e=y50e,y25e=y25e,y75e=y75e)
+      pts2<-data.frame(vals=vals+vals_offset,y50e=y50e,y25e=y25e,y75e=y75e)
       
       areaVals<-c(vals[1],vals,vals[length(vals)])
       areaData<-c(1,y50,1)
-      ptsNHST<-data.frame(x=areaVals,y=areaData)
+      ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
       g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=col,alpha=0.5)
       areaData<-c(0,y50e,0)
-      ptsNHST<-data.frame(x=areaVals,y=areaData)
+      ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
       g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=cole,alpha=0.5)
       
       if (doLine) {
@@ -203,30 +230,29 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       
     } else {
       if (doLine) {
-        pts1f<-data.frame(x=c(vals,rev(vals)),y=c(y25,rev(y75)))
-        if (ni_max==1 || !no_se_multiple) {
+        pts1f<-data.frame(x=c(vals,rev(vals))+vals_offset,y=c(y25,rev(y75)))
+        if (ni_max2==1 || !no_se_multiple) {
           g<-g+geom_polygon(data=pts1f,aes(x=x,y=y),fill=col,alpha=0.5)
         }
         g<-g+geom_line(data=pts1,aes(x=vals,y=y50),color="black")
       } else{
-        if (ni_max==1 || !no_se_multiple){
+        if (ni_max2==1 || !no_se_multiple){
           g<-g+geom_errorbar(data=pts1,aes(x=vals,ymin=y25,ymax=y75,width=0.2))
         }
       }
       if (use_col_names){
-        pts1<-data.frame(x=vals,y=y50,fill=explore$Explore_extraShow)
+        pts1<-data.frame(x=vals+vals_offset,y=y50,fill=explore$Explore_extraShow)
         g<-g+geom_point(data=pts1,aes(x=x,y=y,fill=fill),shape=21, colour = "black", size = markersize)
       } else {
         g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black",fill=col, size = markersize)
       }
     }
     
-    g<-g+geom_hline(yintercept=lines,color="white", linetype="dotted",size=0.5)    
+    if (is.element(explore$Explore_show,c("EffectSize","Interaction")) && is.element(explore$Explore_type,c("EffectSize","EffectSize1","EffectSize2","Covariation","Interaction"))){
+      pts3<-data.frame(x=c(-1,1),y=c(-1,1))
+      g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="white", linetype="dotted")
+    }
     
-    # if (is.element(explore$Explore_show,c("EffectSize","Interaction")) && is.element(explore$Explore_type,c("EffectSize","EffectSize1","EffectSize2","Covariation","Interaction"))){
-    #   pts3<-data.frame(x=c(-1,1),y=c(-1,1))
-    #   g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="white", linetype="dotted")
-    # }
     if (explore$Explore_show=="p(sig)" && explore$Explore_type=="SampleSize"){
       w<-y50
       n<-exploreResult$vals
@@ -235,19 +261,22 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       r_est<-r_est$minimum
       nvals<-seq(min(n),max(n),length.out=101)
       yvals<-rn2w(r_est,nvals)
-      ptsn<-data.frame(x=nvals,y=yvals)
+      ptsn<-data.frame(x=nvals+vals_offset,y=yvals)
       g<-g+geom_line(data=ptsn,aes(x=x,y=y),color="white")
       
       minnw<-function(n,r,w){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
       n80<-optimize(minnw,c(10,explore$Explore_nRange),w=0.8,r=r_est)
       
       if (sum(n<n80$minimum)>=2 && sum(n>n80$minimum)>=2){
-        label<-paste("n80 =",format(n80$minimum,digits=2),"  r_est =", format(r_est,digits=3))
+        label<-paste("n80 =",format(n80$minimum,digits=2))
+        # label<-paste("n80 =",format(n80$minimum,digits=2),"  r_est =", format(r_est,digits=3))
       } else {
-        label<-paste("Unsafe result","  r_est =", format(r_est,digits=3))
+        if (sum(n<n80$minimum)<2) label<-paste("Unsafe result - decrease range")
+        if (sum(n>n80$minimum)<2) label<-paste("Unsafe result - increase range")
+        # label<-paste("Unsafe result","  r_est =", format(r_est,digits=3))
       }
-      if (ni_max>1){label<-paste(explore$Explore_extraShow,": ",label,sep="")}
-      lpts<-data.frame(x=0,y=0.8+(ni-1)/10,label=label)
+      if (ni_max2>1){label<-paste(explore$Explore_extraShow,": ",label,sep="")}
+      lpts<-data.frame(x=0+vals_offset,y=0.8+(ni_max2-1)/10,label=label)
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3.5)
     }
     if (explore$Explore_show=="p(sig)" && explore$Explore_type=="EffectSize"){
@@ -258,23 +287,26 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       n_est<-n_est$minimum
       rvals<-seq(min(r),max(r),length.out=101)
       yvals<-rn2w(rvals,n_est)
-      ptsn<-data.frame(x=rvals,y=yvals)
+      ptsn<-data.frame(x=rvals+vals_offset,y=yvals)
       g<-g+geom_line(data=ptsn,aes(x=x,y=y),color="white")
       
       minnw<-function(n,r,w){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
       n80<-optimize(minnw,c(0,0.8),w=0.8,n=n_est)
       
       if (sum(r<n80$minimum)>=2 && sum(r>n80$minimum)>=2){
-        label<-paste("n80 =",format(n80$minimum,digits=2),"  n_est =", format(n_est,digits=3))
+        label<-paste("n80 =",format(n80$minimum,digits=2))
+        # label<-paste("n80 =",format(n80$minimum,digits=2),"  n_est =", format(n_est,digits=3))
       } else {
-        label<-paste("Unsafe result","  n_est =", format(n_est,digits=3))
+        if (sum(r<n80$minimum)<2) label<-paste("Unsafe result - decrease range")
+        if (sum(r>n80$minimum)<2) label<-paste("Unsafe result - increase range")
+        # label<-paste("Unsafe result","  r_est =", format(r_est,digits=3))
       }
-      if (ni_max>1){label<-paste(explore$Explore_extraShow,": ",label,sep="")}
-      lpts<-data.frame(x=0,y=0.8+(ni-1)/10,label=label)
+      if (ni_max2>1){label<-paste(explore$Explore_extraShow,": ",label,sep="")}
+      lpts<-data.frame(x=0+vals_offset,y=0.8+(ni-1)/10,label=label)
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3.5)
     }
   }
-  
+  }
     switch (explore$Explore_show,
             "EffectSize"={
               ylim<-c(-1,1)
@@ -304,6 +336,26 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               ylabel<-"Type I"
             }
     )
+
+  if (multi=="which") {
+    for (ni2 in 1:3) {
+      switch (ni2,
+              {explore$Explore_whichShow<-"Main 1"},
+              {explore$Explore_whichShow<-"Main 2"},
+              {explore$Explore_whichShow<-"Interaction"})
+    vals_offset<-(ni2-1)*valsGap
+    td<-data.frame(x=vals_offset+0.5,y=ylim[2]-diff(ylim)/6,label=explore$Explore_whichShow)
+    g<-g+geom_text(data=td,aes(x=x, y=y, label=label))
+    }
+    if (min(vals)<0) {
+      tk<-(-2:2)/2
+      jk<-2*valsGap
+    } else {
+      tk<-(0:4)/4
+      jk<-valsGap
+    }
+    g<-g+scale_x_continuous(breaks=c(tk,tk+jk,tk+jk*2),labels=c(tk,tk,tk),limits=c(tk[1],1+jk*2)+c(-1,1)*0.25)
+  }
   
   if (explore$full_ylim){
   g<-g+coord_cartesian(ylim = ylim*1.05)
