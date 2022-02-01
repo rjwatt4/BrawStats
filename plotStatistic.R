@@ -179,13 +179,13 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
   rActual[is.na(r)]<-0
 
     ylim<-c(-1, 1)
-
+    ysc=1
+    
   if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
     xoff=0
     rs<-result$rIV
     ps<-result$pIV
   } else {
-    ysc=1
     if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
         switch (result$showType,
             "direct"={
@@ -365,7 +365,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
     )
   }
 
-  for (i in 1:ncol(rs)){
+  for (i in 1:length(xoff)){
     single<-TRUE
     if (is.matrix(rs)) {
       if (nrow(rs)>points_threshold) {single<-FALSE}

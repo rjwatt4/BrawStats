@@ -87,7 +87,7 @@ shinyServer(function(input, output, session) {
     
     if (quickHypos) {
     # control-1-6 set 2 variable types
-    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && altKeyOn && shiftKeyOn){
+    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && altKeyOn && !shiftKeyOn){
       updateCheckboxInput(session,"hidden",value=FALSE)
       result<-get2combination(input$keypress)
       setIVanyway(result$IV)
@@ -97,7 +97,7 @@ shinyServer(function(input, output, session) {
     }
     
     # control-shift-1-8 set 3 variable types
-    if (input$keypress>=49 && input$keypress<=56 && controlKeyOn && altKeyOn && !shiftKeyOn){
+    if (input$keypress>=49 && input$keypress<=56 && controlKeyOn && altKeyOn && shiftKeyOn){
       updateCheckboxInput(session,"hidden",value=FALSE)
       beforeIVs<-input$IV2choice
       
@@ -581,40 +581,61 @@ shinyServer(function(input, output, session) {
       use<-match(input$IVchoice,variables$name)
       if (is.na(use)) return(NULL)
       
-      MV<-variables[use,]
-      IV$name<-MV$name
-      IV$type<-MV$type
+      IV<-as.list(variables[use,])
       if (IV$type=="Ordinal") {
         if (warnOrd==FALSE) {
           hmm("Ordinal IV will be treated as Interval.")
           warnOrd<<-TRUE
         }
       }
-      if (IV$type=="Ordinal") IV$type<-"Interval"
-      switch (MV$type,
-                "Interval"={
-                  IV$mu<-MV$mu
-                  IV$sd<-MV$sd
-                  IV$skew<-MV$skew
-                  IV$kurtosis<-MV$kurtosis
-                },
-                "Categorical"={
-                  IV$ncats<-MV$ncats
-                  cs<-MV$cases
+
+      if (IV$type=="Categorical") {
+                  cs<-IV$cases
                   cs<-strsplit(cs,",")
                   cs<-cs[[1]]
                   if (length(cs)<IV$ncats){
                     cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
                   }
                   IV$cases<-cs
-                  IV$proportions<-MV$prop
+      #             IV$proportions<-MV$prop
                 }
-        )
-      IV$process<-MV$process
-      
       if (debug) print("     updateIV - exit")
-      IV        
+      return(IV)
+      # MV<-variables[use,]
+      # IV$name<-MV$name
+      # IV$type<-MV$type
+      # if (IV$type=="Ordinal") {
+      #   if (warnOrd==FALSE) {
+      #     hmm("Ordinal IV will be treated as Interval.")
+      #     warnOrd<<-TRUE
+      #   }
+      # }
+      # if (IV$type=="Ordinal") IV$type<-"Interval"
+      # switch (MV$type,
+      #           "Interval"={
+      #             IV$mu<-MV$mu
+      #             IV$sd<-MV$sd
+      #             IV$skew<-MV$skew
+      #             IV$kurtosis<-MV$kurtosis
+      #           },
+      #           "Categorical"={
+      #             IV$ncats<-MV$ncats
+      #             cs<-MV$cases
+      #             cs<-strsplit(cs,",")
+      #             cs<-cs[[1]]
+      #             if (length(cs)<IV$ncats){
+      #               cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
+      #             }
+      #             IV$cases<-paste(cs,sep='',collapse=',')
+      #             IV$proportions<-MV$prop
+      #           }
+      #   )
+      # IV$process<-MV$process
+      # 
+      # if (debug) print("     updateIV - exit")
+      # IV        
     }
+    
     updateIV2<-function(){
       if (debug) print("     updateIV2")
       if (input$IV2choice=="none"){
@@ -653,7 +674,7 @@ shinyServer(function(input, output, session) {
                 if (length(cs)<IV2$ncats){
                   cs<-c(cs,paste("C",(length(cs)+1):IV2$ncats,sep=""))
                 }
-                IV2$cases<-cs
+                IV2$cases<-paste(cs,sep='',collapse=',')
                 IV2$proportions<-MV$prop
               }
       )
@@ -668,51 +689,64 @@ shinyServer(function(input, output, session) {
       use<-match(input$DVchoice,variables$name)
       if (is.na(use)) return(NULL)
       
-      MV<-variables[use,]
-      DV$name<-MV$name
-      DV$type<-MV$type
-      switch (MV$type,
-              "Interval"={
-                DV$mu<-MV$mu
-                DV$sd<-MV$sd
-                DV$skew<-MV$skew
-                DV$kurtosis<-MV$kurtosis
-              },
-              "Ordinal"={
-                DV$nlevs<-MV$nlevs
-                DV$centre<-MV$centre
-                DV$spread<-MV$spread
-              },
-              "Categorical"={
-                DV$ncats<-MV$ncats
-                cs<-MV$cases
-                cs<-strsplit(cs,",")
-                cs<-cs[[1]]
-                if (length(cs)<DV$ncats){
-                  cs<-c(cs,paste("C",(length(cs)+1):DV$ncats,sep=""))
-                }
-                DV$cases<-cs
-                DV$proportions<-MV$prop
-              }
-      )
-      DV$process<-MV$process
-      if (DV$type=="Categorical" && DV$ncats>2) {
-        if (input$IV2choice!="none") {
-          if (warn3Cat2==FALSE) {
-            hmm("Categorical DV with more than 2 cases. Graphs not complete.")
-            warn3Cat2<<-TRUE
-          }
-        }
-      }
+      DV<-as.list(variables[use,])
       if (DV$type=="Ordinal" && input$IV2choice!="none") {
         if (warn3Ord==FALSE) {
           hmm("Ordinal DV with more than 1 IV. It will be treated as Interval.")
           warn3Ord<<-TRUE
         }
-        
+      }
+      if (DV$type=="Categorical") {
+        cs<-DV$cases
+        cs<-strsplit(cs,",")
+        cs<-cs[[1]]
+        if (length(cs)<IV$ncats){
+          cs<-c(cs,paste("C",(length(cs)+1):DV$ncats,sep=""))
+        }
+        DV$cases<-cs
+        #             IV$proportions<-MV$prop
       }
       if (debug) print("     updateDV - exit")
-      DV        
+      return(DV)
+      
+      # MV<-variables[use,]
+      # DV$name<-MV$name
+      # DV$type<-MV$type
+      # switch (MV$type,
+      #         "Interval"={
+      #           DV$mu<-MV$mu
+      #           DV$sd<-MV$sd
+      #           DV$skew<-MV$skew
+      #           DV$kurtosis<-MV$kurtosis
+      #         },
+      #         "Ordinal"={
+      #           DV$nlevs<-MV$nlevs
+      #           DV$centre<-MV$centre
+      #           DV$spread<-MV$spread
+      #         },
+      #         "Categorical"={
+      #           DV$ncats<-MV$ncats
+      #           cs<-MV$cases
+      #           cs<-strsplit(cs,",")
+      #           cs<-cs[[1]]
+      #           if (length(cs)<DV$ncats){
+      #             cs<-c(cs,paste("F",(length(cs)+1):DV$ncats,sep=""))
+      #           }
+      #           DV$cases<-paste(cs,sep='',collapse=',')
+      #           DV$proportions<-MV$prop
+      #         }
+      # )
+      # DV$process<-MV$process
+      # if (DV$type=="Categorical" && DV$ncats>2) {
+      #   if (input$IV2choice!="none") {
+      #     if (warn3Cat2==FALSE) {
+      #       hmm("Categorical DV with more than 2 cases. Graphs not complete.")
+      #       warn3Cat2<<-TRUE
+      #     }
+      #   }
+      # }
+      #   
+      # DV        
     }
     
 # UI changes    
