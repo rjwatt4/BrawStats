@@ -133,7 +133,7 @@ IV<-variables[1,]
 IV2<-emptyVariable
 DV<-variables[3,]
 MV<-IV
-startBlank=TRUE
+startBlank=FALSE
 
 no_ivs<-1
 simData<-TRUE

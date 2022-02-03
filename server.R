@@ -120,7 +120,16 @@ shinyServer(function(input, output, session) {
       if (input$keypress==69 && controlKeyOn && altKeyOn){
         updateNumericInput(session,"rIV",value=0.3)    
         updateNumericInput(session,"rIV2",value=-0.3)    
+        updateNumericInput(session,"rIVIV2",value=0.0)    
         updateNumericInput(session,"rIVIV2DV",value=0.5)    
+      }
+      
+      # control-alt-f set effects to test case
+      if (input$keypress==69 && controlKeyOn && altKeyOn){
+        updateNumericInput(session,"rIV",value=0.2)    
+        updateNumericInput(session,"rIV2",value=0.4)    
+        updateNumericInput(session,"rIVIV2",value=-0.8)    
+        updateNumericInput(session,"rIVIV2DV",value=0.0)    
       }
       
       # control-alt-d do debug
@@ -163,7 +172,10 @@ shinyServer(function(input, output, session) {
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
         
-        effect$rIVIV2=-0.25
+        effect$rIVIV2=-0.8
+        effect$rIV=0.2
+        effect$rIV2=0.5
+        effect$rIVIV2DV=0.0
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
       }
@@ -650,39 +662,60 @@ shinyServer(function(input, output, session) {
       use<-match(input$IV2choice,variables$name)
       if (is.na(use)) return(NULL)
       
-      MV<-variables[use,]
-      IV2$name<-MV$name
-      IV2$type<-MV$type
+      IV2<-as.list(variables[use,])
       if (IV2$type=="Ordinal") {
         if (warnOrd==FALSE) {
-          hmm("Ordinal IV2 treated as Interval.")
+          hmm("Ordinal IV2 will be treated as Interval.")
           warnOrd<<-TRUE
         }
       }
-      if (IV2$type=="Ordinal") IV2$type<-"Interval"
-      switch (MV$type,
-              "Interval"={
-                IV2$mu<-MV$mu
-                IV2$sd<-MV$sd
-                IV2$skew<-MV$skew
-                IV2$kurtosis<-MV$kurtosis
-              },
-              "Categorical"={
-                IV2$ncats<-MV$ncats
-                cs<-MV$cases
-                cs<-strsplit(cs,",")
-                cs<-cs[[1]]
-                if (length(cs)<IV2$ncats){
-                  cs<-c(cs,paste("C",(length(cs)+1):IV2$ncats,sep=""))
-                }
-                IV2$cases<-paste(cs,sep='',collapse=',')
-                IV2$proportions<-MV$prop
-              }
-      )
-      IV2$process<-MV$process
-
+      
+      if (IV2$type=="Categorical") {
+        cs<-IV2$cases
+        cs<-strsplit(cs,",")
+        cs<-cs[[1]]
+        if (length(cs)<IV$ncats){
+          cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
+        }
+        IV2$cases<-cs
+        #             IV$proportions<-MV$prop
+      }
       if (debug) print("     updateIV2 - exit")
-      IV2     
+      return(IV2)
+      
+      # MV<-variables[use,]
+      # IV2$name<-MV$name
+      # IV2$type<-MV$type
+      # if (IV2$type=="Ordinal") {
+      #   if (warnOrd==FALSE) {
+      #     hmm("Ordinal IV2 treated as Interval.")
+      #     warnOrd<<-TRUE
+      #   }
+      # }
+      # if (IV2$type=="Ordinal") IV2$type<-"Interval"
+      # switch (MV$type,
+      #         "Interval"={
+      #           IV2$mu<-MV$mu
+      #           IV2$sd<-MV$sd
+      #           IV2$skew<-MV$skew
+      #           IV2$kurtosis<-MV$kurtosis
+      #         },
+      #         "Categorical"={
+      #           IV2$ncats<-MV$ncats
+      #           cs<-MV$cases
+      #           cs<-strsplit(cs,",")
+      #           cs<-cs[[1]]
+      #           if (length(cs)<IV2$ncats){
+      #             cs<-c(cs,paste("C",(length(cs)+1):IV2$ncats,sep=""))
+      #           }
+      #           IV2$cases<-paste(cs,sep='',collapse=',')
+      #           IV2$proportions<-MV$prop
+      #         }
+      # )
+      # IV2$process<-MV$process
+      # 
+      # if (debug) print("     updateIV2 - exit")
+      # IV2     
     }
     
     updateDV<-function(){

@@ -1,6 +1,7 @@
 
 reportPlot<-function(outputText,nc,nr,rd=1){
 
+  bg<-maincolours$graphC
   margin=0.5
   colSpace=2
   font_size=4
@@ -48,11 +49,11 @@ reportPlot<-function(outputText,nc,nr,rd=1){
   
   if (any(boldlabels)){
     pts1<-data.frame(x=x_gap1[boldlabels],y=d$y[boldlabels],labels=outputText[boldlabels])
-    g<-g+geom_text(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold")
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fill=bg,fontface="bold",label.size=NA)
   }
   if (any(redlabels)) {
     pts1<-data.frame(x=x_gap1[redlabels],y=d$y[redlabels],labels=outputText[redlabels])
-    g<-g+geom_text(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold", color="black",fill="red",label.size=NA)
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fontface="bold", color="black",fill="red",label.size=NA)
   }
   if (any(greenlabels)) {
     pts1<-data.frame(x=x_gap1[greenlabels],y=d$y[greenlabels],labels=outputText[greenlabels])
@@ -64,10 +65,10 @@ reportPlot<-function(outputText,nc,nr,rd=1){
     t1<-outputText[!boldlabels & !redlabels & !greenlabels]
     mathlabels<-grepl("['^']{1}[0-9.{}]",t1)
     pts<-data.frame(x=x1[!mathlabels],y=y1[!mathlabels],labels=t1[!mathlabels])
-    g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size)
+    g<-g+geom_label(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size, fill=bg,label.size=NA)
     if (any(mathlabels)) {
     pts<-data.frame(x=x1[mathlabels],y=y1[mathlabels],labels=t1[mathlabels])
-    g<-g+geom_text(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size,parse=TRUE)
+    g<-g+geom_label(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size, fill=bg,parse=TRUE,label.size=NA)
     }
   }
 

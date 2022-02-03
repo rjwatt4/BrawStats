@@ -626,91 +626,72 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
             switch (DV$type,
                     "Interval"={
                       # total effect sizes
-                      lm1total<-lm(formula=dv~iv1,data=resultNormData)
-                      lm2total<-lm(formula=dv~iv2,data=resultNormData)
-                      lm12total<-lm(formula=dv~iv1:iv2,data=resultNormData)
-                      rIV1total<-model2effect(lm1total,DV$type,"iv1")
-                      rIV2total<-model2effect(lm2total,DV$type,"iv2")
-                      rIV1IV2total<-model2effect(lm12total,DV$type,"iv1:iv2")
-
-                      # get the unique effects
-                      an1<-Anova(lmNorm,test=testMethod3,type=3)
-                      unr<-sqrt(an1$`Sum Sq`/sum(an1$`Sum Sq`))
-                      # model without iv1:iv2
+                      lm1total<-lm(formula=dv~iv1,data=resultNormData,contrasts=list(iv1=contr.sum))
+                      lm2total<-lm(formula=dv~iv2,data=resultNormData,contrasts=list(iv2=contr.sum))
+                      lm12total<-lm(formula=dv~iv1:iv2,data=resultNormData,contrasts=contrasts)
                       a3<-lm(formula=dv~iv1+iv2,data=resultNormData,contrasts=contrasts)
-                      # fitted values due to iv1:iv2
-                      a3d<-lmNorm$fitted.values-a3$fitted.values
-                      rIV1IV2unique<-sd(a3d)/totalSD * sign(cor(as.numeric(iv1)*as.numeric(iv2),a3d))
-                      rIV1IV2unique<-unr[4]* sign(cor(as.numeric(iv1)*as.numeric(iv2),a3d))
-                      
-                      # model without iv1
-                      a1<-lm(formula=dv~iv2+iv1:iv2,data=resultNormData,contrasts=contrasts)
-                      # fitted values due to iv1
-                      a1d<-lmNorm$fitted.values-a1$fitted.values
-                      rIV1unique<-sd(a1d)/totalSD * sign(cor(as.numeric(iv1),a1d))
-                      rIV1unique<-unr[2]* sign(cor(as.numeric(iv1),a1d))
-                      
-                      # model without iv2
-                      a2<-lm(formula=dv~iv1+iv1:iv2,data=resultNormData,contrasts=contrasts)
-                      # fitted values due to iv2
-                      a2d<-lmNorm$fitted.values-a2$fitted.values
-                      rIV2unique<-sd(a2d)/totalSD * sign(cor(as.numeric(iv2),a2d))
-                      rIV2unique<-unr[3]* sign(cor(as.numeric(iv2),a2d))
-
+                      anUnique<-Anova(lmNorm,test.statistic = "F")
                     },
                     "Categorical"={
                       lm1total<-glm(formula=dv~iv1,data=resultNormData,family="binomial")
                       lm2total<-glm(formula=dv~iv2,data=resultNormData,family="binomial")
                       lm12total<-glm(formula=dv~iv1:iv2,data=resultNormData,family="binomial")
-                      rIV1total<-model2effect(lm1total,DV$type,"iv1")
-                      rIV2total<-model2effect(lm2total,DV$type,"iv2")
-                      rIV1IV2total<-model2effect(lm12total,DV$type,"iv1:iv2")
-                      
-                      if (is.factor(iv1) && is.factor(iv2)) {
-                        c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv1)))]
-                        c <- -c
-                        rsign<-sign(cor(c,1:length(c)))
-                        rIV1IV2total<-abs(rIV1IV2total)*rsign
-                      }
-                      if (is.factor(iv1) && !is.factor(iv2)) {
-                        c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv1)))]
-                        rsign<-sign(cor(c,1:length(c)))
-                        rIV1IV2total<-abs(rIV1IV2total)*rsign
-                      }
-                      if (!is.factor(iv1) && is.factor(iv2)) {
-                        c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv2)))]
-                        rsign<-sign(cor(c,1:length(c)))
-                        rIV1IV2total<-abs(rIV1IV2total)*rsign
-                      }
-                      
-                      # get the unique effects
-                        # model without iv1:iv2
-                        a3<-glm(formula=dv~iv1+iv2,data=resultNormData,family="binomial")
-                        # fitted values due to iv1:iv2
-                        a3d<-lmNorm$fitted.values-a3$fitted.values
-                        rIV1IV2unique<-sd(a3d)/totalSD * sign(cor(as.numeric(iv1)*as.numeric(iv2),a3d))
-                        
-                        # model without iv1
-                        # fitted values due to iv1
-                        a1d<-a3$fitted.values-lm2total$fitted.values
-                        rIV1unique<-sd(a1d)/totalSD * sign(cor(as.numeric(iv1),a1d))
-                        
-                        # model without iv2
-                        # fitted values due to iv2
-                        a2d<-a3$fitted.values-lm1total$fitted.values
-                        rIV2unique<-sd(a2d)/totalSD * sign(cor(as.numeric(iv2),a2d))
-
-                      # # unique effect sizes
+                      a3<-glm(formula=dv~iv1+iv2,data=resultNormData,family="binomial")
                       anUnique<-Anova(lmNorm,test.statistic = "LR")
-                      rIV1unique<-sqrt(anUnique["iv1",]$`LR Chisq`/n) * sign(cor(as.numeric(iv1),a1d))
-                      rIV2unique<-sqrt(anUnique["iv2",]$`LR Chisq`/n) * sign(cor(as.numeric(iv2),a2d))
-                      rIV1IV2unique<-sqrt(anUnique["iv1:iv2",]$`LR Chisq`/n) * sign(cor(as.numeric(iv1)*as.numeric(iv2),a3d))
                     }
             )
+            
+            rIV1total<-model2effect(lm1total,DV$type,"iv1")
+            rIV2total<-model2effect(lm2total,DV$type,"iv2")
+            rIVIV2total<-model2effect(lm12total,DV$type,"iv1:iv2")
+            
+            if (is.factor(iv1) && is.factor(iv2)) {
+              c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv1)))]
+              c <- -c
+              rsign<-sign(cor(c,1:length(c)))
+              rIVIV2total<-abs(rIVIV2total)*rsign
+            }
+            if (is.factor(iv1) && !is.factor(iv2)) {
+              c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv1)))]
+              rsign<-sign(cor(c,1:length(c)))
+              rIVIV2total<-abs(rIVIV2total)*rsign
+            }
+            if (!is.factor(iv1) && is.factor(iv2)) {
+              c<-lm12total$coefficients[1+(1:length(levels(lm12total$model$iv2)))]
+              rsign<-sign(cor(c,1:length(c)))
+              rIVIV2total<-abs(rIVIV2total)*rsign
+            }
+            
+            # get the unique effects
+            # model without iv1:iv2
+            # fitted values due to iv1:iv2
+            a3d<-lmNorm$fitted.values-a3$fitted.values
+            a3c<-cor(as.numeric(iv1)*as.numeric(iv2),a3d)
+
+            # model without iv1
+            # fitted values due to iv1
+            a1d<-a3$fitted.values-lm2total$fitted.values
+            a1c<-cor(as.numeric(iv1),a1d)
+
+            # model without iv2
+            # fitted values due to iv2
+            a2d<-a3$fitted.values-lm1total$fitted.values
+            a2c<-cor(as.numeric(iv2),a2d)
+
+            # unique effect sizes
+            if (is.factor(dv)) {
+              rIV1unique<-sqrt(anUnique["iv1",1]/n) * sign(a1c)
+              rIV2unique<-sqrt(anUnique["iv2",1]/n) * sign(a2c)
+              rIVIV2unique<-sqrt(anUnique["iv1:iv2",1]/n) * sign(a3c)
+            } else {
+              rIV1unique<-sqrt(anUnique["iv1",1]/sum(anUnique[,1])) * sign(a1c)
+              rIV2unique<-sqrt(anUnique["iv2",1]/sum(anUnique[,1])) * sign(a2c)
+              rIVIV2unique<-sqrt(anUnique["iv1:iv2",1]/sum(anUnique[,1])) * sign(a3c)
+            }
 
             r.direct<-c(result$rIV,result$rIV2,result$rIVIV2DV)
-            r.unique<-c(rIV1unique,rIV2unique,rIV1IV2unique)
-            r.total<-c(rIV1total,rIV2total,rIV1IV2total)
+            r.unique<-c(rIV1unique,rIV2unique,rIVIV2unique)
+            r.total<-c(rIV1total,rIV2total,rIVIV2total)
           }
           }
   )
