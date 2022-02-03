@@ -153,9 +153,9 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
              sNStrata=5, sRStrata=2,
-             sNCluster=5, sRCluster=0.2,
-             sNConvenience=1, sRConvenience=0.2, sNCConvenience=5, sRCConvenience=0.2, sRCSConvenience=0.5,
-             sNCSnowball=2, sNSSnowball=2, sRCSnowball=0.2, sRSSnowball=0.1, sDSnowball=0.5
+             sNCluster=5,     sRCluster=0.7,
+             sNConvenience=1, sRConvenience=0.7, sNCConvenience=5, sRCConvenience=0.7, sRCSConvenience=0.5,
+             sNCSnowball=2,   sRCSnowball=0.7,   sNSSnowball=2,    sRSSnowball=0.7,    sRCSSnowball=0.1
 )    
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")

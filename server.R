@@ -852,7 +852,7 @@ shinyServer(function(input, output, session) {
                    sNStrata=input$sNStrata, sRStrata=input$sRStrata,
                    sNCluster=input$sNCluster, sRCluster=input$sRCluster,
                    sNConvenience=input$sNConvenience, sRConvenience=input$sRConvenience, sNCConvenience=input$sNCConvenience, sRCConvenience=input$sRCConvenience, sRCSConvenience=input$sRCSConvenience,
-                   sNCSnowball=input$sNCSnowball, sRCSnowball=input$sRCSnowball, sNSSnowball=input$sNSSnowball, sRSSnowball=input$sRSSnowball, sDSnowball=input$sDSnowball
+                   sNCSnowball=input$sNCSnowball, sRCSnowball=input$sRCSnowball, sNSSnowball=input$sNSSnowball, sRSSnowball=input$sRSSnowball, sRCSSnowball=input$sRCSSnowball
       )
       if (debug) print("     updateDesign - exit")
       design

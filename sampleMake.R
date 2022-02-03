@@ -94,14 +94,14 @@ makeSampleVar<-function(design,n,MV){
               ivr1<-c()
               dvr1_m<-c()
               dvr1_s<-c()
-              
+
               cluster_centre_sd<-sqrt(1-design$sRCSnowball^2)
               for (i in 1:design$sNConvenience) {
                 # location of cluster
                 x_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 y_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 
-                contact_centre_sd<-sqrt((1-design$sRCSnowball^2) - (design$sRCSnowball*design$sRCSnowball)^2)
+                contact_centre_sd<-sqrt((1-design$sRCSnowball^2) - (design$sRCSnowball*design$sRSSnowball)^2)
                 for (j in 1:design$sNCConvenience) {
                   # location of contact group
                   x_contact_centre<-rnorm(1,x_cluster_centre,contact_centre_sd) 
@@ -112,11 +112,11 @@ makeSampleVar<-function(design,n,MV){
                   x_new<-x_contact_centre
                   y_new<-y_contact_centre
                   for (k in 1:dens) {
-                    x_new<-x_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball)
-                    y_new<-y_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball)
+                    x_new<-x_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
+                    y_new<-y_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
                     ivr1<-c(ivr1,x_new)
                     dvr1_m<-c(dvr1_m,y_new)
-                    dvr1_s<-c(dvr1_s,design$sRCSnowball*design$sRSSnowball)
+                    dvr1_s<-c(dvr1_s,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
                   }
                 }
               }
@@ -125,7 +125,6 @@ makeSampleVar<-function(design,n,MV){
               ivr1<-ivr1[use]
               dvr1_m<-dvr1_m[use]
               dvr1_s<-dvr1_s[use]
-              
             },
     )
     if (design$sRangeOn && ((design$sIVRange[1]>-fullRange) || (design$sIVRange[2]<fullRange))) {
