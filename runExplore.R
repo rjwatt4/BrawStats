@@ -45,7 +45,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
               vals<-round(seq(min_n,max_n,length.out=npoints))
             }
           },
-          "Method"={vals<-c("Random","Opportunity")},
+          "Method"={vals<-c("Random","Stratified","Cluster","Convenience","Snowball")},
           "Usage"={vals<-c("Between","Within")},
           "Dependence"={vals<-seq(0,anomaliesRange,length.out=npoints)},
           "Outliers"={vals<-seq(0,anomaliesRange,length.out=npoints)},

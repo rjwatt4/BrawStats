@@ -848,7 +848,12 @@ shinyServer(function(input, output, session) {
       if (debug) print("     updateDesign")
       design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
-                   sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering)
+                   sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering,
+                   sNStrata=input$sNStrata, sRStrata=input$sRStrata,
+                   sNCluster=input$sNCluster, sRCluster=input$sRCluster,
+                   sNConvenience=input$sNConvenience, sRConvenience=input$sRConvenience, sNCConvenience=input$sNCConvenience, sRCConvenience=input$sRCConvenience, sRCSConvenience=input$sRCSConvenience,
+                   sNCSnowball=input$sNCSnowball, sRCSnowball=input$sRCSnowball, sNSSnowball=input$sNSSnowball, sRSSnowball=input$sRSSnowball, sDSnowball=input$sDSnowball
+      )
       if (debug) print("     updateDesign - exit")
       design
     } 
@@ -1344,7 +1349,7 @@ shinyServer(function(input, output, session) {
     expectedResultNullHold<-reactiveValues()
     expectedResultNullHold$result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c())
     expectedResultNullHold$count<-0
-    
+
 
 # UI changes
     # go to the expected tabs 
@@ -1379,7 +1384,7 @@ shinyServer(function(input, output, session) {
       for (i in 1:expected$nsims) {
         expectedResultHold$result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,append,expectedResultHold$result)
         expectedResultHold$count<-length(expectedResultHold$result$rIV)
-        if (expected$Expected_type=="NHSTErrors"){
+        if (expected$type=="NHSTErrors"){
           expectedResultNullHold$result<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,1,append,expectedResultNullHold$result)
           expectedResultNullHold$count<-length(expectedResultNullHold$result$rIV)
         }
@@ -1409,7 +1414,8 @@ shinyServer(function(input, output, session) {
       effectNull$rIVIV2DV<-0
   
       expected<-updateExpected()
-
+      expectedResultHold$result$showType<-input$Effect_type
+      
       showProgress<-TRUE
       append<-expected$append
       if (showProgress) {showNotification(paste0(format(0),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
@@ -1427,6 +1433,7 @@ shinyServer(function(input, output, session) {
       }
       if (showProgress) {removeNotification(id = "counting")}
       expectedResultHold
+      
     })
 
 # Expected outputs
@@ -1440,8 +1447,7 @@ shinyServer(function(input, output, session) {
       design<-updateDesign()
       
       expected<-updateExpected()
-      expectedResultHold$result$showType<-input$Effect_type
-
+      
       if (expectedResultHold$count>1) {
         switch (input$Expected_type,
                 "EffectSize"=g<-r_plot(expectedResultHold$result),

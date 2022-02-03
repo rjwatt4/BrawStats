@@ -22,7 +22,7 @@ DesignTab <-
                                       tags$tr(
                                         tags$td(width = "30%", tags$div(style = localStyle, "Method:")),
                                         tags$td(width = "70%", 
-                                                selectInput("sMethod",label=NULL,c("Random","Opportunity","Resample"),
+                                                selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball","Resample"),
                                                             selected=design$sMethod,
                                                             selectize=FALSE)
                                         )
@@ -55,20 +55,20 @@ DesignTab <-
                            style = paste("background: ",subpanelcolours$designC,";"),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Dependence:")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Dependence:")),
+                                        tags$td(width = "60%", 
                                                 numericInput("sDependence",label=NULL,value=design$sDependence,min=0, max=1, step=0.1)
                                         )
                                       ),
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Outliers:")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Outliers:")),
+                                        tags$td(width = "60%", 
                                                 numericInput("sOutliers",label=NULL,value=design$sOutliers,min=0, max=1, step=0.1)
                                         )
                                       ),
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Limited Ranges:")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Limited Ranges:")),
+                                        tags$td(width = "60%", 
                                                 checkboxInput("sRangeOn",label=NULL,value=design$sRangeOn)
                                         )
                                       )
@@ -96,6 +96,97 @@ DesignTab <-
                            )
                          )
                 )
+                )
+                # options tab
+                ,tabPanel("#",id="DesignOptions",
+                          style = paste("background: ",subpanelcolours$designC),
+                          wellPanel(
+                            style = paste("background: ",subpanelcolours$designC,";"),
+                            conditionalPanel(condition="input.sMethod == 'Random'",
+                                             tags$table(width = "100%",class="myTable",
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Random:")),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "100%", tags$div(style = localPlainStyle, "no options")),
+                                                        ))),
+                            conditionalPanel(condition="input.sMethod == 'Stratified'",
+                                             tags$table(width = "100%",class="myTable",
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Stratified:")),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "number:")),
+                                                          tags$td(width = "50%",numericInput("sNStrata",label=NULL,value=design$sNStrata)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "range:")),
+                                                          tags$td(width = "50%",numericInput("sRStrata",label=NULL,value=design$sRStrata)),
+                                                        ))),
+                            conditionalPanel(condition="input.sMethod == 'Cluster'",
+                                             tags$table(width = "100%",class="myTable",
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Cluster:")),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster number:")),
+                                                          tags$td(width = "50%",numericInput("sNCluster",label=NULL,value=design$sNCluster)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster range:")),
+                                                          tags$td(width = "50%",numericInput("sRCluster",label=NULL,value=design$sRCluster)),
+                                                        ))),
+                            conditionalPanel(condition="input.sMethod == 'Convenience'",
+                                             tags$table(width = "100%",class="myTable",
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Convenience:")),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster number:")),
+                                                          tags$td(width = "50%",numericInput("sNConvenience",label=NULL,value=design$sNConvenience)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster range:")),
+                                                          tags$td(width = "50%",numericInput("sRConvenience",label=NULL,value=design$sRConvenience)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "contacts number:")),
+                                                          tags$td(width = "50%",numericInput("sNCConvenience",label=NULL,value=design$sNCConvenience)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "contacts range:")),
+                                                          tags$td(width = "50%",numericInput("sRCConvenience",label=NULL,value=design$sRCConvenience)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "spread range:")),
+                                                          tags$td(width = "50%",numericInput("sRCSConvenience",label=NULL,value=design$sRCSConvenience)),
+                                                        ))),
+                            conditionalPanel(condition="input.sMethod == 'Snowball'",
+                                             tags$table(width = "100%",class="myTable",
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Snowball:")),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster number:")),
+                                                          tags$td(width = "50%",numericInput("sNCSnowball",label=NULL,value=design$sNCSnowball)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "cluster range:")),
+                                                          tags$td(width = "50%",numericInput("sRCSnowball",label=NULL,value=design$sRCSnowball)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "number seeds:")),
+                                                          tags$td(width = "50%",numericInput("sNSSnowball",label=NULL,value=design$sNSSnowball)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "seed range:")),
+                                                          tags$td(width = "50%",numericInput("sRSSnowball",label=NULL,value=design$sRSSnowball)),
+                                                        ),
+                                                        tags$tr(
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "dependence:")),
+                                                          tags$td(width = "50%",numericInput("sDSnowball",label=NULL,value=design$sDSnowball)),
+                                                        ))),
+                          )
                 )
                 # help tab
                 ,tabPanel(helpChar,value="?",

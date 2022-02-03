@@ -9,7 +9,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   
   vals<-exploreResult$vals
   if (is.character(vals[1])){
-    vals<-factor(vals,levels=vals)
+    vals<-1:length(vals)
     doLine=FALSE
   } else {doLine=TRUE}
   
@@ -355,6 +355,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       jk<-valsGap
     }
     g<-g+scale_x_continuous(breaks=c(tk,tk+jk,tk+jk*2),labels=c(tk,tk,tk),limits=c(tk[1],1+jk*2)+c(-1,1)*0.25)
+  } else {
+    g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
   }
   
   if (explore$full_ylim){

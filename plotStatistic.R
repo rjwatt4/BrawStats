@@ -180,7 +180,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
 
     ylim<-c(-1, 1)
     ysc=1
-    
+
   if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
     xoff=0
     rs<-result$rIV
@@ -226,7 +226,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)*xoff[2]/2
+        xr<-runif(nrow(rs),min=-1,max=1)*length(xoff)/2
       }
       else {
         rvals<-rs[i]
@@ -374,7 +374,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)*xoff[2]/2
+        xr<-runif(nrow(rs),min=-1,max=1)*length(xoff)/2
       }
       else {
         rvals<-rs[i]
