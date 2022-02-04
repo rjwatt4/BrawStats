@@ -88,25 +88,9 @@ shinyServer(function(input, output, session) {
     }
     
     if (quickHypos) {
-      # control-alt-n set sample size to big (500)
+      # control-alt-n set sample size to big (1000)
       if (input$keypress==78 && controlKeyOn && altKeyOn){
         updateNumericInput(session,"sN",value=1000)    
-      }
-      
-      # control-alt-e set effects to test case
-      if (input$keypress==69 && controlKeyOn && altKeyOn){
-        updateNumericInput(session,"rIV",value=0.3)    
-        updateNumericInput(session,"rIV2",value=-0.3)    
-        updateNumericInput(session,"rIVIV2",value=0.0)    
-        updateNumericInput(session,"rIVIV2DV",value=0.5)    
-      }
-      
-      # control-alt-f set effects to test case
-      if (input$keypress==69 && controlKeyOn && altKeyOn){
-        updateNumericInput(session,"rIV",value=0.2)    
-        updateNumericInput(session,"rIV2",value=0.4)    
-        updateNumericInput(session,"rIVIV2",value=-0.8)    
-        updateNumericInput(session,"rIVIV2DV",value=0.0)    
       }
       
       # control-alt-d do debug
@@ -268,15 +252,40 @@ shinyServer(function(input, output, session) {
 # QUICK HYPOTHESES
   
   observeEvent(input$Hypchoice,{
-
+    
     result<-getTypecombination(input$Hypchoice)
-
+    
     setIVanyway(result$IV)
     setIV2anyway(result$IV2)
     setDVanyway(result$DV)
-
+    
     # editVar$data<<-editVar$data+1
     
+  })
+  
+  observeEvent(input$Effectchoice,{
+    
+    switch (input$Effectchoice,
+            "e0"={
+              updateNumericInput(session,"rIV",value=0)    
+              updateNumericInput(session,"rIV2",value=0)    
+              updateNumericInput(session,"rIVIV2",value=0)    
+              updateNumericInput(session,"rIVIV2DV",value=0)    
+            },
+            "e1"={
+              updateNumericInput(session,"rIV",value=0.3)    
+              updateNumericInput(session,"rIV2",value=-0.3)    
+              updateNumericInput(session,"rIVIV2",value=0.0)    
+              updateNumericInput(session,"rIVIV2DV",value=0.5)    
+            },
+            "e2"={
+              updateNumericInput(session,"rIV",value=0.2)    
+              updateNumericInput(session,"rIV2",value=0.4)    
+              updateNumericInput(session,"rIVIV2",value=-0.8)    
+              updateNumericInput(session,"rIVIV2DV",value=0.0)    
+            }
+            )
+
   })
   
   

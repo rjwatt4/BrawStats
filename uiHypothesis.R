@@ -141,6 +141,22 @@ HypothesisTab <-
                                                 numericInput("Heteroscedasticity",label=NULL,value=effect$Heteroscedasticity,min=-2, max=2, step=0.1),
                                                 tags$td(width = "45%", tags$div(style = localStyle, " "))
                                         )
+                                      ),
+                                      tags$tr(
+                                        tags$td(width = "35%", 
+                                                conditionalPanel(condition="input.local == 'y'",
+                                                                 tags$div(style = localStyle, "Presets:")
+                                                                 )
+                                        ),
+                                        tags$td(width = "65%", 
+                                                conditionalPanel(condition="input.local == 'y'",
+                                                                 selectInput("Effectchoice", label = NULL,
+                                                                             choices=
+                                                                               list("zeroes"="e0","interaction"="e1","opposite"="e2"),
+                                                                             selected="none",
+                                                                             selectize=FALSE)
+                                                                 )
+                                        ),
                                       )
                            ),
                            width="100%"
