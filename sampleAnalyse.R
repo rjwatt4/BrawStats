@@ -1,13 +1,57 @@
 model2effect<-function(mF,DVvarType,variable=NULL){
   switch (DVvarType,
-          "Interval"=     r<-lm2effect(mF,variable),
-          "Ordinal"=      r<-lm2effect(mF,variable),
-          "Categorical"=  r<-glm2effect(mF,variable)
+          "Interval"=     {
+            m2effect<-lm2effect
+            predict.m<-predict.lm
+            },
+          "Ordinal"=      {
+            m2effect<-lm2effect
+            predict.m<-predict.lm
+          },
+          "Categorical"=  {
+            m2effect<-glm2effect
+            predict.m<-predict.glm
+          },
   )
+  r<-m2effect(mF,variable)
   if (is.null(variable)){
     r
   } else {
-    r*signEffect(mF,variable)
+    # one IV ?
+    if (is.null(mF$model$iv1)||is.null(mF$model$iv2)) {
+      if (is.factor(mF$model[,variable])) {
+        d<-data.frame(a=levels(mF$model[,variable]))
+      } else {
+        d<-data.frame(a=c(-1,1))
+      }
+      names(d)[1]<-variable
+      v<-predict.m(mF,d)
+      r<-r*sign(mean(diff(v)))
+    } else {
+      # interaction here
+      if (is.factor(mF$model$iv1)) {
+        d1<-levels(mF$model$iv1)
+      } else {
+        d1<-c(-1,1)
+      }
+      if (is.factor(mF$model$iv2)) {
+        d2<-levels(mF$model$iv2)
+      } else {
+        d2<-c(-1,1)
+      }
+      
+      w1<-seq(-1,1,length.out=length(d1))
+      w2<-seq(-1,1,length.out=length(d2))
+      w<-meshgrid(w1,w2)
+      w<-w$X*w$Y
+      
+      d<-expand.grid(d1,d2)
+      v<-predict.m(mF,data.frame(iv1=d$Var1,iv2=d$Var2))
+      v<-matrix(v,nrow=length(d1),ncol=length(d2))
+      
+      r<-r*sign(cor(c(v),c(w)))
+    }
+    r
   }
 }
 
@@ -35,23 +79,27 @@ glm2effect<-function(glmNorm,variable) {
 }
 
 signEffect<-function(mF,variable){
+  print(mF)
   nm<-names(mF$coefficients)
   switch (variable,
           "iv1"= {
             use<-grepl("iv1[^:]{1}",nm) | grepl("iv1$",nm)
+            if (is.factor(mF$model$iv1)) {use<-c(which(use),1)}
           },
           "iv2"= {
             use<-grepl("iv2[^:]{1}",nm) | grepl("iv2$",nm)
+            if (is.factor(mF$model$iv2)) {use<-c(which(use),1)}
           },
           "iv1:iv2"={
             use<-grepl("iv1[^:]*:iv2[^:]*",nm)
           }
   )
-  c<-mF$coefficients[use]
-  if (length(c)>1) {
-    sign(mean(diff(c),na.rm=TRUE))
+  
+  cc<-mF$coefficients[use]
+  if (length(cc)>1) {
+    sign(mean(diff(cc),na.rm=TRUE))
   } else {
-    sign(c)
+    sign(cc)
   }
 }
 
@@ -382,46 +430,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
       
     }
   }
-  # if (showProgress) {removeNotification(id = "counting")}
-  
-  # if (appendData){
-  #   main_res$rIV<-rbind(expectedResultHold$rIV,main_res$rIV)
-  #   main_res$pIV<-rbind(expectedResultHold$pIV,main_res$pIV)
-  #   main_res$nval<-rbind(expectedResultHold$nval,main_res$nval)
-  #   if (!is.null(IV2)){
-  #     main_res$rIV2<-rbind(expectedResultHold$rIV2,main_res$rIV2)
-  #     main_res$pIV2<-rbind(expectedResultHold$pIV2,main_res$pIV2)
-  #     main_res$rIVIV2DV<-rbind(expectedResultHold$rIVIV2DV,main_res$rIVIV2DV)
-  #     main_res$pIVIV2DV<-rbind(expectedResultHold$pIVIV2DV,main_res$pIVIV2DV)
-  #     
-  #     main_res$r$direct<-rbind(expectedResultHold$r$direct,main_res$r$direct)
-  #     main_res$r$unique<-rbind(expectedResultHold$r$unique,main_res$r$unique)
-  #     main_res$r$total<-rbind(expectedResultHold$r$total,main_res$r$total)
-  #     main_res$r$coefficients<-rbind(expectedResultHold$r$coefficients,main_res$r$coefficients)
-  #     
-  #     main_res$p$direct<-rbind(expectedResultHold$p$direct,main_res$p$direct)
-  #     main_res$p$unique<-rbind(expectedResultHold$p$unique,main_res$p$unique)
-  #     main_res$p$total<-rbind(expectedResultHold$p$total,main_res$p$total)
-  #     
-  #   } else {
-  #     main_res$rIV2<-rbind(expectedResultHold$rIV2,0)
-  #     main_res$pIV2<-rbind(expectedResultHold$pIV2,1)
-  #     main_res$rIVIV2DV<-rbind(expectedResultHold$rIVIV2DV,0)
-  #     main_res$pIVIV2DV<-rbind(expectedResultHold$pIVIV2DV,1)
-  #     
-  #     main_res$r$direct<-rbind(expectedResultHold$r$direct,main_res$rIV)
-  #     main_res$r$unique<-rbind(expectedResultHold$r$unique,main_res$rIV)
-  #     main_res$r$total<-rbind(expectedResultHold$r$total,main_res$rIV)
-  #     main_res$r$coefficients<-rbind(main_res$r$coefficients,as.double(res$uModel$coefficients)[2:length(res$uModel$coefficients)])
-  #     
-  #     main_res$p$direct<-rbind(expectedResultHold$p$direct,main_res$pIV)
-  #     main_res$p$unique<-rbind(expectedResultHold$p$unique,main_res$pIV)
-  #     main_res$p$total<-rbind(expectedResultHold$p$total,main_res$pIV)
-  #   }
-  # }  
   main_res$showType<-evidence$showType
-  # expectedResult<-list(rval=rvals,pval=pvals,nval=nvals)
-  # expectedResultHold$result<<-main_res
   main_res
 }
 
@@ -524,7 +533,11 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 lmRaw3<-lmRaw
               }
             } else{ lmRaw3<-lmRaw}
+            if (is.null(IV2)) {
+              lmNorm<-lm(formula=formula,data=resultNormData)
+            } else {
             lmNorm<-lm(formula=formula,data=resultNormData,contrasts=contrasts)
+            }
             testMethod<-"F"
             testMethod3<-"F"
             pcol=4;prow=2;
@@ -626,10 +639,10 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
             switch (DV$type,
                     "Interval"={
                       # total effect sizes
-                      lm1total<-lm(formula=dv~iv1,data=resultNormData,contrasts=list(iv1=contr.sum))
-                      lm2total<-lm(formula=dv~iv2,data=resultNormData,contrasts=list(iv2=contr.sum))
-                      lm12total<-lm(formula=dv~iv1:iv2,data=resultNormData,contrasts=contrasts)
-                      a3<-lm(formula=dv~iv1+iv2,data=resultNormData,contrasts=contrasts)
+                      lm1total<-lm(formula=dv~iv1,data=resultNormData)
+                      lm2total<-lm(formula=dv~iv2,data=resultNormData)
+                      lm12total<-lm(formula=dv~iv1:iv2,data=resultNormData)
+                      a3<-lm(formula=dv~iv1+iv2,data=resultNormData)
                       anUnique<-Anova(lmNorm,test.statistic = "F")
                     },
                     "Categorical"={

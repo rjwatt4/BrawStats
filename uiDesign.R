@@ -22,7 +22,7 @@ DesignTab <-
                                       tags$tr(
                                         tags$td(width = "30%", tags$div(style = localStyle, "Method:")),
                                         tags$td(width = "70%", 
-                                                selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball","Resample"),
+                                                selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball"),
                                                             selected=design$sMethod,
                                                             selectize=FALSE)
                                         )

@@ -48,7 +48,22 @@ HypothesisTab <-
                                         )),
                                         tags$td(width = "25%", actionButton("editDV","Edit DV")),
                                         tags$td(width = "25%", actionButton("hypothesisApply","Apply"))
-                                        )
+                                        ),
+                                      conditionalPanel(condition="false",selectInput("local",label=NULL,choices=c("y","n"),selected=quickHypos)),
+                                      tags$tr(
+                                                         tags$td(width = "5%", 
+                                                                 conditionalPanel(condition="input.local == 'y'",
+                                                                                  tags$div(style = localStyle, "Hypothesis:"))
+                                                         ),
+                                                         tags$td(width = "45%", 
+                                                                 conditionalPanel(condition="input.local == 'y'",
+                                                                                  selectInput("Hypchoice", label = NULL,
+                                                                                            choices=
+                                                                                              list("ii"="ii","ci"="ci","io"="io","co"="co","ic"="ic","cc"="cc"," ","iii"="iii","cii"="cii","ici"="ici","cci"="cci","  ","iic"="iic","cic"="cic","icc"="icc","ccc"="ccc"),
+                                                                                            selected="none",
+                                                                                            selectize=FALSE))
+                                                         ),
+                                      )
                            ),
                            width="100%"
                          )
@@ -130,11 +145,11 @@ HypothesisTab <-
                            ),
                            width="100%"
                          )
-                )
+                ),
                 # help tab
-                ,tabPanel(helpChar,value="?",
+                tabPanel(helpChar,value="?",
                           style = paste("background: ",subpanelcolours$hypothesisC),
-                          wellPanel(
+                         wellPanel(
                             style = paste("background: ",subpanelcolours$hypothesisC,";"),
                             tags$table(width = "100%",class="myTable",
                                        tags$tr(

@@ -39,4 +39,10 @@ warn3Cat2<-FALSE
 warnOrd<-FALSE
 warn3Ord<-FALSE
 
+is_local <- Sys.getenv('SHINY_PORT') == ""
+if (is_local) {
+  quickHypos<-"y"
+} else {
+  quickHypos<-"n"
+}
 

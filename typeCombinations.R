@@ -1,15 +1,15 @@
-get2combination<-function(keypress) {
-  
+getTypecombination<-function(HypType) {
+
   IV<-variables[1,]
   IV2<-variables[2,]
   DV<-variables[3,]
-  switch (keypress-48,
-          { #print(1)
+  switch (HypType,
+    "ii"={ #print(1)
             IV$type<-"Interval"
             DV$type<-"Interval"
             IV2$name<-"none"
           },
-          { #print(2)
+    "ci"={ #print(2)
             IV$type<-"Categorical"
             IV$ncats<-3
             IV$cases<-"C1,C2,C3"
@@ -17,12 +17,12 @@ get2combination<-function(keypress) {
             DV$type<-"Interval"
             IV2$name<-"none"
           },
-          { #print(3)
+    "io"={ #print(3)
             IV$type<-"Interval"
             DV$type<-"Ordinal"
             IV2$name<-"none"
           },
-          { #print(4)
+    "co"={ #print(4)
             IV$type<-"Categorical"
             IV$ncats<-3
             IV$cases<-"C1,C2,C3"
@@ -30,12 +30,12 @@ get2combination<-function(keypress) {
             DV$type<-"Ordinal"
             IV2$name<-"none"
           },
-          { #print(5)
+    "ic"={ #print(5)
             IV$type<-"Interval"
             DV$type<-"Categorical"
             IV2$name<-"none"
           },
-          { #print(6)
+    "cc"={ #print(6)
             IV$type<-"Categorical"
             IV$ncats<-3
             IV$cases<-"C1,C2,C3"
@@ -43,24 +43,13 @@ get2combination<-function(keypress) {
             DV$type<-"Categorical"
             IV2$name<-"none"
           },
-  )
-  result<-list(IV=IV, IV2=IV2, DV=DV)
-}
-
-
-get3combination<-function(keypress) {
-
-    IV<-variables[1,]
-    IV2<-variables[2,]
-    IV2$name<-"IV2"
-    DV<-variables[3,]
-    switch (keypress-48,
-            { #print(11)
+    
+       "iii"={ #print(11)
               IV$type<-"Interval"
               IV2$type<-"Interval"
               DV$type<-"Interval"
             },
-            { #print(12)
+       "cii"={ #print(12)
               IV$type<-"Categorical"
               IV$ncats<-3
               IV$cases<-"C1,C2,C3"
@@ -68,7 +57,7 @@ get3combination<-function(keypress) {
               IV2$type<-"Interval"
               DV$type<-"Interval"
             },
-            { #print(13)
+       "ici"={ #print(13)
               IV$type<-"Interval"
               IV2$type<-"Categorical"
               IV2$ncats<-3
@@ -76,7 +65,7 @@ get3combination<-function(keypress) {
               IV2$proportions<-"1,1,1"
               DV$type<-"Interval"
             },
-            { #print(14)
+       "cci"={ #print(14)
               IV$type<-"Categorical"
               IV$ncats<-3
               IV$cases<-"C1,C2,C3"
@@ -87,7 +76,7 @@ get3combination<-function(keypress) {
               IV2$proportions<-"1,1,1"
               DV$type<-"Interval"
             },
-            { #print(15)
+       "iic"={ #print(15)
               IV$type<-"Interval"
               IV2$type<-"Interval"
               DV$type<-"Categorical"
@@ -95,7 +84,7 @@ get3combination<-function(keypress) {
               DV$cases<-"E1,E2"
               DV$proportions<-"1,1"
             },
-            { #print(16)
+       "cic"={ #print(16)
               IV$type<-"Categorical"
               IV$ncats<-3
               IV$cases<-"C1,C2,C3"
@@ -106,7 +95,7 @@ get3combination<-function(keypress) {
               DV$cases<-"E1,E2"
               DV$proportions<-"1,1"
             },
-            { #print(17)
+       "icc"={ #print(17)
               IV$type<-"Interval"
               IV2$type<-"Categorical"
               IV2$ncats<-3
@@ -117,7 +106,7 @@ get3combination<-function(keypress) {
               DV$cases<-"E1,E2"
               DV$proportions<-"1,1"
             },
-            { #print(18)
+       "ccc"={ #print(18)
               IV$type<-"Categorical"
               IV$ncats<-3
               IV$cases<-"C1,C2,C3"

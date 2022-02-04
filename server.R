@@ -58,7 +58,8 @@ shinyServer(function(input, output, session) {
 
 ####################################
 #KEYBOARD: capture keyboard events
-  
+
+  # observeEvent(input$local, {print(input$local)})
 
   keyrespond<-observeEvent(input$pressedKey,{
      # print(input$keypress)
@@ -87,30 +88,6 @@ shinyServer(function(input, output, session) {
     }
     
     if (quickHypos) {
-    # control-1-6 set 2 variable types
-    if (input$keypress>=49 && input$keypress<=54 && controlKeyOn && altKeyOn && !shiftKeyOn){
-      updateCheckboxInput(session,"hidden",value=FALSE)
-      result<-get2combination(input$keypress)
-      setIVanyway(result$IV)
-      setIV2anyway(result$IV2)
-      setDVanyway(result$DV)
-      editVar$data<<-editVar$data+1
-    }
-    
-    # control-shift-1-8 set 3 variable types
-    if (input$keypress>=49 && input$keypress<=56 && controlKeyOn && altKeyOn && shiftKeyOn){
-      updateCheckboxInput(session,"hidden",value=FALSE)
-      beforeIVs<-input$IV2choice
-      
-      result<-get3combination(input$keypress)
-      setIV2anyway(result$IV2)
-      setIVanyway(result$IV)
-      setDVanyway(result$DV)
-      if (beforeIVs==IV2$name) {
-      editVar$data<<-editVar$data+1
-      }
-    }
-    
       # control-alt-n set sample size to big (500)
       if (input$keypress==78 && controlKeyOn && altKeyOn){
         updateNumericInput(session,"sN",value=1000)    
@@ -193,6 +170,8 @@ shinyServer(function(input, output, session) {
     if (input$keypress==16) shiftKeyOn<<-FALSE
   })
 
+  
+  
 ####################################
 # other housekeeping
   observeEvent(input$allScatter,{
@@ -284,6 +263,23 @@ shinyServer(function(input, output, session) {
                         }
                  )
                  })
+
+####################################
+# QUICK HYPOTHESES
+  
+  observeEvent(input$Hypchoice,{
+
+    result<-getTypecombination(input$Hypchoice)
+
+    setIVanyway(result$IV)
+    setIV2anyway(result$IV2)
+    setDVanyway(result$DV)
+
+    # editVar$data<<-editVar$data+1
+    
+  })
+  
+  
 ####################################
 # VARIABLES  
   # make basic variables    
