@@ -143,11 +143,16 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y50<-c()
               y25<-c()
               y75<-c()
+              y62<-c()
+              y38<-c()
               for (i in 1:length(exploreResult$vals)){
                 p<-mean(pVals[,i]<alpha,na.rm=TRUE)
+                p_se<-sqrt(p*(1-p)/length(pVals[,i]))
                 y50[i]<-p
-                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
-                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                y75[i]<-p+p_se*qnorm(0.75)
+                y25[i]<-p+p_se*qnorm(0.25)
+                y62[i]<-p+p_se*qnorm(0.625)
+                y38[i]<-p+p_se*qnorm(0.375)
               }
               lines<-c(0.05,0.8)
               if (is.null(IV2)){
@@ -189,11 +194,15 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     if (is.element(explore$Explore_show,c("EffectSize","p","w"))) {
       quants<-explore$Explore_quants/2
       y75<-c()
+      y62<-c()
       y50<-c()
+      y38<-c()
       y25<-c()
       for (i in 1:length(exploreResult$vals)) {
         y75[i]<-quantile(showVals[,i],0.50+quants,na.rm=TRUE)
+        y62[i]<-quantile(showVals[,i],0.50+quants/2,na.rm=TRUE)
         y50[i]<-quantile(showVals[,i],0.50,na.rm=TRUE)
+        y38[i]<-quantile(showVals[,i],0.50-quants/2,na.rm=TRUE)
         y25[i]<-quantile(showVals[,i],0.50-quants,na.rm=TRUE)
       }
     }
@@ -231,8 +240,10 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     } else {
       if (doLine) {
         pts1f<-data.frame(x=c(vals,rev(vals))+vals_offset,y=c(y25,rev(y75)))
+        pts2f<-data.frame(x=c(vals,rev(vals))+vals_offset,y=c(y38,rev(y62)))
         if (ni_max2==1 || !no_se_multiple) {
           g<-g+geom_polygon(data=pts1f,aes(x=x,y=y),fill=col,alpha=0.5)
+          g<-g+geom_polygon(data=pts2f,aes(x=x,y=y),fill=col,alpha=0.45)
         }
         g<-g+geom_line(data=pts1,aes(x=vals,y=y50),color="black")
       } else{
@@ -356,6 +367,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     }
     g<-g+scale_x_continuous(breaks=c(tk,tk+jk,tk+jk*2),labels=c(tk,tk,tk),limits=c(tk[1],1+jk*2)+c(-1,1)*0.25)
   } else {
+    if (is.character(exploreResult$vals[1]))
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
   }
   

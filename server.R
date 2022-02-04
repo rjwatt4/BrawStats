@@ -133,10 +133,7 @@ shinyServer(function(input, output, session) {
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
         
-        effect$rIVIV2=-0.8
-        effect$rIV=0.2
-        effect$rIV2=0.5
-        effect$rIVIV2DV=0.0
+        effect$rIVIV2=-0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
       }

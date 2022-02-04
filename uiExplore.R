@@ -27,6 +27,7 @@ hypothesisChoices=list("Variables"=list("IV" = "IV",
 variableChoices=list("& type"="Type",
                      "& skew"="skew",
                      "& kurtosis"="kurtosis",
+                     "& cats"="cats",
                      "& levels"="levels",
                      "& proptn"="prop"
 )
@@ -150,10 +151,14 @@ ExploreTab <-
                                                         selectInput("Explore_typeD",label=NULL,
                                                                     designChoices,selectize=FALSE)
                                                 ),
-                                                tags$td(id="Explore_nRangeLabel",width = "25%", tags$div(style = localStyle, "range:")),
+                                                tags$td(id="Explore_nRangeLabel",width = "25%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
+                                                                         tags$div(style = localStyle, "range:")
+                                                        )),
                                                 tags$td(width = "25%", 
-                                                        numericInput("Explore_nRange", label=NULL,value=250)
-                                                )
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
+                                                                         numericInput("Explore_nRange", label=NULL,value=250)
+                                                ))
                                               ),
                                               tags$tr(
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
