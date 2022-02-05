@@ -84,6 +84,19 @@ wellPanel(
                                     )
                          ))
               )
+              # options tab
+              ,tabPanel("#",value="#",
+                        style = paste("background: ",subpanelcolours$filesC),
+                        wellPanel(
+                          style = paste("background: ",subpanelcolours$filesC,";"),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "30%", checkboxInput("ImportOrdinals", value=FALSE, label=NULL)),
+                                       tags$td(width = "30%", numericInput("MaxOrdinals", value=9, label=NULL)),
+                                     )
+                          )
+                        )
+              )
               # help tab
               ,tabPanel(helpChar,value="?",
                         style = paste("background: ",subpanelcolours$filesC),

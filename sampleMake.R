@@ -357,7 +357,11 @@ makeSample<-function(IV,IV2,DV,effect,design){
                iv<-ivr*IV$sd+IV$mu
              },
              "Categorical"={
-               breaks<-qnorm((0:IV$ncats)/IV$ncats)
+               ng<-IV$ncats
+               pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+               proportions<-c(0,pp)
+               breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=ivr*0
                for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
                iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
@@ -370,7 +374,11 @@ makeSample<-function(IV,IV2,DV,effect,design){
                iv2<-iv2r*IV2$sd+IV2$mu
              },
              "Categorical"={
-               breaks<-qnorm((0:IV2$ncats)/IV2$ncats)
+               ng<-IV2$ncats
+               pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+               proportions<-c(0,pp)
+               breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=iv2r*0
                for (i in 1:IV2$ncats) {vals=vals+(iv2r>breaks[i])}
                iv2<-factor(vals,levels=1:IV2$ncats,labels=IV2$cases)
@@ -459,7 +467,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
         if (DV$type=="Interval"){
           mn1=mean(dv[use1])
           sd1=sd(dv[use1])
-          xplot[use1]<-i-1+rnorm(length(xplot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
+          xplot[use1]<-i-1+rnorm(length(xplot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15*2*sum(use1)/length(xp)
         } else {
           xplot[use1]<-i-1+rnorm(length(xplot[use1]))*mean(use1)*0.3
         }

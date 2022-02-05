@@ -56,6 +56,11 @@ shinyServer(function(input, output, session) {
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
 
+  if (!showLikelihood) {
+    shinyjs::hideElement(id= "MainLikelihood")
+    hideTab("Graphs", "Possible", session)
+    hideTab("Reports", "Possible", session)
+  }
 ####################################
 #KEYBOARD: capture keyboard events
 
@@ -256,8 +261,9 @@ shinyServer(function(input, output, session) {
     setIV2anyway(result$IV2)
     setDVanyway(result$DV)
     
-    # editVar$data<<-editVar$data+1
-    
+    if (!is.null(IV2)) {
+    editVar$data<<-editVar$data+1
+    }    
   })
   
   observeEvent(input$Effectchoice,{
@@ -1045,6 +1051,7 @@ shinyServer(function(input, output, session) {
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
         # set the result into likelihood: populations
         updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
+        updateNumericInput(session,"likelihoodSampRhoS",value=result$rIV)
         
         result
       }
@@ -1452,10 +1459,10 @@ shinyServer(function(input, output, session) {
       
       if (expectedResultHold$count>1) {
         switch (input$Expected_type,
-                "EffectSize"=g<-r_plot(expectedResultHold$result),
-                "Power"=     g<-w_plot(expectedResultHold$result),
-                "NHSTErrors"=g<-e2_plot(expectedResultHold$result),
-                "CILimits"=  g<-ci1_plot(expectedResultHold$result)
+                "EffectSize"=g<-r_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "Power"=     g<-w_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "NHSTErrors"=g<-e2_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "CILimits"=  g<-ci1_plot(expectedResultHold$result,r=effect$rIV,n=design$sN)
                 # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"r"),
                 # "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"w"),
                 # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"e2"),
@@ -1483,10 +1490,10 @@ shinyServer(function(input, output, session) {
         {return(ggplot()+plotBlankTheme)}
       if (expectedResultHold$count>1) {
         switch (input$Expected_type,
-                "EffectSize"=g<-p_plot(expectedResultHold$result),
-                "Power"=     g<-nw_plot(expectedResultHold$result),
-                "NHSTErrors"=g<-e1_plot(expectedResultHold$result),
-                "CILimits"=  g<-ci2_plot(expectedResultHold$result)
+                "EffectSize"=g<-p_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "Power"=     g<-nw_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "NHSTErrors"=g<-e1_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
+                "CILimits"=  g<-ci2_plot(expectedResultHold$result,r=effect$rIV,n=design$sN)
                 # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"p"),
                 #   "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"nw"),
                 # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultNullHold$result,"e1"),
@@ -1748,25 +1755,21 @@ shinyServer(function(input, output, session) {
       
       switch (input$Likelihood,
               "Populations"={
-                if (validExpected) {
-                  expectedResult<-expectedAnalysis()
-                  sampleES<-expectedResult$rIV
-                } 
                 list(type=input$Likelihood,
                      populationDist=input$Population_distrP, populationDistK=input$Population_distr_kP,
                      sampleES=sampleES,populationES=effect$rIV,
                      showTheory=input$likelihoodTheoryP,appendSim=input$likelihoodAppendP,
-                     Likelihood_length=as.numeric(input$likelihood_lengthP),
-                     view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
+                     Likelihood_length=as.numeric(input$likelihood_lengthP)
+                     # view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
                 )
               },
               "Samples"={
                 list(type=input$Likelihood,
-                     populationDist=input$Population_distrS, populationDistK=input$Population_distr_kS,
+                     populationDist="Uniform", populationDistK=0,
                      sampleES=sampleES,populationES=input$likelihoodPopRho,
                      showTheory=input$likelihoodTheoryS,appendSim=input$likelihoodAppendS,
-                     Likelihood_length=as.numeric(input$likelihood_lengthS),
-                     view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
+                     Likelihood_length=as.numeric(input$likelihood_lengthS)
+                     # view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
                 )
               }
       )
@@ -1813,6 +1816,10 @@ shinyServer(function(input, output, session) {
       likelihood<-updateLikelihood()
       likelihoodResult<-likelihoodAnalysis()
 
+      likelihood$view<-input$LikelihoodView
+      likelihood$azimuth<-input$LikelihoodAzimuth
+      likelihood$elevation<-input$LikelihoodElevation
+      likelihood$range<-input$LikelihoodRange
       drawLikelihood(Iv,DV,effect,design,likelihood,likelihoodResult)
       
     })
@@ -1842,7 +1849,7 @@ shinyServer(function(input, output, session) {
       keep<-!apply(is.na(raw_data),2,all)
       raw_data<-raw_data[,keep]
 
-      newVariables<-readSample(raw_data,header)
+      newVariables<-readSample(raw_data,input$ImportOrdinals,input$MaxOrdinals,header)
 
       # store the variables in global workspace
       if (mergeVariables){

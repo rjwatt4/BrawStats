@@ -76,6 +76,8 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
 # make the theoretical distribution        
   # samples
   rs<-seq(-1,1,length=200)    
+  rp<-seq(-1,1,length=200)    
+  
   dens_r1<-rSamplingDistr(rs,pRho,n)
   sDens_r<-dens_r1
   dr_gain<-max(sDens_r,na.rm=TRUE)
@@ -84,7 +86,6 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
   rs_stats<-densityFunctionStats(sDens_r,rs)
   
   # populations
-  rp<-seq(-1,1,length=200)    
   dens_r1<-1
   for (ei in 1:length(sRho)){
     dens_r1 <- dens_r1 * rSamplingDistr(rp,sRho[ei],n)
@@ -176,7 +177,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
           }
   )
 
-  likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,
+  likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,sr=sr,
                          rp=rp,rs=rs,pDens_r=pDens_r,sDens_r=sDens_r,
                          rp_sd=rp_stats$sd,rs_sd=rs_stats$sd,
                          rp_ci=rp_stats$ci$y,rs_ci=rs_stats$ci$y,
@@ -189,7 +190,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
                          rpSim_peak=rpSim_peak,rsSim_peak=rsSim_peak
   )
   } else{
-    likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,
+    likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,sr=NA,
                            rp=rp,rs=rs,pDens_r=pDens_r,sDens_r=sDens_r,
                            rp_sd=rp_stats$sd,rs_sd=rs_stats$sd,
                            rp_ci=rp_stats$ci$y,rs_ci=rs_stats$ci$y,

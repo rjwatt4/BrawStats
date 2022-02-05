@@ -1,7 +1,7 @@
 doLegendPoints=FALSE
 
 drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
-  
+
   showRawData<-(allScatter=="all")
   if (colindex==1)
           {  col<- plotcolours$descriptionC
@@ -33,6 +33,7 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
           },
           
           "Categorical Interval"={
+            pp<-CatProportions(IV)
             pts<-data.frame(IV=x+xoff,DV=y);
             if (showRawData) {
               if (colindex>=2) 

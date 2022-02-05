@@ -19,9 +19,9 @@ MainReports <-
                 ,tabPanel("Explore",value="Explore",
                           plotOutput("ExploreReport",height="5cm",width=panelWidth),
                           style =paste("background:", maincolours$graphC, ";"))
-                # ,tabPanel("Possible",value="Possible",
-                #           plotOutput("LikelihoodReport",height="5cm",width=panelWidth),
-                #           style =paste("background:", maincolours$graphC, ";"))
+                ,tabPanel("Possible",value="Possible",
+                          plotOutput("LikelihoodReport",height="5cm",width=panelWidth),
+                          style =paste("background:", maincolours$graphC, ";"))
     ),
     width="16cm"
   )

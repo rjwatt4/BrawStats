@@ -5,9 +5,9 @@ likelihoodLengthChoices=c("100" = "100",
 )
 LikelihoodTab <-
 
-wellPanel(
-  style = paste("background: ",panelcolours$likelihoodC), 
-  # h5("Evidence"),
+  wellPanel(ID="MainLikelihood",
+    style = paste("background: ",panelcolours$likelihoodC), 
+    # h5("Evidence"),
   fluidRow(headerText("Likelihood functions based on sample or population")),
   tabsetPanel(type="tabs",id="Likelihood",
               # single tab
@@ -21,36 +21,39 @@ wellPanel(
                        wellPanel(
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
                          tags$table(width = "100%",class="myTable",
-                                    tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Population Distrib:")),
-                                      tags$td(width = "30%", 
-                                              selectInput("Population_distrS", label=NULL,
-                                                          c("Uniform" = "Uniform",
-                                                            "Exp" = "Exp"),selectize=FALSE)
-                                      ),
-                                      tags$td(width = "20%", 
-                                              numericInput("Population_distr_kS",label=NULL,
-                                                           min = 0,
-                                                           max = 1,
-                                                           step = 0.05,
-                                                           value = 0.2)
-                                      )
-                                    ),
+                                    # tags$tr(
+                                    #   tags$td(width = "50%", tags$div(style = localStyle, "Population Distrib:")),
+                                    #   tags$td(width = "30%", 
+                                    #           selectInput("Population_distrS", label=NULL,
+                                    #                       c("Uniform" = "Uniform",
+                                    #                         "Exp" = "Exp"),selectize=FALSE)
+                                    #   ),
+                                    #   tags$td(width = "20%", 
+                                    #           numericInput("Population_distr_kS",label=NULL,
+                                    #                        min = 0,
+                                    #                        max = 1,
+                                    #                        step = 0.05,
+                                    #                        value = 0.2)
+                                    #   )
+                                    # ),
                                     tags$tr(
                                       tags$td(width = "50%", tags$div(style = localStyle, "Source Population:")),
                                       tags$td(width = "30%", numericInput("likelihoodPopRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
                                       tags$td(width = "20%")
                                     ),
+                                    tags$tr(
+                                      tags$td(width = "50%", tags$div(style = localStyle, "Target Sample:")),
+                                      tags$td(width = "30%", numericInput("likelihoodSampRhoS", label=NULL,min=-1,max=1, step=0.1,value=0)),
+                                      tags$td(width = "20%")
+                                    ),
                          ),
-                         conditionalPanel(condition="1==2",
                                           tags$table(width = "100%",class="myTable",
                                                      tags$tr(
                                       tags$td(width = "50%", tags$div(style = localStyle, "Show theory:")),
-                                      tags$td(width = "30%", checkboxInput("likelihoodTheoryS", value=TRUE, label=NULL)),
+                                      tags$td(width = "30%", checkboxInput("likelihoodTheoryS", value=FALSE, label=NULL)),
                                       tags$td(width = "20%")
                                     ),
-                         )),
-                         conditionalPanel(condition="1==2",
+                         ),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
@@ -62,7 +65,6 @@ wellPanel(
                                       tags$td(width = "10%", checkboxInput("likelihoodAppendS", label=NULL)),
                                       tags$td(width = "10%", actionButton("likelihoodRunS", "Run"))
                                     )
-                         )
                          )
                        )
               ),
@@ -78,12 +80,14 @@ wellPanel(
                                                           c("Uniform" = "Uniform",
                                                             "Exp" = "Exp"),selectize=FALSE)
                                       ),
+                                      conditionalPanel(condition="input.Population_distrP!='Uniform'",
                                       tags$td(width = "20%", 
                                               numericInput("Population_distr_kP",label=NULL,
                                                            min = 0,
                                                            max = 1,
                                                            step = 0.05,
                                                            value = 0.2)
+                                      )
                                       )
                                     ),
                                     tags$tr(
@@ -92,16 +96,14 @@ wellPanel(
                                       tags$td(width = "20%")
                                     ),
                          ),
-                         conditionalPanel(condition="1==2",
-                                          tags$table(width = "100%",class="myTable",
-                                                     tags$tr(
-                                                       tags$td(width = "50%", tags$div(style = localStyle, "Show theory:")),
-                                                       tags$td(width = "30%", checkboxInput("likelihoodTheoryP", value=TRUE, label=NULL)),
-                                                       tags$td(width = "20%")
-                                                     )
-                                          )),
-                         conditionalPanel(condition="1==2",
-                                          tags$table(width = "100%",class="myTable",
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "50%", tags$div(style = localStyle, "Show theory:")),
+                                      tags$td(width = "30%", checkboxInput("likelihoodTheoryP", value=FALSE, label=NULL)),
+                                      tags$td(width = "20%")
+                                    )
+                         ),
+                         tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "20%", 
@@ -112,7 +114,6 @@ wellPanel(
                                       tags$td(width = "10%", checkboxInput("likelihoodAppendP", label=NULL)),
                                       tags$td(width = "10%", actionButton("likelihoodRunP", "Run")),
                                     )
-                         )
                          )
                        )
               ),

@@ -32,6 +32,8 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")
 
+showLikelihood=TRUE
+
 fullRange<-3
 allScatter<-"all"
 

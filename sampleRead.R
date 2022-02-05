@@ -1,7 +1,8 @@
-readSample<-function(raw_data,header=c()){
+readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinals=9, header=c()){
   if (is.null(raw_data)) {return(NULL)}
   if (nrow(raw_data)==0) {return(NULL)}
-  
+
+
   if (is.null(header)) {
   vars<-colnames(raw_data)
   } else {
@@ -104,7 +105,7 @@ readSample<-function(raw_data,header=c()){
     } else {
       data<-sapply(data,as.numeric)
       importedData[[ivar+1]]<<-importedData[[i]]
-      if (all(data==round(data))) {
+      if (doOrdinals && all(data==round(data)) && all(data>=0) && max(data)<maxOrdinal) {
         vartype<-"Ordinal"
       } else {
         vartype<-"Interval"

@@ -45,7 +45,7 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
             lines(trans3d(x=c(0,0),y=c(-1,1),z=c(0,0),pmat=mapping),col="black",lty=3)
             lines(trans3d(x=c(-1,1),y=c(sRho,sRho),z=c(0,0),pmat=mapping),col=colS)
             lines(trans3d(x=c(pRho,pRho),y=c(-1,1),z=c(0,0),pmat=mapping),col=colP)
-            
+
             # make the back wall
             rpw<-seq(-1,1,length=200)
             rpw_dens<-populationDensityFunction(rpw,likelihood)
@@ -206,6 +206,12 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                   
                   polygon(x=x,y=y1,col=colS)
                   theoryAlpha=0.5
+                  
+                  lines(c(0,0)+abs(sRho),c(0,1),col="black")
+                  text(abs(sRho),1,format(mean(likelihoodResult$sr>abs(sRho)),digits=2),adj=c(0,1))
+                  lines(c(0,0)-abs(sRho),c(0,1),col="black")
+                  text(-abs(sRho),1,format(mean(likelihoodResult$sr<(-abs(sRho))),digits=2),adj=c(1,1))
+                  
                 }
               }
             }

@@ -167,7 +167,7 @@ shinyUI(fluidPage(
                          # Explore panel
                          ,ExploreTab
                          # Likelihood panel
-                         # ,LikelihoodTab
+                         ,LikelihoodTab
                          # Files panel
                          ,FilesTab
                      ),

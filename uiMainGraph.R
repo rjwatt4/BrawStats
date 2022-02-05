@@ -51,10 +51,10 @@ MainGraphs <-
                          plotOutput("ExplorePlot",height=panelHeight,width=panelWidth),
                          style =paste("background:", maincolours$graphC, ";")
                 )
-                # ,tabPanel("Possible",value="Possible",
-                #          plotOutput("LikelihoodPlot",height=panelHeight,width=panelWidth),
-                #          style =paste("background:", maincolours$graphC, ";")
-                # )
+                ,tabPanel("Possible",value="Possible",
+                         plotOutput("LikelihoodPlot",height=panelHeight,width=panelWidth),
+                         style =paste("background:", maincolours$graphC, ";")
+                )
     ),
     width="16cm"
   )

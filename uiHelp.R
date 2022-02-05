@@ -69,15 +69,12 @@ wellPanel(id="HelpTabset",
                            style = paste("background: ",subpanelcolours$simulateC,";"),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
-                                        tags$div(style = helpStyle,
-                                                 tags$br(HTML("<b>"),"Evidence:",HTML("</b>")),
-                                                 tags$br(HTML('&emsp;'), '1. Single: simulate a sample and analyse it'),
-                                                 tags$br(HTML('&emsp;'), '2. Multiple: run multiple samples to see variability'),
-                                        ),
-                                        tags$tr(
-                                          actionButton("testedOutputButton","test")
+                                                tags$div(style = helpStyle,
+                                                         tags$br(HTML("<b>"),"Evidence:",HTML("</b>")),
+                                                         tags$br(HTML('&emsp;'), '1. Single: simulate a sample and analyse it'),
+                                                         tags$br(HTML('&emsp;'), '2. Multiple: run multiple samples to see variability'),
+                                                )
                                         )
-                                      )
                            )
                          )
                 ),
