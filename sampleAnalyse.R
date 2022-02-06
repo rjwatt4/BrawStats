@@ -463,8 +463,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   
   n<-length(dv)
   resultRawData<-data.frame(participant=result$participant,iv1=iv1,iv2=iv2,dv=dv)
-  
-  
+
   # normalize variables
   # if (IV$type=="Interval")  iv1=(iv1-mean(iv1,na.rm=TRUE))/sd(iv1,na.rm=TRUE)
   # if (!is.null(IV2) && IV2$type=="Interval") iv2=(iv2-mean(iv2,na.rm=TRUE))/sd(iv2,na.rm=TRUE)

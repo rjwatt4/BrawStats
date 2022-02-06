@@ -219,7 +219,53 @@ makeSample<-function(IV,IV2,DV,effect,design){
         dv<-dv[!waste]
         id<-id[!waste]
 
-      
+      # any type conversions required?
+        if (is.numeric(iv) && IV$type=="Categorical") {
+          ivr<-iv
+          ng<-IV$ncats
+          pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+          if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+          proportions<-c(0,pp)
+          breaks<-qnorm(cumsum(proportions)/sum(proportions))
+          vals=ivr*0
+          for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
+          iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
+        } else {
+          if (!is.numeric(iv) && IV$type!="Categorical") {
+            iv<-as.numeric(iv)
+          }
+        }
+        if (is.numeric(iv2) && IV2$type=="Categorical") {
+          iv2r<-iv2
+          ng<-IV2$ncats
+          pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+          if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+          proportions<-c(0,pp)
+          breaks<-qnorm(cumsum(proportions)/sum(proportions))
+          vals=iv2r*0
+          for (i in 1:IV2$ncats) {vals=vals+(iv2r>breaks[i])}
+          iv12<-factor(vals,levels=1:IV2$ncats,labels=IV2$cases)
+        } else {
+          if (!is.numeric(iv2) && IV2$type!="Categorical") {
+            iv2<-as.numeric(iv2)
+          }
+        }
+        if (is.numeric(dv) && DV$type=="Categorical") {
+          dvr<-dv
+          ng<-DV$ncats
+          pp<-as.numeric(unlist(strsplit(DV$proportions,",")))
+          if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+          proportions<-c(0,pp)
+          breaks<-qnorm(cumsum(proportions)/sum(proportions))
+          vals=dvr*0
+          for (i in 1:DV$ncats) {vals=vals+(dvr>breaks[i])}
+          dv<-factor(vals,levels=1:DV$ncats,labels=DV$cases)
+        } else {
+          if (!is.numeric(dv) && DV$type!="Categorical") {
+            iv<-as.numeric(dv)
+          }
+        }
+        
       # save the result
       lastSample<<-list(participant=id, iv=iv, iv2=iv2, dv=dv)
       
@@ -417,7 +463,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       
     }
     } # end of simulate
-    
+
     switch(IV$type,
            "Interval"={
              IVs<-list(mu=mean(iv),sd=sd(iv),name=IV$name,type=IV$type,vals=iv)

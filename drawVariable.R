@@ -18,7 +18,6 @@ drawVar<-function(pts,var){
       theme(plot.margin=varplotMargins)+
     coord_cartesian(xlim = c(-1,1), ylim = c(0, 1))
   } else {
-  xlim<-c(-1,1)*3*var$sd+var$mu
   ggplot(pts,aes(x=r,y=dens))+geom_area(fill=plotcolours$sampleC)+
     # geom_line(lwd=0.5)+
     labs(x=var$name,y="")+
@@ -26,8 +25,7 @@ drawVar<-function(pts,var){
     theme(axis.text.y=element_blank(),
           axis.ticks.y=element_blank())+
     theme(plot.margin=varplotMargins)+
-    geom_line(aes(x=r,y=dens*0),color=plotcolours$sampleC,lwd=0.5)+
-    coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
+    geom_line(aes(x=r,y=dens*0),color=plotcolours$sampleC,lwd=0.5)
 }
 }
 
@@ -53,14 +51,16 @@ drawCategorical<-function(var){
   l=var$cases[1:ng]
   
   pts=data.frame(r=r,dens=dens)
+  xlim<-c(-ng-1,ng+1)
   drawVar(pts,var)+
-    scale_x_continuous(breaks=b,labels=l)
+    scale_x_continuous(breaks=b,labels=l)+
+    coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
   
 }
 
 drawOrdinal<-function(var){
   ng<-var$nlevs
-  r1<-c(-1, -1, 1, 1)*0.48
+  r1<-c(-1, -1, 1, 1)*0.49999999
   d1<-c(0,1,1,0)
   pp<-OrdProportions(var)
   b<-(1:ng)-(ng+1)/2
@@ -79,8 +79,12 @@ drawOrdinal<-function(var){
   l=1:ng
   
   pts=data.frame(r=r,dens=dens)
+  x1=r[1]
+  x2=r[length(r)]
+  xlim<-c(x1-(x2-x1)/10,x2+(x2-x1)/10)
   drawVar(pts,var)+
-    scale_x_continuous(breaks=b,labels=l)
+    scale_x_continuous(breaks=b,labels=l)+
+    coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
   
 }
 
@@ -97,7 +101,9 @@ drawInterval<-function(var){
   dens[1]=0; dens[length(dens)]=0
   
   pts=data.frame(r=r,dens=dens/max(dens))
-  drawVar(pts,var)
+  xlim<-c(-1,1)*3*var$sd+var$mu
+  drawVar(pts,var)+
+    coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
 }
 
 drawVariable<-function(var){

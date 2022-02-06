@@ -261,6 +261,8 @@ shinyServer(function(input, output, session) {
     setIV2anyway(result$IV2)
     setDVanyway(result$DV)
     
+    # 3 variable hypotheses look after themselves
+    #
     if (!is.null(IV2)) {
     editVar$data<<-editVar$data+1
     }    
@@ -304,6 +306,12 @@ shinyServer(function(input, output, session) {
   DV<-variables[3,]
   MV<-IV
   
+  observeEvent(c(input$IVchoice,input$IV2choice,input$DVchoice),
+                {
+                  validSample<<-FALSE
+                  validExpected<<-FALSE
+                  validExplore<<-FALSE
+                })
   
   # modalDialog to edit each variable
   # all of this code only gets used if the modalDialog mechanism is set up in ui.R
@@ -320,7 +328,7 @@ shinyServer(function(input, output, session) {
                  skew=input$MVskew, kurtosis=input$MVkurt,
                  nlevs=input$MVnlevs,centre=input$MVcentre,spread=input$MVspread,
                  ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,
-                 deploy="Between",process="sim")
+                 deploy=MV$deploy,process=MV$process)
     
     switch (modalVar,
             "IV" ={setIVanyway(MV)},
@@ -395,6 +403,12 @@ shinyServer(function(input, output, session) {
                   )
       )
     )
+      # if we are editing imported variables, there is less we can change
+      if (MV$process=="data") {
+        shinyjs::hideElement(id= "MVIntVal")
+        shinyjs::hideElement(id= "MVOrdVal")
+        # shinyjs::hideElement(id= "MVCatVal")
+      }
       oldName<<-MV$name
     # make sure we get the current values
   })
@@ -1015,7 +1029,7 @@ shinyServer(function(input, output, session) {
 
     # UI changes
     # go to the sample tabs 
-    sampleUpdate<-observeEvent(c(input$Single,input$newSample),{
+    sampleUpdate<-observeEvent(c(input$Single,input$newSample,input$hypothesisApply),{
       if (any(c(input$Single,input$newSample))>0) {
         if (!is.element(input$Graphs,c("Sample","Describe","Infer","Possible")))
         {updateTabsetPanel(session, "Graphs",
@@ -1904,6 +1918,9 @@ shinyServer(function(input, output, session) {
       raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
         getNewVariables(raw_data) 
+      # shinyjs::hideElement(id= "editIV")
+      # shinyjs::hideElement(id= "editIV2")
+      # shinyjs::hideElement(id= "editDV")
     })
     
     readCLipDataFile<-observeEvent(input$dPaste, {
@@ -1916,6 +1933,9 @@ shinyServer(function(input, output, session) {
       colnames(raw_data)<-header
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
       getNewVariables(raw_data)
+      shinyjs::hideElement(id= "editIV")
+      shinyjs::hideElement(id= "editIV2")
+      shinyjs::hideElement(id= "editDV")
     })
     
     exportData<-function() {
