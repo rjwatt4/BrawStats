@@ -235,6 +235,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
             iv<-as.numeric(iv)
           }
         }
+        if (!is.null(IV2)) {
         if (is.numeric(iv2) && IV2$type=="Categorical") {
           iv2r<-iv2
           ng<-IV2$ncats
@@ -249,6 +250,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
           if (!is.numeric(iv2) && IV2$type!="Categorical") {
             iv2<-as.numeric(iv2)
           }
+        }
         }
         if (is.numeric(dv) && DV$type=="Categorical") {
           dvr<-dv

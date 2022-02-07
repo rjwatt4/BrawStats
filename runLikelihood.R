@@ -117,14 +117,14 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
             if (longHand){
               effect$rIV<-pRho
               res<-multipleAnalysis(IV,NULL,DV,effect,design,evidence,nsims)
-              sr<-res$rIV
+              r_effects<-res$rIV
             } else {
-              sr<-tanh(rnorm(nsims,mean=atanh(pRho),sd=s))
+              r_effects<-tanh(rnorm(nsims,mean=atanh(pRho),sd=s))
             }
             if (likelihood$appendSim){
               sr_effects<-c(likelihoodSResultHold,sr)
             } else {
-              sr_effects<-sr
+              sr_effects<-r_effects
             }
             binWidth<-2*IQR(sr_effects)/length(sr_effects)^(1/3)
             nbins=round(2/binWidth)
@@ -144,7 +144,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
             rsSim_ci=NULL
             rsSim_peak=NULL
             
-            sample_increase=10;
+            sample_increase=1;
             switch (likelihood$populationDist,
                     "Exp"={
                       pops<-tanh(rexp(nsims*sample_increase,rate=1/likelihood$populationDistK))*sign(rnorm(nsims))
@@ -177,7 +177,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
           }
   )
 
-  likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,sr=sr,
+  likelihoodResult<-list(likelihood=likelihood,pRho=pRho,sRho=sRho,sr=r_effects,
                          rp=rp,rs=rs,pDens_r=pDens_r,sDens_r=sDens_r,
                          rp_sd=rp_stats$sd,rs_sd=rs_stats$sd,
                          rp_ci=rp_stats$ci$y,rs_ci=rs_stats$ci$y,

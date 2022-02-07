@@ -1,7 +1,12 @@
-likelihoodLengthChoices=c("100" = "100",
-                       "250" = "250",
-                       "500" = "500",
-                       "1000" = "1000"
+SlikelihoodLengthChoices=c("100" = "100",
+                          "250" = "250",
+                          "500" = "500",
+                          "1000" = "1000"
+)
+PlikelihoodLengthChoices=c("1000" = "1000",
+                          "2500" = "2500",
+                          "5000" = "5000",
+                          "10000" = "10000"
 )
 LikelihoodTab <-
 
@@ -59,7 +64,7 @@ LikelihoodTab <-
                                       tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "20%", 
                                               selectInput("likelihood_lengthS", label=NULL,
-                                                          likelihoodLengthChoices,selectize=FALSE)
+                                                          SlikelihoodLengthChoices,selectize=FALSE)
                                       ),
                                       tags$td(width = "20%", tags$div(style = localStyle, "Append:")),
                                       tags$td(width = "10%", checkboxInput("likelihoodAppendS", label=NULL)),
@@ -108,7 +113,7 @@ LikelihoodTab <-
                                       tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "20%", 
                                               selectInput("likelihood_lengthP", label=NULL,
-                                                          likelihoodLengthChoices,selectize=FALSE)
+                                                          PlikelihoodLengthChoices,selectize=FALSE)
                                       ),
                                       tags$td(width = "20%", tags$div(style = localStyle, "Append:")),
                                       tags$td(width = "10%", checkboxInput("likelihoodAppendP", label=NULL)),
