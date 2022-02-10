@@ -128,7 +128,9 @@ shinyUI(fluidPage(
             "#r .irs-bar {background-color: transparent; border-color: transparent; }"
         )),
         tags$style(HTML( # action button
-            ".col-sm-3 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}"
+            ".col-sm-3 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}",
+            ".col-sm-2 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}",
+            ".col-sm-1 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}"
         )),
         tags$style(HTML( # tab panels
             ".tabbable > .nav > li > a {font-weight: normal; font-size: 8pt; padding:2px; margin:1px; color:#222222; background-color:#dddddd}",

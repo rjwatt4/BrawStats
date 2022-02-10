@@ -628,6 +628,7 @@ inspectHistory<-c()
     inspectData<<-c()
     inspectHistory<<-c()
     
+    updateCheckboxInput(session,"showResiduals",value=FALSE)
     switch (var$type,
             "Categorical"={
               updateCheckboxInput(session,"showMean",label="Mode")
@@ -701,6 +702,24 @@ inspectHistory<-c()
   }
   )
   
+  output$explainResiduals<-renderText( {
+    if (input$showResiduals) {
+    switch (inspectVar$type,
+    "Categorical"={txt1<-"<br> 0: v<sub>i</sub> = v&#772;<br> 1: v<sub>i</sub> &ne; v&#772;"
+                   txt2<-"<b>mode</b>(v) = v&#772; when <br> abs(&Sigma;residual) is minimum (nearest to 0)"
+    },
+    "Ordinal"={txt1<-"<br> -1: v<sub>i</sub> < v&#772;<br> +1: v<sub>i</sub> more than v&#772;"
+               txt2<-"<b>median</b>(v) = v&#772; when <br> abs(&Sigma;residual) is minimum (nearest to 0)"
+    },
+    "Interval"={txt1<-"v<sub>i</sub>-v&#772;"
+                txt2<-"<b>mean</b>(v) = v&#772; when <br> abs(&Sigma;residual) is minimum (equals 0)"
+    }
+    )
+      paste0("<p style='font-size:12px'>", "<b>residual:</b> ",txt1, "<br>",  txt2, "</p>")
+    } else {""}
+  }
+  )
+
 
   
 ######################################################  

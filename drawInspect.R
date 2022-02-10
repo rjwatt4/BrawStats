@@ -102,7 +102,7 @@ inspectPenaltyGraph<-function(inspect) {
       } else {
         switch(var$type,
                "Categorical"={
-                 val<-(sum(data!=round(x[i]))+(length(data)-sum(data==round(x[i]))))/length(data)
+                 val<-(sum(data!=round(x[i]))+(length(data)-sum(data==round(x[i]))))/length(data)/var$ncats
                },
                "Ordinal"={
                  # sum(outside iqr)-sum(inside iqr)
@@ -140,16 +140,28 @@ inspectPenaltyGraph<-function(inspect) {
   }
   
   # wind up
-  g<-g+scale_x_continuous(breaks=NULL)
   g<-g+scale_y_continuous(breaks=0)
   switch (var$type,
-          "Categorical"={g<-g+coord_cartesian(xlim=c(1,var$ncats)+c(-1,1)*(var$ncats-1)/10,ylim=c(-1,1))},
-          "Ordinal"={g<-g+coord_cartesian(xlim=c(1,var$nlevs)+c(-1,1)*(var$nlevs-1)/10,ylim = c(-1,1))},
-          "Interval"={g<-g+coord_cartesian(xlim=c(-1,1)*3*var$sd+var$mu,ylim = c(-1,1))}
+          "Categorical"+{
+            g<-g+scale_x_continuous(breaks=1:var$ncats,labels=var$cases)
+            g<-g+coord_cartesian(xlim=c(1,var$ncats)+c(-1,1)*(var$ncats-1)/10,ylim=c(-1,1))
+          },
+          "Ordinal"={
+            g<-g+scale_x_continuous(breaks=1:var$nlevs)
+            g<-g+coord_cartesian(xlim=c(1,var$nlevs)+c(-1,1)*(var$nlevs-1)/10,ylim = c(-1,1))
+          },
+          "Interval"={
+            g<-g+scale_x_continuous()
+            g<-g+coord_cartesian(xlim=c(-1,1)*3*var$sd+var$mu,ylim = c(-1,1))
+          }
   )
-  
-  g+labs(x=NULL,y=paste("Residuals^",inspect$whichResiduals,sep=""))+plotTheme
-  
+  # g+labs(x=var$name,y=paste("Residuals^(",inspect$whichResiduals,")",sep=""))+plotTheme
+  switch (inspect$whichResidual,
+          "1"={g<-g+labs(x=var$name,y=bquote(Residuals^1))},
+          "2"={g<-g+labs(x=var$name,y=bquote(Residuals^2))}
+          )
+  g+plotTheme
+
   
 }
 
