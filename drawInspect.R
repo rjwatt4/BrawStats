@@ -12,7 +12,7 @@ inspectMainGraph<-function(inspect) {
     
     switch(inspect$inspectOrder,
            "unsorted"={y<-1:inspect$n},
-           "sorted"={y<-rank(data)},
+           "sorted"={y<-rank(data,ties.method="first")},
            "piled"={y<-pile(data)}
            )
     
@@ -46,38 +46,9 @@ inspectMainGraph<-function(inspect) {
               }
       )
     }
-    
-    # show mean
-    if (inspect$showMean) {
-      # vertical line
-      switch (var$type,
-              "Categorical"={
-                g<-g+geom_vline(xintercept=Mode(data), colour = "red", lwd=2)
-                },
-              "Ordinal"={
-                g<-g+geom_vline(xintercept=median(data), colour = "red", lwd=2)
-                },
-              "Interval"={
-                g<-g+geom_vline(xintercept=mean(data), colour = "red", lwd=2)
-                }
-      )
-    }
-    # show mean
-    if (inspect$showSd) {
-      # vertical lines
-      switch (var$type,
-              "Categorical"={
-              },
-              "Ordinal"={
-                g<-g+geom_vline(xintercept=quantile(data,0.25), colour = "red", lwd=1)
-                g<-g+geom_vline(xintercept=quantile(data,0.75), colour = "red", lwd=1)
-              },
-              "Interval"={
-                g<-g+geom_vline(xintercept=mean(data)+std(data,1), colour = "red", lwd=1)
-                g<-g+geom_vline(xintercept=mean(data)-std(data,1), colour = "red", lwd=1)
-              }
-      )
-    }
+
+    g<-showMean(g,inspect)
+    g<-showSD(g,inspect)    
   }
   
   # wind up
@@ -101,33 +72,69 @@ inspectMainGraph<-function(inspect) {
 
 
 inspectPenaltyGraph<-function(inspect) {
-  
+
   var<-inspect$var
   data<-inspect$data
   
   if (!is.null(data) && inspect$showResiduals) {
       # vertical line
-    switch(var$type,
-           "Categorical"={
-             val<-mean(as.numeric(data)!=round(inspect$ResidVal))
-             },
-           "Ordinal"={
-             if (var$discrete) {mval<-round(inspect$ResidVal)} else {mval<-inspect$ResidVal}
-             val<-mean(sign(data-mval))
-           },
-           "Interval"={
-             val<-mean(data-inspect$ResidVal)/2/var$sd
-             }
-           )
+    if (inspect$inspectHistory[length(inspect$inspectHistory)]!=inspect$ResidVal)
+    {inspect$inspectHistory<-c(inspect$inspectHistory,inspect$ResidVal)}
     
     g<-ggplot()
+    y=c()
+    x<-sort(inspect$inspectHistory)
+    
+    for (i in 1:length(x)) {
+      if (inspect$whichResiduals=="1") {
+        switch(var$type,
+               "Categorical"={
+                 val<-mean(as.numeric(data)!=round(x[i]))
+               },
+               "Ordinal"={
+                 if (var$discrete) {mval<-round(x[i])} else {mval<-x[i]}
+                 val<-mean(sign(data-mval))
+               },
+               "Interval"={
+                 val<-mean(data-x[i])/2/var$sd
+               }
+        )
+      } else {
+        switch(var$type,
+               "Categorical"={
+                 val<-(sum(data!=round(x[i]))+(length(data)-sum(data==round(x[i]))))/length(data)
+               },
+               "Ordinal"={
+                 # sum(outside iqr)-sum(inside iqr)
+                 if (var$discrete) {mval<-round(x[i])} else {mval<-x[i]}
+                 q1<-median(data[data<mval])
+                 q2<-median(data[data>mval])
+                 r1=sum(data<q1)+sum(data>q2)
+                 r2<-sum(data>q1 & data<q2)
+                 val<-r1-r2
+               },
+               "Interval"={
+                 # squared residual
+                 val<-mean((data-x[i])^2)/2/2/var$sd/var$sd
+               }
+        )
+      }
     if (val<0) {
-      g<-g+geom_polygon(data=data.frame(x=c(-0.5,-0.5,0.5,0.5),y=c(0,val,val,0)),aes(x=x,y=y),colour="white",fill="white")
+      g<-g+geom_polygon(data=data.frame(x=c(-1,-1,1,1)/50+x[i],y=c(0,val,val,0)),aes(x=x,y=y),colour="white",fill="white")
       g<-g+geom_hline(yintercept=0,colour="white",lwd=1)
     } else {
-      g<-g+geom_polygon(data=data.frame(x=c(-0.5,-0.5,0.5,0.5),y=c(0,val,val,0)),aes(x=x,y=y),colour="black",fill="black")
+      g<-g+geom_polygon(data=data.frame(x=c(-1,-1,1,1)/50+x[i],y=c(0,val,val,0)),aes(x=x,y=y),colour="black",fill="black")
       g<-g+geom_hline(yintercept=0,colour="black",lwd=1)
     }
+      y<-c(y,val)
+      if (i>1) {
+        pts<-data.frame(x=x[i-1],y=y[i-1],xend=x[i],yend=y[i])
+        g<-g+geom_segment(data=pts,aes(x=x,y=y,xend=xend,yend=yend),colour="yellow",lwd=0.5)
+      }
+    }
+    g<-showMean(g,inspect)
+    g<-showSD(g,inspect)    
+    
   } else {
     return(ggplot()+plotBlankTheme)
   }
@@ -135,61 +142,17 @@ inspectPenaltyGraph<-function(inspect) {
   # wind up
   g<-g+scale_x_continuous(breaks=NULL)
   g<-g+scale_y_continuous(breaks=0)
-  g<-g+coord_cartesian(xlim=c(-1,1),ylim = c(-1,1))
-  g+labs(x=NULL,y="Residuals")+plotTheme
+  switch (var$type,
+          "Categorical"={g<-g+coord_cartesian(xlim=c(1,var$ncats)+c(-1,1)*(var$ncats-1)/10,ylim=c(-1,1))},
+          "Ordinal"={g<-g+coord_cartesian(xlim=c(1,var$nlevs)+c(-1,1)*(var$nlevs-1)/10,ylim = c(-1,1))},
+          "Interval"={g<-g+coord_cartesian(xlim=c(-1,1)*3*var$sd+var$mu,ylim = c(-1,1))}
+  )
+  
+  g+labs(x=NULL,y=paste("Residuals^",inspect$whichResiduals,sep=""))+plotTheme
   
   
 }
 
-
-inspectPenalty2Graph<-function(inspect) {
-  return(ggplot()+plotBlankTheme)
-  
-  var<-inspect$var
-  data<-inspect$data
-  
-  if (!is.null(data) && inspect$showResiduals) {
-    # vertical line
-    switch(var$type,
-           "Categorical"={
-             val<-mean(as.numeric(data)!=round(inspect$ResidVal))
-             val<-(sum(data!=round(inspect$ResidVal))+(length(data)-sum(data==round(inspect$ResidVal))))/length(data)
-           },
-           "Ordinal"={
-             # sum(outside iqr)-sum(inside iqr)
-             if (var$discrete) {mval<-round(inspect$ResidVal)} else {mval<-inspect$ResidVal}
-             q1<-median(data[data<mval])
-              q2<-median(data[data>mval])
-             r1=sum(data<q1)+sum(data>q2)
-             r2<-sum(data>q1 & data<q2)
-             val<-r1-r2
-           },
-           "Interval"={
-             # squared residual
-             val<-mean((data-inspect$ResidVal)^2)/2/var$sd/var$sd
-           }
-    )
-    
-    g<-ggplot()
-    if (val<0) {
-      g<-g+geom_polygon(data=data.frame(x=c(-0.5,-0.5,0.5,0.5),y=c(0,val,val,0)),aes(x=x,y=y),colour="white",fill="white")
-      g<-g+geom_hline(yintercept=0,colour="white",lwd=1)
-    } else {
-      g<-g+geom_polygon(data=data.frame(x=c(-0.5,-0.5,0.5,0.5),y=c(0,val,val,0)),aes(x=x,y=y),colour="black",fill="black")
-      g<-g+geom_hline(yintercept=0,colour="black",lwd=1)
-    }
-  } else {
-    return(ggplot()+plotBlankTheme)
-  }
-  
-  # wind up
-  g<-g+scale_x_continuous(breaks=NULL)
-  g<-g+scale_y_continuous(breaks=0)
-  g<-g+coord_cartesian(xlim=c(-1,1),ylim = c(0,1))
-  g+labs(x=NULL,y="Residuals^2")+plotTheme
-  
-  
-}
 
 pile<-function(data) {
   x<-c()
@@ -202,4 +165,49 @@ pile<-function(data) {
     x<-c(x,data[i])
   }
   return(y)
+}
+
+
+showMean<-function(g,inspect) {
+  var<-inspect$var
+  data<-inspect$data
+  # show mean
+  if (inspect$showMean) {
+    # vertical line
+    switch (var$type,
+            "Categorical"={
+              g<-g+geom_vline(xintercept=Mode(data), colour = "red", lwd=2)
+            },
+            "Ordinal"={
+              g<-g+geom_vline(xintercept=median(data), colour = "red", lwd=2)
+            },
+            "Interval"={
+              g<-g+geom_vline(xintercept=mean(data), colour = "red", lwd=2)
+            }
+    )
+  }
+  return(g)
+}
+
+showSD<-function(g,inspect) {
+  var<-inspect$var
+  data<-inspect$data
+  # show mean
+  if (inspect$showSd) {
+    # vertical lines
+    switch (var$type,
+            "Categorical"={
+            },
+            "Ordinal"={
+              g<-g+geom_vline(xintercept=quantile(data,0.25), colour = "red", lwd=1)
+              g<-g+geom_vline(xintercept=quantile(data,0.75), colour = "red", lwd=1)
+            },
+            "Interval"={
+              g<-g+geom_vline(xintercept=mean(data)+std(data,1), colour = "red", lwd=1)
+              g<-g+geom_vline(xintercept=mean(data)-std(data,1), colour = "red", lwd=1)
+            }
+    )
+  }
+  return(g)
+  
 }

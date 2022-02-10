@@ -17,11 +17,10 @@ inspectDiagram <-
                    ),
             ),
             column(width=6,plotOutput("mainInspect")),
-            column(width=2,plotOutput("penaltyInspect")),
-            column(width=2,plotOutput("penalty2Inspect"))
+            column(width=4,plotOutput("penaltyInspect"))
           ),
           fluidRow(
-            column(width=2,checkboxInput("showResiduals","Show Residuals")
+            column(width=2,checkboxInput("showResiduals","Show Residuals"),selectInput("whichResiduals",label=NULL,choices=c("1st Order"="1","2nd Order"="2"),selected="1",selectize=FALSE)
             ),
             column(width=6,conditionalPanel(condition="input.showResiduals",
                            sliderInput("ResidVal",label=NULL,value=-0.8,min=-1,max=1, step=0.01, ticks=FALSE, width="100%")

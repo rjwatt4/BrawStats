@@ -608,10 +608,11 @@ shinyServer(function(input, output, session) {
 inspectData<-c()  
 inspectVar<-c()
 inspectSource<-c()
+inspectHistory<-c()
 
   updateInspect<-function() {
-    inspect<-list(inspectOrder=input$inspectOrder,
-                  showResiduals=input$showResiduals,
+    inspect<-list(inspectOrder=input$inspectOrder,whichResiduals=input$whichResiduals,
+                  showResiduals=input$showResiduals,inspectHistory=inspectHistory,
                   ResidVal=input$ResidVal,n=input$sN,
                   data=inspectData)
   }
@@ -625,6 +626,8 @@ inspectSource<-c()
     inspectSource<<-input$changed
     inspectVar<<-var
     inspectData<<-c()
+    inspectHistory<<-c()
+    
     switch (var$type,
             "Categorical"={
               updateCheckboxInput(session,"showMean",label="Mode")
@@ -654,6 +657,12 @@ inspectSource<-c()
   }
   )
 
+  observeEvent(input$ResidVal, {
+    inspectHistory<<-c(inspectHistory,input$ResidVal)
+
+  }
+  )
+  
   observeEvent(input$inspectNewSample,{
     IV<-updateIV()
     DV<-updateDV()
@@ -667,10 +676,10 @@ inspectSource<-c()
     
   })
   
-  getInspect1<-eventReactive(c(input$inspectOrder,input$inspectNewSample,input$showResiduals,input$ResidVal,input$showMean,input$showSD),{
+  getInspect1<-eventReactive(c(input$inspectOrder,input$inspectNewSample,input$showResiduals,input$whichResiduals,input$ResidVal,input$showMean,input$showSD),{
     
-    inspect<-list(inspectOrder=input$inspectOrder,
-                  showResiduals=input$showResiduals,
+    inspect<-list(inspectOrder=input$inspectOrder,whichResiduals=input$whichResiduals,
+                  showResiduals=input$showResiduals,inspectHistory=inspectHistory,
                   ResidVal=input$ResidVal,n=input$sN,
                   showMean=input$showMean,showSd=input$showSD,
                   var=inspectVar,
@@ -692,13 +701,7 @@ inspectSource<-c()
   }
   )
   
-  output$penalty2Inspect<-renderPlot( {
-    doIt<-input$inspectNewSample
-    inspect<-getInspect1()
-    return(inspectPenalty2Graph(inspect))
-  }
-  )
-  
+
   
 ######################################################  
 ## update variables functions
