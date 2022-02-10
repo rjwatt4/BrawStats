@@ -68,15 +68,20 @@ anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
-                  nlevs=7,spread=1.5,centre=0,
+                  nlevs=7,iqr=3,median=4,discrete=TRUE,
                   ncats=2,cases="C1,C2",proportions="1,1",
                   deploy="Between",process="sim"){
   
   var<-list(name=name,type=type,
        mu=mu,sd=sd,skew=skew,kurtosis=kurtosis,
-       nlevs=nlevs,spread=spread,centre=centre,
+       nlevs=nlevs,iqr=iqr,median=median,discrete=discrete,
        ncats=ncats,cases=cases,proportions=proportions,
        deploy=deploy,process=process)
+  # do ordinal mean and sd (for graphs)
+  if (var$type=="Ordinal") {
+    var$mu<-var$median
+    var$sd<-var$iqr/2
+  }
   # check for cases
   cs<-strsplit(var$cases,",")
   cs<-cs[[1]]
@@ -117,8 +122,8 @@ vars<-list(
   makeVar(name="RiskTaker?",type="Categorical",ncats=2,cases="no,yes"),
   makeVar(name="Musician?",type="Categorical",ncats=2,cases="no,yes"),
   
-  makeVar(name="StudySubject",type="Categorical",ncats=3,cases="psych,phil,sports",proportions="1,1,1"),
-  makeVar(name="BirthOrder",type="Categorical",ncats=4,cases="1st,middle,last,only",proportions="1,1,1,1")
+  makeVar(name="StudySubject",type="Categorical",ncats=3,cases="psych,phil,sports",proportions="1.5,1,2"),
+  makeVar(name="BirthOrder",type="Categorical",ncats=4,cases="first,middle,last,only",proportions="1,0.4,0.6,0.2")
 )
 
 variables<-data.frame(vars[[1]])

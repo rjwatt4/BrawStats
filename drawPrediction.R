@@ -103,11 +103,11 @@ drawParOrdPrediction<-function(g,IV,DV,rho,n,offset=1){
   se<-sqrt((1+x^2)/n)*qnorm(0.975)
   y_lower<-y-se
   y_upper<-y+se
-  yv_lower<-y_lower*DV$spread+(DV$nlevs+1)/2
-  yv_upper<-y_upper*DV$spread+(DV$nlevs+1)/2
+  yv_lower<-y_lower*(DV$iqr/2)+(DV$nlevs+1)/2
+  yv_upper<-y_upper*(DV$iqr/2)+(DV$nlevs+1)/2
   
   xv<-x*IV$sd+IV$mu
-  yv<-y*DV$spread+(DV$nlevs+1)/2
+  yv<-y*(DV$iqr/2)+(DV$nlevs+1)/2
   xv<-c(xv,rev(xv))
   yv<-c(yv,rev(yv))
   
@@ -398,16 +398,25 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
             "Interval Interval"={
               g<-drawParParPrediction(g,IV,DV,rho,n,offset)
             },
+            "Ordinal Interval"={
+              g<-drawParParPrediction(g,IV,DV,rho,n,offset)
+            },
             "Categorical Interval"={
               g<-drawCatParPrediction(g,IV,DV,rho,n,offset)
             },
             "Interval Ordinal"={
               g<-drawParOrdPrediction(g,IV,DV,rho,n,offset)
             },
+            "Ordinal Ordinal"={
+              g<-drawParOrdPrediction(g,IV,DV,rho,n,offset)
+            },
             "Categorical Ordinal"={
               g<-drawCatOrdPrediction(g,IV,DV,rho,n,offset)
             },
             "Interval Categorical"={
+              g<-drawParCatPrediction(g,IV,DV,rho,n,offset)
+            },
+            "Ordinal Categorical"={
               g<-drawParCatPrediction(g,IV,DV,rho,n,offset)
             },
             "Categorical Categorical"={
@@ -420,6 +429,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
     roff=0.82
     switch (IV2$type,
             "Interval"= rho<-effect$rIV+c(-1,1)*effect$rIVIV2DV,
+            "Ordinal"= rho<-effect$rIV+c(-1,1)*effect$rIVIV2DV,
             "Categorical"= rho<-effect$rIV+seq(-1,1,length.out=IV2$ncats)*effect$rIVIV2DV
     )
     rho[is.na(rho)] <- 0
@@ -447,10 +457,19 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
             "Interval Interval"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
             },
+            "Ordinal Interval"={
+              g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
+            },
             "Categorical Interval"={
               g<-g+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*1.5*DV$sd+DV$mu)
             },
             "Interval Ordinal"={
+              g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
+              l=paste(1:DV$nlevs,sep="")
+              b<-1:DV$nlevs
+              g<-g+scale_y_continuous(breaks=b,labels=l)
+            },
+            "Ordinal Ordinal"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
               l=paste(1:DV$nlevs,sep="")
               b<-1:DV$nlevs
@@ -463,6 +482,10 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-g+scale_y_continuous(breaks=b,labels=l)
             },
             "Interval Categorical"={
+              g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-0.1,1.1))
+              g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
+            },
+            "Ordinal Categorical"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-0.1,1.1))
               g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
             },

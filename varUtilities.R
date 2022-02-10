@@ -11,13 +11,13 @@ CatProportions<-function(var) {
 
 OrdProportions<-function(var) {
   ng<-var$nlevs
-  centre<-(var$centre/ng+0.5)
-  concentration<-1/var$spread*10
+  centre<-((var$median-(ng+1)/2)/ng+0.5)
+  concentration<-1/(var$iqr/2)*10
   alpha<-1+centre*(concentration-2)
   beta<-1+(1-centre)*(concentration-2)
   pp<-dbeta(seq(0,1,1/(ng+1)),alpha,beta)
   pp<-pp[2:(ng+1)]
-  # pp<-exp(-0.5*(((1:ng)-(ng+1)/2)/var$spread)^2)
+  # pp<-exp(-0.5*(((1:ng)-(ng+1)/2)/(var$iqr/2)^2)
   pp<-pp/max(pp)
   
 }

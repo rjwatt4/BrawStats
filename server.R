@@ -40,6 +40,8 @@ source("runLikelihood.R")
 source("wsRead.R")
 source("typeCombinations.R")
 
+source("drawInspect.R")
+
 simCycles=20
 simPeriod=1000
 
@@ -321,15 +323,19 @@ shinyServer(function(input, output, session) {
   editVar<-reactiveValues(data=0)
   oldName<-""
   
+  observeEvent(input$MVnlevs, {
+    updateNumericInput(session,"MVcentre",value=(input$MVnlevs+1)/2)
+    updateNumericInput(session,"MVspread",value=(input$MVnlevs-1)/2)
+  })
   #Press "OK": make the new variable
   observeEvent(input$MVok, {
     MV<<-makeVar(name=input$MVname, type=input$MVtype,
                  mu=input$MVmu, sd=input$MVsd,
                  skew=input$MVskew, kurtosis=input$MVkurt,
-                 nlevs=input$MVnlevs,centre=input$MVcentre,spread=input$MVspread,
+                 nlevs=input$MVnlevs,median=input$MVcentre,iqr=input$MVspread,discrete=input$MVdiscrete,
                  ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,
                  deploy=MV$deploy,process=MV$process)
-    
+
     switch (modalVar,
             "IV" ={setIVanyway(MV)},
             "IV2"={setIV2anyway(MV)},
@@ -354,7 +360,8 @@ shinyServer(function(input, output, session) {
               IV<-updateIV()
               MV<<-IV
               varTypes<<- c("Interval" = "Interval",
-                         "Categorical" = "Categorical"
+                            "Ordinal" = "Ordinal",
+                            "Categorical" = "Categorical"
               )
             },
             "editIV2"={
@@ -362,6 +369,7 @@ shinyServer(function(input, output, session) {
               IV2<-updateIV2()
               MV<<-IV2
               varTypes<<- c("Interval" = "Interval",
+                            "Ordinal" = "Ordinal",
                             "Categorical" = "Categorical"
               )
             },
@@ -383,8 +391,8 @@ shinyServer(function(input, output, session) {
     updateNumericInput(session,"MVskew",value=MV$skew)
     updateNumericInput(session,"MVkurt",value=MV$kurtosis)
     updateNumericInput(session,"MVnlevs",value=MV$nlevs)
-    updateNumericInput(session,"MVcentre",value=MV$centre)
-    updateNumericInput(session,"MVspread",value=MV$spread)
+    updateNumericInput(session,"MVcentre",value=MV$median)
+    updateNumericInput(session,"MVspread",value=MV$iqr)
     updateNumericInput(session,"MVncats",value=MV$ncats)
     updateTextInput(session,"MVcases",value=MV$cases)
     updateTextInput(session,"MVprop",value=MV$proportions)
@@ -449,7 +457,14 @@ shinyServer(function(input, output, session) {
               updateNumericInput(session, "IVmu", value=newMV$mu)
               updateNumericInput(session, "IVsd", value=newMV$sd)
             },
-            "Categorical"={
+            "Ordinal"={
+              updateNumericInput(session, "IVnlevs", value=newMV$nlevs)
+              updateTextInput(session, "IVcases", value=newMV$cases)
+              updateTextInput(session, "IVprop", value=newMV$proportions)
+              updateNumericInput(session, "IVmu", value=newMV$mu)
+              updateNumericInput(session, "IVsd", value=newMV$sd)
+            },
+              "Categorical"={
               updateNumericInput(session, "IVncats", value=newMV$ncats)
               updateTextInput(session, "IVcases", value=newMV$cases)
               updateTextInput(session, "IVprop", value=newMV$proportions)
@@ -478,29 +493,11 @@ shinyServer(function(input, output, session) {
     if (is.null(newMV)) {
       if (input$IV2choice=="none") {
         no_ivs<<-1
-        updateSelectInput(session,"Explore_typeH",
-                          choices=list("Variables"=list("IV" = "IV",
-                                                        "DV" = "DV",
-                                                        "IV/DV Types" = "IVDVType"),
-                                       "Effects"=list("Effect Size" = "EffectSize")
-                          )
-        )
         shinyjs::disable("editIV2")
         return(NULL)
       }
       else {
         no_ivs<<-2
-        updateSelectInput(session,"Explore_typeH",
-                          choices=list("Variables"=list("IV" = "IV",
-                                                        "IV2" = "IV2",
-                                                        "DV" = "DV",
-                                                        "IV/IV2 Types" = "IVIV2Type"),
-                                       "Effects"=list("Effect Size1" = "EffectSize1",
-                                                      "Effect Size2" = "EffectSize2",
-                                                      "Interaction" = "Interaction",
-                                                      "Covariation" = "Covariation")
-                          )
-        )
         shinyjs::enable("editIV2")
       }
       
@@ -608,8 +605,103 @@ shinyServer(function(input, output, session) {
     )
   }
   
+inspectData<-c()  
+inspectVar<-c()
+inspectSource<-c()
 
-# update variables functions
+  updateInspect<-function() {
+    inspect<-list(inspectOrder=input$inspectOrder,
+                  showResiduals=input$showResiduals,
+                  ResidVal=input$ResidVal,n=input$sN,
+                  data=inspectData)
+  }
+  
+  observeEvent(c(input$inspectIV,input$inspectDV),{
+    req(input$changed)
+    switch (input$changed,
+            "inspectIV"={var<-updateIV()},
+            "inspectDV"={var<-updateDV()},
+    )
+    inspectSource<<-input$changed
+    inspectVar<<-var
+    inspectData<<-c()
+    switch (var$type,
+            "Categorical"={
+              updateCheckboxInput(session,"showMean",label="Mode")
+              updateCheckboxInput(session,"showSD",label=" ")
+              # c(1,var$ncats)+c(-1,1)*(var$ncats-1)/10
+              updateSliderInput(session,"ResidVal",min=1-(var$ncats-1)/10,max=var$ncats+(var$ncats-1)/10,value=1.7)
+              updateSelectInput(session,"inspectOrder",choices=c("unsorted","piled"),selected="unsorted")
+              shinyjs::hideElement(id= "showSD")
+            },
+            "Ordinal"={
+              updateCheckboxInput(session,"showMean",label="Median")
+              updateCheckboxInput(session,"showSD",label="IQR")
+              # c(1,var$nlevs)+c(-1,1)*(var$nlevs-1)/10
+              updateSliderInput(session,"ResidVal",min=1-(var$nlevs-1)/10,max=var$nlevs+(var$nlevs-1)/10,value=1.7)
+              updateSelectInput(session,"inspectOrder",choices=c("unsorted","sorted","piled"),selected="unsorted")
+              shinyjs::showElement(id= "showSD")
+            },
+            "Interval"={
+              updateCheckboxInput(session,"showMean",label="Mean")
+              updateCheckboxInput(session,"showSD",label="SD")
+              updateSliderInput(session,"ResidVal",min=var$mu-var$sd*3,max=var$mu+var$sd*3,value=var$mu-var$sd)
+              updateSelectInput(session,"inspectOrder",choices=c("unsorted","sorted","piled"),selected="unsorted")
+              shinyjs::showElement(id= "showSD")
+            },
+    )
+    toggleModal(session, modalId = "inspectOutput", toggle = "open")
+  }
+  )
+
+  observeEvent(input$inspectNewSample,{
+    IV<-updateIV()
+    DV<-updateDV()
+    effect<-updatePrediction()
+    design<-updateDesign()
+    sample<-makeSample(IV,NULL,DV,effect,design)
+    switch (inspectSource,
+            "inspectIV"={inspectData<<-sample$iv},
+            "inspectDV"={inspectData<<-sample$dv},
+    )
+    
+  })
+  
+  getInspect1<-eventReactive(c(input$inspectOrder,input$inspectNewSample,input$showResiduals,input$ResidVal,input$showMean,input$showSD),{
+    
+    inspect<-list(inspectOrder=input$inspectOrder,
+                  showResiduals=input$showResiduals,
+                  ResidVal=input$ResidVal,n=input$sN,
+                  showMean=input$showMean,showSd=input$showSD,
+                  var=inspectVar,
+                  data=inspectData)
+  }
+  )
+  
+  output$mainInspect<-renderPlot( {
+    doIt<-input$inspectNewSample
+    inspect<-getInspect1()
+    return(inspectMainGraph(inspect))
+  }
+  )
+  
+  output$penaltyInspect<-renderPlot( {
+    doIt<-input$inspectNewSample
+    inspect<-getInspect1()
+    return(inspectPenaltyGraph(inspect))
+  }
+  )
+  
+  output$penalty2Inspect<-renderPlot( {
+    doIt<-input$inspectNewSample
+    inspect<-getInspect1()
+    return(inspectPenalty2Graph(inspect))
+  }
+  )
+  
+  
+######################################################  
+## update variables functions
     updateIV<-function(){
       if (debug) print("     updateIV")
       
@@ -617,12 +709,6 @@ shinyServer(function(input, output, session) {
       if (is.na(use)) return(NULL)
       
       IV<-as.list(variables[use,])
-      if (IV$type=="Ordinal") {
-        if (warnOrd==FALSE) {
-          hmm("Ordinal IV will be treated as Interval.")
-          warnOrd<<-TRUE
-        }
-      }
 
       if (IV$type=="Categorical") {
                   cs<-IV$cases
@@ -685,12 +771,6 @@ shinyServer(function(input, output, session) {
       if (is.na(use)) return(NULL)
       
       IV2<-as.list(variables[use,])
-      if (IV2$type=="Ordinal") {
-        if (warnOrd==FALSE) {
-          hmm("Ordinal IV2 will be treated as Interval.")
-          warnOrd<<-TRUE
-        }
-      }
       
       if (IV2$type=="Categorical") {
         cs<-IV2$cases
@@ -777,8 +857,8 @@ shinyServer(function(input, output, session) {
       #         },
       #         "Ordinal"={
       #           DV$nlevs<-MV$nlevs
-      #           DV$centre<-MV$centre
-      #           DV$spread<-MV$spread
+      #           DV$median<-MV$median
+      #           DV$iqr<-MV$iqr
       #         },
       #         "Categorical"={
       #           DV$ncats<-MV$ncats
@@ -861,7 +941,7 @@ shinyServer(function(input, output, session) {
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
       prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity)
+                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr)
       if (debug) print("     updatePrediction - exit")
       prediction
     }
@@ -1061,6 +1141,21 @@ shinyServer(function(input, output, session) {
         effect<-updatePrediction()
         design<-updateDesign()
         evidence<-updateEvidence()
+        
+        if (IV$type=="Ordinal") {
+          if (warnOrd==FALSE) {
+            hmm("Ordinal IV will be treated as Interval.")
+            warnOrd<<-TRUE
+          }
+        }
+        if (!is.null(IV2)) {
+        if (IV2$type=="Ordinal") {
+          if (warnOrd==FALSE) {
+            hmm("Ordinal IV2 will be treated as Interval.")
+            warnOrd<<-TRUE
+          }
+        }
+        }
         
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
         # set the result into likelihood: populations
@@ -1593,6 +1688,31 @@ shinyServer(function(input, output, session) {
     #   
     #   validExplore<<-FALSE
     # })
+    
+    observeEvent(input$IV2choice,{
+      if (input$IV2choice=="none") {
+        updateSelectInput(session,"Explore_typeH",
+                          choices=list("Variables"=list("IV" = "IV",
+                                                        "DV" = "DV",
+                                                        "IV/DV Types" = "IVDVType"),
+                                       "Effects"=list("Effect Size" = "EffectSize1")
+                          )
+        )
+      }
+      else {
+        updateSelectInput(session,"Explore_typeH",
+                          choices=list("Variables"=list("IV" = "IV",
+                                                        "IV2" = "IV2",
+                                                        "DV" = "DV",
+                                                        "IV/IV2 Types" = "IVIV2Type"),
+                                       "Effects"=list("Effect Size1" = "EffectSize1",
+                                                      "Effect Size2" = "EffectSize2",
+                                                      "Interaction" = "Interaction",
+                                                      "Covariation" = "Covariation")
+                          )
+        )
+      }
+    })
     
 # set explore variable from UI    
     # update explore values    

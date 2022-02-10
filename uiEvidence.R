@@ -62,7 +62,7 @@ wellPanel(
                                                             "250" = "250",
                                                             "500" = "500",
                                                             "1000" = "1000"),
-                                                          selected = "10",
+                                              selected = "10",
                                                   selectize=FALSE)
                                       ),
                                       tags$td(width = "10%", tags$div(style = localStyle, "Append:")),

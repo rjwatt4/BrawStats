@@ -36,15 +36,19 @@ variableDialog<-wellPanel(
                                       tags$td(width = "30%",  tags$div(id="MVTnlevs",style = localStyle, "No levels:")),
                                       tags$td(width = "20%", numericInput("MVnlevs", value = MV$nlevs, label = NULL,step=1,min=2)),
                                       # tags$td(width = "30%",  tags$div(style = localStyle, "Spread:")),
-                                      # tags$td(width = "20%", textInput("MVspread", value = MV$spread, label = NULL)),
+                                      # tags$td(width = "20%", textInput("MVspread", value = MV$iqr, label = NULL)),
                                       # tags$td(width = "10%",  tags$div(style = localStyle, " "))
                               ),
                               tags$tr(id="MVOrdVal2",
-                                      tags$td(width = "30%",  tags$div(id="MVTcentre",style = localStyle, "Offset:")),
-                                      tags$td(width = "20%", numericInput("MVcentre", value = MV$centre, label = NULL,step=1)),
-                                      tags$td(width = "30%",  tags$div(id="MVTmu",style = localStyle, "Spread:")),
-                                      tags$td(width = "20%", numericInput("MVspread", value = MV$spread, label = NULL,step=0.5)),
+                                      tags$td(width = "30%",  tags$div(id="MVTcentre",style = localStyle, "Median:")),
+                                      tags$td(width = "20%", numericInput("MVcentre", value = (MV$nlevs+1)/2, label = NULL,step=1)),
+                                      tags$td(width = "30%",  tags$div(id="MVTmu",style = localStyle, "IQR:")),
+                                      tags$td(width = "20%", numericInput("MVspread", value = (MV$nlevs-1)/2, label = NULL,step=0.5)),
                                       # tags$td(width = "10%",  tags$div(style = localStyle, " "))
+                              ),
+                              tags$tr(id="MVOrdVal3",
+                                      tags$td(width = "30%",  tags$div(id="MVTdiscrete",style = localStyle, "Discrete:")),
+                                      tags$td(width = "20%", checkboxInput("MVdiscrete", value = TRUE, label = NULL)),
                               ),
                    )),
 conditionalPanel(condition="input.MVtype == 'Categorical'",
@@ -64,6 +68,13 @@ conditionalPanel(condition="input.MVtype == 'Categorical'",
                                     tags$td(width = "10%",  tags$div(style = localStyle, " "))
                             )
                  )),
+# tags$table(id="Inspect",width = "100%",class="myTable",
+#            tags$tr(id="MVCatVal2",
+#                    tags$td(width = "90%",  tags$div(style = localStyle, " ")),
+#                    tags$td(width = "10%", actionButton("MVInspect", label = "Inspect")),
+#            )
+# ),
+
 width="100%")
 
 

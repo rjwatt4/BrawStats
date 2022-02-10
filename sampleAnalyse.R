@@ -440,6 +440,8 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
 analyseSample<-function(IV,IV2,DV,design,evidence,result){
 
   if (is.null(IV2)) {no_ivs<-1} else {no_ivs<-2}
+  if (IV$type=="Ordinal") {IV$type<-"Interval"}
+  if (!is.null(IV2) && IV2$type=="Ordinal") {IV2$type<-"Interval"}
   if (!is.null(IV2) && DV$type=="Ordinal") {DV$type<-"Interval"}
   
   # collect the data
@@ -719,6 +721,12 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               df<-paste("(",format(an$Df[nrow(an)]),")",sep="")
               tval<-result$rIV
             },
+            "Ordinal Interval"={
+              an_name<-"Pearson Correlation"
+              t_name<-"r"
+              df<-paste("(",format(an$Df[nrow(an)]),")",sep="")
+              tval<-result$rIV
+            },
             "Categorical Interval"={
               if (IV$ncats==2){
                 if (design$sIV1Use=="Within"){
@@ -748,6 +756,16 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               }
             },
             "Interval Ordinal"={
+              an_name<-"Spearman Correlation"
+              t_name<-"rho"
+              df<-paste("(",format(an$Df[nrow(an)]),")",sep="")
+              op <- options(warn = (-1))
+              tv<-cor.test(iv1, dv, method="spearman")
+              options(op)
+              tval<-tv$estimate
+              result$pIV<-tv$p.value
+            },
+            "Ordinal Ordinal"={
               an_name<-"Spearman Correlation"
               t_name<-"rho"
               df<-paste("(",format(an$Df[nrow(an)]),")",sep="")
@@ -800,6 +818,12 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               }
             },
             "Interval Categorical"={
+              an_name<-"Logistic Regression"
+              t_name<-"chi2"
+              df<-paste("(",format(an$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")
+              tval<-an$Chisq[2]
+            },
+            "Ordinal Categorical"={
               an_name<-"Logistic Regression"
               t_name<-"chi2"
               df<-paste("(",format(an$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")

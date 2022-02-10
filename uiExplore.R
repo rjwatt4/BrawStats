@@ -14,7 +14,7 @@ hypothesisFullChoices=list("Variables"=list("IV type" = "IVType",
                                       "Covariation" = "Covariation")
 )
 
-hypothesisChoices=list("Variables"=list("IV" = "IV",
+hypothesisChoices3=list("Variables"=list("IV" = "IV",
                                         "IV2" = "IV2",
                                         "DV" = "DV",
                                         "IV/DV Types" = "Types"),
@@ -22,6 +22,12 @@ hypothesisChoices=list("Variables"=list("IV" = "IV",
                                       "Effect Size2" = "EffectSize2",
                                       "Interaction" = "Interaction",
                                       "Covariation" = "Covariation")
+)
+
+hypothesisChoices2=list("Variables"=list("IV" = "IV",
+                                        "DV" = "DV",
+                                        "IV/DV Types" = "Types"),
+                       "Effects"=list("Effect Size" = "EffectSize1")
 )
 
 variableChoices=list("& type"="Type",
@@ -95,7 +101,7 @@ ExploreTab <-
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Vary:")),
                                                 tags$td(width = "40%", 
                                                         selectInput("Explore_typeH",label=NULL,
-                                                                    hypothesisChoices,selectize=FALSE)
+                                                                    hypothesisChoices3,selectize=FALSE)
                                                 ),
                                                 tags$td(width = "25%", 
                                                         conditionalPanel(condition="input.Explore_typeH == 'IV' || input.Explore_typeH == 'DV' || input.Explore_typeH == 'IV2'",

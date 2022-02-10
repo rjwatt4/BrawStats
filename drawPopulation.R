@@ -113,7 +113,7 @@ drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   l2=1:ng2
   
   division<-r2CatProportions(rho,ncats1,ng2)  
-  pp<-exp(-0.5*(((1:ng2)-(ng2+1)/2)/DV$spread)^2)
+  pp<-exp(-0.5*(((1:ng2)-DV$median)/(DV$iqr/2))^2)
   pp<-pp/max(pp)
   s<-division/max(division)
   x<-c(-1,-1,1,1)*min(diff(b1))/2*0.9
@@ -242,16 +242,25 @@ drawPopulation<-function(IV,DV,effect,alpha=1){
           "Interval Interval"={
             g<-drawParParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
+          "Ordinal Interval"={
+            g<-drawParParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
+          },
           "Categorical Interval"={
             g<-drawCatParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
           "Interval Ordinal"={
             g<-drawParOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
           },
+          "Ordinal Ordinal"={
+            g<-drawParOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
+          },
           "Categorical Ordinal"={
             g<-drawCatOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$nlevs+1))
           },
           "Interval Categorical"={
+            g<-drawParCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
+          },
+          "Ordinal Categorical"={
             g<-drawParCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
           },
           "Categorical Categorical"={

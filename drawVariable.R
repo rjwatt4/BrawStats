@@ -35,7 +35,7 @@ drawCategorical<-function(var){
   pp<-CatProportions(var)
   b<-(1:ng)*2-(ng+1)
   
-  r1<-c(-1, -1, 1, 1)*0.3
+  r1<-c(-1, -1, 1, 1)*0.6
   d1<-c(0,1,1,0)
   
   r<-c()
@@ -51,7 +51,7 @@ drawCategorical<-function(var){
   l=var$cases[1:ng]
   
   pts=data.frame(r=r,dens=dens)
-  xlim<-c(-ng-1,ng+1)
+  xlim<-c(-ng,ng)+c(-1,1)*ng/10
   drawVar(pts,var)+
     scale_x_continuous(breaks=b,labels=l)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
@@ -59,12 +59,16 @@ drawCategorical<-function(var){
 }
 
 drawOrdinal<-function(var){
-  ng<-var$nlevs
-  r1<-c(-1, -1, 1, 1)*0.49999999
+  r1<-c(-1, -1, 1, 1)*0.499
   d1<-c(0,1,1,0)
-  pp<-OrdProportions(var)
-  b<-(1:ng)-(ng+1)/2
   
+    ng<-var$nlevs
+    pp<-OrdProportions(var)
+    b<-(1:ng)-var$median
+    bt<-b
+    lt=1:ng
+
+    
   r<-c()
   dens<-c()
   for (i in 1:length(b)){
@@ -76,14 +80,12 @@ drawOrdinal<-function(var){
   r<-c(-fullRange,r,fullRange)
   dens<-c(0,dens,0)
   
-  l=1:ng
-  
   pts=data.frame(r=r,dens=dens)
   x1=r[1]
   x2=r[length(r)]
   xlim<-c(x1-(x2-x1)/10,x2+(x2-x1)/10)
   drawVar(pts,var)+
-    scale_x_continuous(breaks=b,labels=l)+
+    scale_x_continuous(breaks=bt,labels=lt)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
   
 }

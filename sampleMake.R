@@ -7,15 +7,26 @@ hsyConstant=1
 make_debug=FALSE
 
 
-makeSampleVals<-function(n,mn,sdv,MV){
-  if (MV$type=="Interval" && (MV$skew!=0 || MV$kurtosis!=3)){
-    print('Johnson')
-    a<-f_johnson_M(0,sdv,MV$skew,MV$kurtosis)
-    ivr<-rJohnson(n,parms=a)
-  } else {
-    ivr<-rnorm(n,0,sdv)
-  }
-  ivr+mn
+makeSampleVals<-function(n,mn,sdv,MV,distr="normal"){
+  switch (distr,
+          "normal"= {
+            if (MV$type=="Interval" && (MV$skew!=0 || MV$kurtosis!=3)){
+              print('Johnson')
+              a<-f_johnson_M(0,sdv,MV$skew,MV$kurtosis)
+              ivr<-rJohnson(n,parms=a)
+            } else {
+              ivr<-rnorm(n,0,sdv)
+            }
+            ivr+mn
+          },
+          "uniform"={
+            ivr=runif(n,min=-1,max=1)*sdv/sqrt(3)+mn
+          },
+          "Cauchy"={
+            ivr=rcauchy(n,location=0,scale=1)*qnorm(0.75)
+            ivr=ivr*sdv+mn
+          }
+  )
 }
 
 makeSampleVar<-function(design,n,MV){
@@ -315,7 +326,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       
       # make residuals
       variance_explained=rho^2+rho2^2+rhoInter^2+2*rho*rho2*rho12
-      residual<-makeSampleVals(n,0,sqrt(1-variance_explained),DV)
+      residual<-makeSampleVals(n,0,sqrt(1-variance_explained),DV,effect$ResidDistr)
       residual<-residual*dvr_s+dvr_m
 
       # non-independence  
@@ -404,6 +415,19 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Interval"={
                iv<-ivr*IV$sd+IV$mu
              },
+             "Ordinal"={
+               pp<-OrdProportions(IV)
+               ng<-IV$nlevs
+               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+               proportions<-c(0,pp)
+               breaks<-qnorm(cumsum(proportions)/sum(proportions))
+               vals=ivr*0
+               for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
+               if (!IV$discrete) {
+                 vals=vals+runif(length(vals),min=-0.5,max=0.5)
+               }
+               iv<-vals
+             },
              "Categorical"={
                ng<-IV$ncats
                pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
@@ -420,6 +444,19 @@ makeSample<-function(IV,IV2,DV,effect,design){
       switch(IV2$type,
              "Interval"={
                iv2<-iv2r*IV2$sd+IV2$mu
+             },
+             "Ordinal"={
+               pp<-OrdProportions(IV2)
+               ng<-IV2$nlevs
+               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+               proportions<-c(0,pp)
+               breaks<-qnorm(cumsum(proportions)/sum(proportions))
+               vals=iv2r*0
+               for (i in 1:ng) {vals=vals+(iv2r>breaks[i])}
+               if (!IV2$discrete) {
+                 vals=vals+runif(length(vals),min=-0.5,max=0.5)
+               }
+               iv<-vals
              },
              "Categorical"={
                ng<-IV2$ncats
@@ -448,6 +485,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
                breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=dvr*0
                for (i in 1:ng) {vals=vals+(dvr>breaks[i])}
+               if (!DV$discrete) {
+                 vals=vals+runif(length(vals),min=-0.5,max=0.5)
+               }
                dv<-vals
              },
              "Categorical"={
@@ -470,6 +510,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
            "Interval"={
              IVs<-list(mu=mean(iv),sd=sd(iv),name=IV$name,type=IV$type,vals=iv)
            },
+           "Ordinal"={
+             IVs<-list(mu=IV$median, sd=IV$iqr/2, name=IV$name,type=IV$type,nlevs=IV$nlevs,median=IV$median,iqr=IV$iqr,discrete=IV$discrete,vals=iv)
+           },
            "Categorical"={
              IVs<-list(mu=0, sd=1, name=IV$name,type=IV$type,ncats=IV$ncats,cases=IV$cases,proportions=IV$proportions,vals=iv)
            }
@@ -480,6 +523,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
       switch(IV2$type,
            "Interval"={
              IV2s<-list(name=IV2$name,type=IV2$type,mu=mean(iv2),sd=sd(iv2),vals=iv2)
+           },
+           "Ordinal"={
+             IV2s<-list(mu=IV2$median, sd=IV2$iqr/2, name=IV2$name,type=IV2$type,nlevs=IV2$nlevs,median=IV2$median,iqr=IV2$iqr,discrete=IV2$discrete,vals=iv2)
            },
            "Categorical"={
              IV2s<-list(name=IV2$name,type=IV2$type,mu=0, sd=1, ncats=IV2$ncats,cases=IV2$cases,proportions=IV2$proportions,vals=iv2)
@@ -494,7 +540,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
              DVs<-list(mu=mean(dv),sd=sd(dv),name=DV$name,type=DV$type,vals=dv)
            },
            "Ordinal"={
-             DVs<-list(mu=0, sd=1, name=DV$name,type=DV$type,nlevs=DV$nlevs,centre=DV$centre,spread=DV$spread,vals=dv)
+             DVs<-list(mu=DV$median, sd=DV$iqr/2, name=DV$name,type=DV$type,nlevs=DV$nlevs,median=DV$median,iqr=DV$iqr,discrete=DV$discrete,vals=dv)
            },
            "Categorical"={
              DVs<-list(mu=0, sd=1, name=DV$name,type=DV$type,ncats=DV$ncats,cases=DV$cases,proportions=DV$proportions,vals=dv)
@@ -505,6 +551,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
 
     switch(IV$type,
            "Interval"={xplot<-iv},
+           "Ordinal"={xplot<-iv},
            "Categorical"={xplot<-match(iv,levels(iv))}
     )
     
@@ -526,6 +573,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
     if (!is.null(IV2)){
       switch(IV2$type,
              "Interval"={x2plot<-iv2},
+             "Ordinal"={x2plot<-iv2},
              "Categorical"={x2plot<-match(iv2,levels(iv2))}
       )
       if (IV2$type=="Categorical"){

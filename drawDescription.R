@@ -32,6 +32,15 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
               g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, size =dotSize, colour="black", fill=col)
           },
           
+          "Ordinal Interval"={
+            pts<-data.frame(x=x,y=y);
+            if (colindex>=2) {
+              g<-g+geom_point(data=pts,aes(x=x,y=y,fill=names(plotDescriptionCols)[colindex-1]),shape=21, colour = "black", alpha=0.95, size =dotSize)
+            }
+            else
+              g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, size =dotSize, colour="black", fill=col)
+          },
+          
           "Categorical Interval"={
             pp<-CatProportions(IV)
             pts<-data.frame(IV=x+xoff,DV=y);
@@ -41,6 +50,14 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
               else
                 g<-g+geom_point(data=pts,aes(x=IV,y=DV),shape=21, colour = "black", fill=col, alpha=0.95, size =dotSize)
             }
+          },
+          
+          "Ordinal Ordinal"={
+            pts<-data.frame(IV=x,DV=y);
+            if (colindex>=2)
+              g<-g+geom_point(data=pts,aes(x=IV,y=DV,fill=names(plotDescriptionCols)[colindex-1]),shape=21, colour = "black", alpha=0.95, size =dotSize)
+            else
+              g<-g+geom_point(data=pts,aes(x=IV,y=DV),shape=21, size =dotSize, colour="black", fill=col)
           },
           
           "Interval Ordinal"={
@@ -86,7 +103,7 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
               full_y<-c(full_y,yv)
               full_f<-c(full_f,rep(i2,length(xv)))
               if (colindex==1) {
-              full_c<-c(full_c,rep(CatCatcols[i2],length(xv)))
+                full_c<-c(full_c,rep(CatCatcols[i2],length(xv)))
               }
             }
             pts<-data.frame(x=full_x,y=full_y,fill=full_f)
@@ -94,13 +111,57 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
               if (colindex>=2) {
                 # g<-g+geom_point(data=pts,aes(x=x,y=y,fill=names(plotDescriptionCols)[colindex-1]),shape=21, size =dotSize, alpha=0.95, colour="black")
                 g<-g+geom_point(data=pts,aes(x=full_x,y=full_y),shape=21, size =dotSize, alpha=0.95, colour="black",fill="white")
+              } else {
+                if (doLegendPoints) {
+                  g<-g+geom_point(data=pts,aes(x=full_x,y=full_y,fill=factor(full_f)),shape=21, size =dotSize, alpha=0.95)
                 } else {
-                  if (doLegendPoints) {
-                    g<-g+geom_point(data=pts,aes(x=full_x,y=full_y,fill=factor(full_f)),shape=21, size =dotSize, alpha=0.95)
-                  } else {
-                    g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, size =dotSize, alpha=0.95, colour="black",fill=full_c)
-                  }
+                  g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, size =dotSize, alpha=0.95, colour="black",fill=full_c)
                 }
+              }
+            }
+          },
+          
+          
+          "Ordinal Categorical"={
+            bin_breaks<-c(-Inf,seq(-1,1,length.out=10)*fullRange*sd(result$iv)+mean(result$iv),Inf)
+            dens2<-hist(result$iv,breaks=bin_breaks,freq=TRUE,plot=FALSE,warn.unused = FALSE)
+            bins=dens2$mids
+            full_x<-c()
+            full_y<-c()
+            full_f<-c()
+            full_c<-c()
+            for (i2 in 1:DV$ncats){
+              xv<-c()
+              yv<-c()
+              dens1<-hist(result$iv[result$dv==DV$cases[i2]],breaks=bin_breaks,freq=TRUE,plot=FALSE,warn.unused = FALSE)
+              densities<-dens1$counts/dens2$counts
+              for (i in 1:(length(dens1$counts)-1)){
+                y<-dens1$counts[i]
+                if (y>0){
+                  xv<-c(xv,rep(bins[i],y)+runif(y,min=-0.08,max=0.08))
+                  yv<-c(yv,runif(y,min=0.05,max=0.9)*densities[i])
+                }
+              }
+              xoff<-(i2-1)/(DV$ncats-1)-(DV$ncats-1)/2
+              full_x<-c(full_x,xv+xoff/4)
+              full_y<-c(full_y,yv)
+              full_f<-c(full_f,rep(i2,length(xv)))
+              if (colindex==1) {
+                full_c<-c(full_c,rep(CatCatcols[i2],length(xv)))
+              }
+            }
+            pts<-data.frame(x=full_x,y=full_y,fill=full_f)
+            if (showRawData) {
+              if (colindex>=2) {
+                # g<-g+geom_point(data=pts,aes(x=x,y=y,fill=names(plotDescriptionCols)[colindex-1]),shape=21, size =dotSize, alpha=0.95, colour="black")
+                g<-g+geom_point(data=pts,aes(x=full_x,y=full_y),shape=21, size =dotSize, alpha=0.95, colour="black",fill="white")
+              } else {
+                if (doLegendPoints) {
+                  g<-g+geom_point(data=pts,aes(x=full_x,y=full_y,fill=factor(full_f)),shape=21, size =dotSize, alpha=0.95)
+                } else {
+                  g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, size =dotSize, alpha=0.95, colour="black",fill=full_c)
+                }
+              }
             }
           },
           

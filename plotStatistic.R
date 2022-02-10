@@ -430,9 +430,10 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
       g <- expected_plot(g,pts,result,IV,DV,ptype)
       
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], label = paste("p(sig) =",format(mean(pvals<alpha),digits=graph_precision)))
-      g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     }
+    lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
+                     label = paste0("p(sig) = ",format(mean(pvals<alpha),digits=graph_precision),"  (",format(sum(pvals<alpha)),"/",format(length(pvals)),")"))
+    g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     if (length(xoff)>1)
       switch (i,
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},

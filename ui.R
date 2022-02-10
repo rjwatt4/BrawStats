@@ -44,6 +44,8 @@ source("uiPopulationDiagram.R")
 source("uiMainGraph.R")
 source("uiMainReport.R")
 
+source("uiInspectDiagram.R")
+
 shinyUI(fluidPage(
     useShinyjs(),
     
@@ -185,7 +187,9 @@ shinyUI(fluidPage(
                             MainGraphs,
                             MainReports
                      ),
-                     bsModal("testedOutput", "tested Outputs", "testedOutputButton", size = "large",plotOutput("plotPopUp")),
+                     bsModal(id="testedOutput", title="tested Outputs", trigger="testedOutputButton", size = "large",plotOutput("plotPopUp")
+                     ),
+                     inspectDiagram,
                      width = 9
                  ),
         ),
