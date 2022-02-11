@@ -44,14 +44,15 @@ drawCategorical<-function(var){
     r<-c(r,r1+b[i])
     dens<-c(dens,d1*pp[i])
   }
-  r<-r/max(abs(r[1]),2)*2.5
-  r<-c(-fullRange,r,fullRange)
-  dens<-c(0,dens,0)
+  # r<-r/max(abs(r[1]),2)*2.5
   
   l=var$cases[1:ng]
   
-  pts=data.frame(r=r,dens=dens)
   xlim<-c(-ng,ng)+c(-1,1)*ng/10
+  r<-c(xlim[1],r,xlim[2])
+  dens<-c(0,dens,0)
+  pts=data.frame(r=r,dens=dens)
+  
   drawVar(pts,var)+
     scale_x_continuous(breaks=b,labels=l)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
