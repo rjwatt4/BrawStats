@@ -333,7 +333,7 @@ shinyServer(function(input, output, session) {
                  mu=input$MVmu, sd=input$MVsd,
                  skew=input$MVskew, kurtosis=input$MVkurt,
                  nlevs=input$MVnlevs,median=input$MVcentre,iqr=input$MVspread,discrete=input$MVdiscrete,
-                 ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,
+                 ncats=input$MVncats,cases=input$MVcases,proportions=input$MVprop,source=input$MVsource,
                  deploy=MV$deploy,process=MV$process)
 
     switch (modalVar,
@@ -359,33 +359,21 @@ shinyServer(function(input, output, session) {
               modalVar<<-"IV"
               IV<-updateIV()
               MV<<-IV
-              varTypes<<- c("Interval" = "Interval",
-                            "Ordinal" = "Ordinal",
-                            "Categorical" = "Categorical"
-              )
             },
             "editIV2"={
               modalVar<<-"IV2"
               IV2<-updateIV2()
               MV<<-IV2
-              varTypes<<- c("Interval" = "Interval",
-                            "Ordinal" = "Ordinal",
-                            "Categorical" = "Categorical"
-              )
             },
             "editDV"={   
               modalVar<<-"DV"
               DV<-updateDV()
               MV<<-DV
-              varTypes<<- c("Interval" = "Interval",
-                            "Ordinal" = "Ordinal",
-                            "Categorical" = "Categorical"
-              )
             }
             )
     # now set up the controls in the dialogue with up to date values
     updateTextInput(session,"MVname",value=MV$name)
-    updateSelectInput(session,"MVtype",choices=varTypes,selected=MV$type)
+    updateSelectInput(session,"MVtype",selected=MV$type)
     updateNumericInput(session,"MVmu",value=MV$mu)
     updateNumericInput(session,"MVsd",value=MV$sd)
     updateNumericInput(session,"MVskew",value=MV$skew)
@@ -396,6 +384,7 @@ shinyServer(function(input, output, session) {
     updateNumericInput(session,"MVncats",value=MV$ncats)
     updateTextInput(session,"MVcases",value=MV$cases)
     updateTextInput(session,"MVprop",value=MV$proportions)
+    updateSelectInput(session,"source",selected=MV$source)    
 
     # now show the dialog
       showModal(
@@ -452,25 +441,6 @@ shinyServer(function(input, output, session) {
         updateSelectInput(session, "IVchoice", selected=newMV$name)
       }
       
-      switch (newMV$type,
-            "Interval"={
-              updateNumericInput(session, "IVmu", value=newMV$mu)
-              updateNumericInput(session, "IVsd", value=newMV$sd)
-            },
-            "Ordinal"={
-              updateNumericInput(session, "IVnlevs", value=newMV$nlevs)
-              updateTextInput(session, "IVcases", value=newMV$cases)
-              updateTextInput(session, "IVprop", value=newMV$proportions)
-              updateNumericInput(session, "IVmu", value=newMV$mu)
-              updateNumericInput(session, "IVsd", value=newMV$sd)
-            },
-              "Categorical"={
-              updateNumericInput(session, "IVncats", value=newMV$ncats)
-              updateTextInput(session, "IVcases", value=newMV$cases)
-              updateTextInput(session, "IVprop", value=newMV$proportions)
-            }
-    )
-    
     updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
     switch (newMV$type,
             "Interval"={
@@ -537,17 +507,6 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    switch (newMV$type,
-            "Interval"={
-              updateNumericInput(session, "IV2mu", value=newMV$mu)
-              updateNumericInput(session, "IV2sd", value=newMV$sd)
-            },
-            "Categorical"={
-              updateNumericInput(session, "IV2ncats", value=newMV$ncats)
-              updateTextInput(session, "IV2cases", value=newMV$cases)
-              updateTextInput(session, "IV2prop", value=newMV$proportions)
-            }
-    )
     validSample<<-FALSE
     validExpected<<-FALSE
     validExplore<<-FALSE
@@ -587,22 +546,6 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, "DVchoice", selected=newMV$name)
     }
     
-    switch (newMV$type,
-            "Interval"={
-              updateNumericInput(session, "DVmu", value=newMV$mu)
-              updateNumericInput(session, "DVsd", value=newMV$sd)
-            },
-            "Ordinal"={
-              updateNumericInput(session, "DVnlevs", value=newMV$nlevs)
-              updateTextInput(session, "DVcases", value=newMV$cases)
-              updateTextInput(session, "DVprop", value=newMV$proportions)
-            },
-            "Categorical"={
-              updateNumericInput(session, "DVncats", value=newMV$ncats)
-              updateTextInput(session, "DVcases", value=newMV$cases)
-              updateTextInput(session, "DVprop", value=newMV$proportions)
-            }
-    )
   }
   
 inspectData<-c()  
@@ -724,6 +667,7 @@ inspectHistory<-c()
   
 ######################################################  
 ## update variables functions
+  
     updateIV<-function(){
       if (debug) print("     updateIV")
       
@@ -740,43 +684,9 @@ inspectHistory<-c()
                     cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
                   }
                   IV$cases<-cs
-      #             IV$proportions<-MV$prop
                 }
       if (debug) print("     updateIV - exit")
       return(IV)
-      # MV<-variables[use,]
-      # IV$name<-MV$name
-      # IV$type<-MV$type
-      # if (IV$type=="Ordinal") {
-      #   if (warnOrd==FALSE) {
-      #     hmm("Ordinal IV will be treated as Interval.")
-      #     warnOrd<<-TRUE
-      #   }
-      # }
-      # if (IV$type=="Ordinal") IV$type<-"Interval"
-      # switch (MV$type,
-      #           "Interval"={
-      #             IV$mu<-MV$mu
-      #             IV$sd<-MV$sd
-      #             IV$skew<-MV$skew
-      #             IV$kurtosis<-MV$kurtosis
-      #           },
-      #           "Categorical"={
-      #             IV$ncats<-MV$ncats
-      #             cs<-MV$cases
-      #             cs<-strsplit(cs,",")
-      #             cs<-cs[[1]]
-      #             if (length(cs)<IV$ncats){
-      #               cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
-      #             }
-      #             IV$cases<-paste(cs,sep='',collapse=',')
-      #             IV$proportions<-MV$prop
-      #           }
-      #   )
-      # IV$process<-MV$process
-      # 
-      # if (debug) print("     updateIV - exit")
-      # IV        
     }
     
     updateIV2<-function(){
@@ -806,40 +716,6 @@ inspectHistory<-c()
       }
       if (debug) print("     updateIV2 - exit")
       return(IV2)
-      
-      # MV<-variables[use,]
-      # IV2$name<-MV$name
-      # IV2$type<-MV$type
-      # if (IV2$type=="Ordinal") {
-      #   if (warnOrd==FALSE) {
-      #     hmm("Ordinal IV2 treated as Interval.")
-      #     warnOrd<<-TRUE
-      #   }
-      # }
-      # if (IV2$type=="Ordinal") IV2$type<-"Interval"
-      # switch (MV$type,
-      #         "Interval"={
-      #           IV2$mu<-MV$mu
-      #           IV2$sd<-MV$sd
-      #           IV2$skew<-MV$skew
-      #           IV2$kurtosis<-MV$kurtosis
-      #         },
-      #         "Categorical"={
-      #           IV2$ncats<-MV$ncats
-      #           cs<-MV$cases
-      #           cs<-strsplit(cs,",")
-      #           cs<-cs[[1]]
-      #           if (length(cs)<IV2$ncats){
-      #             cs<-c(cs,paste("C",(length(cs)+1):IV2$ncats,sep=""))
-      #           }
-      #           IV2$cases<-paste(cs,sep='',collapse=',')
-      #           IV2$proportions<-MV$prop
-      #         }
-      # )
-      # IV2$process<-MV$process
-      # 
-      # if (debug) print("     updateIV2 - exit")
-      # IV2     
     }
     
     updateDV<-function(){
@@ -866,58 +742,12 @@ inspectHistory<-c()
       }
       if (debug) print("     updateDV - exit")
       return(DV)
-      
-      # MV<-variables[use,]
-      # DV$name<-MV$name
-      # DV$type<-MV$type
-      # switch (MV$type,
-      #         "Interval"={
-      #           DV$mu<-MV$mu
-      #           DV$sd<-MV$sd
-      #           DV$skew<-MV$skew
-      #           DV$kurtosis<-MV$kurtosis
-      #         },
-      #         "Ordinal"={
-      #           DV$nlevs<-MV$nlevs
-      #           DV$median<-MV$median
-      #           DV$iqr<-MV$iqr
-      #         },
-      #         "Categorical"={
-      #           DV$ncats<-MV$ncats
-      #           cs<-MV$cases
-      #           cs<-strsplit(cs,",")
-      #           cs<-cs[[1]]
-      #           if (length(cs)<DV$ncats){
-      #             cs<-c(cs,paste("F",(length(cs)+1):DV$ncats,sep=""))
-      #           }
-      #           DV$cases<-paste(cs,sep='',collapse=',')
-      #           DV$proportions<-MV$prop
-      #         }
-      # )
-      # DV$process<-MV$process
-      # if (DV$type=="Categorical" && DV$ncats>2) {
-      #   if (input$IV2choice!="none") {
-      #     if (warn3Cat2==FALSE) {
-      #       hmm("Categorical DV with more than 2 cases. Graphs not complete.")
-      #       warn3Cat2<<-TRUE
-      #     }
-      #   }
-      # }
-      #   
-      # DV        
     }
     
 # UI changes    
     observeEvent(c(input$rIV,input$rIV2,input$rIVIV2,input$rIVIV2DV,
                                   input$sN,input$sMethod,input$sIV1Use,input$sIV2Use),{
       if (debug) print("     effectChanged")
-      
-      # check effect sizes for over-determination
-      # if (input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2 > 1){
-      #   showModal(modalDialog(title="Effect sizes too high!",
-      #                         paste("r1^2 + r2^2 + r1:r2^2 + 2*r1*r2*r12 = ",format(input$rIV^2 + input$rIV2^2 + input$rIVIV2DV^2 + 2*input$rIVIV2*input$rIV*input$rIV2,digits=3))
-      #   ))
-      # }
       
       # remove out of date sample and other 
       validSample<<-FALSE
@@ -963,7 +793,7 @@ inspectHistory<-c()
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
       prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr, ExptCats=input$ExptCats)
+                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr)
       if (debug) print("     updatePrediction - exit")
       prediction
     }

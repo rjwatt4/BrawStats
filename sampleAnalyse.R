@@ -578,8 +578,8 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   switch (evidence$ssqType,
           "Type1"={an<-Anova(lmRaw,test=testMethod3)},
           "Type2"={an<-Anova(lmRaw,test=testMethod3,type=2)},
-          "Type3"={an<-Anova(lmRaw3,test=testMethod3,type=3)},
-          "Type3w"={an<-Anova(lmRaw,test=testMethod3,type=3)}
+          "Type3"={an<-Anova(lmRaw3,test=testMethod3,type=3,singular.ok=TRUE)},
+          "Type3w"={an<-Anova(lmRaw,test=testMethod3,type=3,singular.ok=TRUE)}
           )
 
   # overall model effect-size

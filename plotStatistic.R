@@ -1,6 +1,7 @@
 min_p=0.0001
 min_nw=10
 max_nw=10000
+horiz_scatter=0.5
 
 se_colour="#BBBBBB"
 se_size=0.75
@@ -226,7 +227,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)*length(xoff)/2
+        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]
@@ -285,8 +286,8 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
         geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
     }
     if (length(xoff)>1)
-      if (rem(i,3)==0)
-      switch (i/3,
+      if (i<=3)
+      switch (i,
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
@@ -374,7 +375,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)*length(xoff)/2
+        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]
@@ -431,11 +432,17 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       g <- expected_plot(g,pts,result,IV,DV,ptype)
       
     }
+    if (length(xoff)>1) {
+      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
+                       label = paste0("p(sig) = ",format(mean(pvals<alpha),digits=graph_precision)))
+    } else {
     lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
                      label = paste0("p(sig) = ",format(mean(pvals<alpha),digits=graph_precision),"  (",format(sum(pvals<alpha)),"/",format(length(pvals)),")"))
+    }
     g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     if (length(xoff)>1)
-      switch (i,
+      if (i<=3)
+        switch (i,
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
@@ -506,7 +513,7 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-0.2,max=0.2)
+        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]
@@ -639,7 +646,7 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-0.2,max=0.2)
+        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]

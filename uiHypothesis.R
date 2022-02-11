@@ -124,22 +124,6 @@ HypothesisTab <-
                                         ))),
                                         tags$td(width = "45%", tags$div(style = localStyle, " "))
                                       ),
-                                      tags$tr(
-                                        tags$td(width = "35%", 
-                                                conditionalPanel(condition="input.local == 'y'",
-                                                                 tags$div(style = localStyle, "Presets:")
-                                                                 )
-                                        ),
-                                        tags$td(width = "65%", 
-                                                conditionalPanel(condition="input.local == 'y'",
-                                                                 selectInput("Effectchoice", label = NULL,
-                                                                             choices=
-                                                                               list("zeroes"="e0","interaction"="e1","opposite"="e2"),
-                                                                             selected="none",
-                                                                             selectize=FALSE)
-                                                                 )
-                                        ),
-                                      )
                            ),
                            width="100%"
                          )
@@ -150,13 +134,6 @@ HypothesisTab <-
                          wellPanel(
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),
                            tags$table(width = "100%",class="myTable",
-                                      tags$tr(
-                                        tags$td(width = "35%", tags$div(style = localStyle, "Experimental Cats:")),
-                                        tags$td(width = "30%", 
-                                                selectInput("ExptCats",label=NULL,choices=c("Yes","No"),selected="No",selectize=FALSE),
-                                        ),
-                                        tags$td(width = "35%", tags$div(style = localStyle, " ")                                        )
-                                      ),
                                       tags$tr(
                                         tags$td(width = "35%", tags$div(style = localStyle, "Heteroscedasticity:")),
                                         tags$td(width = "30%", 
@@ -188,6 +165,22 @@ HypothesisTab <-
                                                          ),
                                                          tags$td(width = "35%", tags$div(style = localStyle, " ")
                                                          )
+                                      ),
+                                      tags$tr(
+                                        tags$td(width = "35%", 
+                                                conditionalPanel(condition="input.local == 'y'",
+                                                                 tags$div(style = localStyle, "Presets:")
+                                                )
+                                        ),
+                                        tags$td(width = "65%", 
+                                                conditionalPanel(condition="input.local == 'y'",
+                                                                 selectInput("Effectchoice", label = NULL,
+                                                                             choices=
+                                                                               list("zeroes"="e0","interaction"="e1","opposite"="e2"),
+                                                                             selected="none",
+                                                                             selectize=FALSE)
+                                                )
+                                        ),
                                       )
                            )
                          )
