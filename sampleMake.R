@@ -1,4 +1,4 @@
-convert2Cat="end"
+
 outlierValue=4
 dependenceVal=0.1
 clusterVal=0.25
@@ -154,6 +154,11 @@ makeSampleVar<-function(design,n,MV){
 
 makeSample<-function(IV,IV2,DV,effect,design){
 
+  switch(effect$ExptCats,
+         "Yes"={convert2Cat<-"start"},
+         "No"={convert2Cat<-"end"},
+  )
+  
   n<-design$sN
   rho<-effect$rIV
   if (n==0){
@@ -182,7 +187,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       sampleRho<-0
       samplePval<-0
       
-    } else{
+    } else {
       
     if (IV$process=="data" && DV$process=="data"){
       useIV<-match(IV$name,variables$name)
@@ -301,6 +306,25 @@ makeSample<-function(IV,IV2,DV,effect,design){
       dvr_m<-data$dvr_m
       dvr_s<-data$dvr_s
       
+      switch(IV$type,
+             "Interval"={
+             },
+             "Ordinal"={
+             },
+             "Categorical"={
+               if (convert2Cat=="start") {
+                 ng<-IV$ncats
+                 pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+                 if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+                 proportions<-c(0,pp)
+                 breaks<-qnorm(cumsum(proportions)/sum(proportions))
+                 vals=ivr*0
+                 for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
+                 ivr<-(vals-(IV$ncats+1)/2)/std((1:IV$ncats),1)
+               }
+             }
+      )
+      
 
       # make iv2 (if needed)
       if (!is.null(IV2)){
@@ -416,27 +440,32 @@ makeSample<-function(IV,IV2,DV,effect,design){
                iv<-ivr*IV$sd+IV$mu
              },
              "Ordinal"={
-               pp<-OrdProportions(IV)
-               ng<-IV$nlevs
-               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
-               proportions<-c(0,pp)
-               breaks<-qnorm(cumsum(proportions)/sum(proportions))
-               vals=ivr*0
-               for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
-               if (!IV$discrete) {
-                 vals=vals+runif(length(vals),min=-0.5,max=0.5)
-               }
-               iv<-vals
+                 pp<-OrdProportions(IV)
+                 ng<-IV$nlevs
+                 if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+                 proportions<-c(0,pp)
+                 breaks<-qnorm(cumsum(proportions)/sum(proportions))
+                 vals=ivr*0
+                 for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
+                 if (!IV$discrete) {
+                   vals=vals+runif(length(vals),min=-0.5,max=0.5)
+                 }
+                 iv<-vals
              },
              "Categorical"={
-               ng<-IV$ncats
-               pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
-               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
-               proportions<-c(0,pp)
-               breaks<-qnorm(cumsum(proportions)/sum(proportions))
-               vals=ivr*0
-               for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
-               iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
+               if (convert2Cat=="end") {
+                 ng<-IV$ncats
+                 pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+                 if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+                 proportions<-c(0,pp)
+                 breaks<-qnorm(cumsum(proportions)/sum(proportions))
+                 vals=ivr*0
+                 for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
+                 iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
+               } else {
+                 ivr<-ivr*std((1:IV$ncats),1)+(IV$ncats+1)/2
+                 iv<-factor(ivr,levels=1:IV$ncats,labels=IV$cases)
+                 }
              }
       )
 

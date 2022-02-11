@@ -963,7 +963,7 @@ inspectHistory<-c()
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
       prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr)
+                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr, ExptCats=input$ExptCats)
       if (debug) print("     updatePrediction - exit")
       prediction
     }
