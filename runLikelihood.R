@@ -122,7 +122,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
               r_effects<-tanh(rnorm(nsims,mean=atanh(pRho),sd=s))
             }
             if (likelihood$appendSim){
-              sr_effects<-c(likelihoodSResultHold,sr)
+              sr_effects<-c(likelihoodSResultHold,r_effects)
             } else {
               sr_effects<-r_effects
             }
