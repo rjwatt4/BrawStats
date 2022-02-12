@@ -36,12 +36,14 @@ makeSampleVar<-function(design,n,MV){
   while (length(ivr)<n) {
     switch (design$sMethod,
             "Random"={
+              # purely random sample from whole range
               ivr1<-makeSampleVals(n,0,1,MV)
               dvr1_m<-rep(0,n)
               dvr1_s<-rep(1,n)
             },
             "Stratified"={
-              r<-seq(-design$sRStrata,design$sRStrata,length.out=design$sNStrata)
+              # sampled at specific intervals
+              r<-seq(-design$sR_Strata,design$sR_Strata,length.out=design$sN_Strata)
               dens<-dnorm(r)
               dens<-round(dens/sum(dens)*n)
               ivr1<-rep(r,dens)
@@ -50,20 +52,23 @@ makeSampleVar<-function(design,n,MV){
               dvr1_s<-rep(1,n)
             },
             "Cluster"={
+              # a number of clusters, 
+              # each cluster having a particular range within the population
+              # random sampling within each cluster
               ivr1<-c()
               dvr1_m<-c()
               dvr1_s<-c()
-              for (i in 1:design$sNCluster) {
+              for (i in 1:design$sNClu_Cluster) {
                 # location of cluster
-                cluster_centre_sd<-sqrt(1-design$sRCluster^2)
+                cluster_centre_sd<-sqrt(1-design$sRClu_Cluster^2)
                 x_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 y_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                   # location of point within cluster
-                  dens<-round(n/design$sNCluster)+1
-                  x_new<-rnorm(dens,x_cluster_centre,design$sRCluster)
+                  dens<-round(n/design$sNClu_Cluster)+1
+                  x_new<-rnorm(dens,x_cluster_centre,design$sRClu_Cluster)
                   ivr1<-c(ivr1,x_new)
                   dvr1_m<-c(dvr1_m,rep(y_cluster_centre,sum(dens)))
-                  dvr1_s<-c(dvr1_s,rep(design$sRCluster,sum(dens)))
+                  dvr1_s<-c(dvr1_s,rep(design$sRClu_Cluster,sum(dens)))
               }
               use<-sample(length(ivr1),length(ivr1))
               ivr1<-ivr1[use]
@@ -71,29 +76,34 @@ makeSampleVar<-function(design,n,MV){
               dvr1_s<-dvr1_s[use]
             },
             "Convenience"={
+              # a number of clusters,
+              # each cluster having a particular range within the population
+              # within each cluster a number of contacts
+              # each contact having a range within the cluster
+              # sample within a certain spread from the contact
               ivr1<-c()
               dvr1_m<-c()
               dvr1_s<-c()
               
-              cluster_centre_sd<-sqrt(1-design$sRConvenience^2)
-              for (i in 1:design$sNConvenience) {
+              cluster_centre_sd<-sqrt(1-design$sRClu_Convenience^2)
+              for (i in 1:design$sNClu_Convenience) {
                 # location of cluster
                 x_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 y_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 
-                contact_centre_sd<-sqrt((1-design$sRConvenience^2) - (design$sRConvenience*design$sRCConvenience)^2)
-                for (j in 1:design$sNCConvenience) {
+                contact_centre_sd<-sqrt((1-design$sRClu_Convenience^2) - (design$sRClu_Convenience*design$sRCont_Convenience)^2)
+                for (j in 1:design$sNClu_Convenience) {
                   # location of contact group
                   x_contact_centre<-rnorm(1,x_cluster_centre,contact_centre_sd) 
                   y_contact_centre<-rnorm(1,y_cluster_centre,contact_centre_sd)
                   
                     # location of point within contact group
-                    dens<-round(n/design$sNConvenience/design$sNCConvenience)+1
-                    x_new<-rnorm(dens,x_contact_centre,design$sRConvenience*design$sRCConvenience*design$sRCSConvenience)
+                    dens<-round(n/design$sNClu_Convenience/design$sNCont_Convenience)+1
+                    x_new<-rnorm(dens,x_contact_centre,design$sRClu_Convenience*design$sRCont_Convenience*design$sRSpread_Convenience)
                     y_new<-rep(y_contact_centre,dens)
                     ivr1<-c(ivr1,x_new)
                     dvr1_m<-c(dvr1_m,y_new)
-                    dvr1_s<-c(dvr1_s,rep(design$sRConvenience*design$sRCConvenience*design$sRCSConvenience,sum(dens)))
+                    dvr1_s<-c(dvr1_s,rep(design$sRClu_Convenience*design$sRCont_Convenience*design$sRSpread_Convenience,sum(dens)))
                 }
               }
               use<-sample(length(ivr1),length(ivr1))
@@ -102,32 +112,37 @@ makeSampleVar<-function(design,n,MV){
               dvr1_s<-dvr1_s[use]
             },
             "Snowball"={
+              # a number of clusters,
+              # each cluster having a particular range within the population
+              # within each cluster a number of contacts
+              # each contact having a range within the cluster
+              # sample a chain from from the contact with chain links of a cerain spread
               ivr1<-c()
               dvr1_m<-c()
               dvr1_s<-c()
 
-              cluster_centre_sd<-sqrt(1-design$sRCSnowball^2)
-              for (i in 1:design$sNConvenience) {
+              cluster_centre_sd<-sqrt(1-design$sRClu_Snowball^2)
+              for (i in 1:design$sNClu_Snowball) {
                 # location of cluster
                 x_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 y_cluster_centre<-rnorm(1,0,cluster_centre_sd)
                 
-                contact_centre_sd<-sqrt((1-design$sRCSnowball^2) - (design$sRCSnowball*design$sRSSnowball)^2)
-                for (j in 1:design$sNCConvenience) {
+                contact_centre_sd<-sqrt((1-design$sRClu_Snowball^2) - (design$sRClu_Snowball*design$sRCont_Snowball)^2)
+                for (j in 1:design$sNCont_Snowball) {
                   # location of contact group
                   x_contact_centre<-rnorm(1,x_cluster_centre,contact_centre_sd) 
                   y_contact_centre<-rnorm(1,y_cluster_centre,contact_centre_sd)
                   
                   # location of contact group
-                  dens<-round(n/design$sNCSnowball/design$sNSSnowball)+1
+                  dens<-round(n/design$sNClu_Snowball/design$sNCont_Snowball)+1
                   x_new<-x_contact_centre
                   y_new<-y_contact_centre
                   for (k in 1:dens) {
-                    x_new<-x_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
-                    y_new<-y_new+rnorm(1,0,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
+                    x_new<-x_new+rnorm(1,0,design$sRClu_Snowball*design$sRCont_Snowball*design$sRSpread_Snowball)
+                    y_new<-y_new+rnorm(1,0,design$sRClu_Snowball*design$sRCont_Snowball*design$sRSpread_Snowball)
                     ivr1<-c(ivr1,x_new)
                     dvr1_m<-c(dvr1_m,y_new)
-                    dvr1_s<-c(dvr1_s,design$sRCSnowball*design$sRSSnowball*design$sRCSSnowball)
+                    dvr1_s<-c(dvr1_s,design$sRClu_Snowball*design$sRCont_Snowball*design$sRSpread_Snowball)
                   }
                 }
               }

@@ -94,7 +94,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   for (i in 1:nc) {
     outputText<-c(outputText,paste("\b",format(vals[use[i]],digits=report_precision),sep=""))
   }
-  outputText<-c(outputText,"lower")
+  outputText<-c(outputText,"lower 25%")
   for (i in 1:nc) {
     outputText<-c(outputText,format(y25[use[i]],digits=report_precision))
   }
@@ -102,7 +102,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   for (i in 1:nc) {
     outputText<-c(outputText,format(y50[use[i]],digits=report_precision))
   }
-  outputText<-c(outputText,"upper")
+  outputText<-c(outputText,"upper 25%")
   for (i in 1:nc) {
     outputText<-c(outputText,format(y75[use[i]],digits=report_precision))
   }

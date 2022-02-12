@@ -803,10 +803,10 @@ inspectHistory<-c()
       design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
                    sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering,
-                   sNStrata=input$sNStrata, sRStrata=input$sRStrata,
-                   sNCluster=input$sNCluster, sRCluster=input$sRCluster,
-                   sNConvenience=input$sNConvenience, sRConvenience=input$sRConvenience, sNCConvenience=input$sNCConvenience, sRCConvenience=input$sRCConvenience, sRCSConvenience=input$sRCSConvenience,
-                   sNCSnowball=input$sNCSnowball, sRCSnowball=input$sRCSnowball, sNSSnowball=input$sNSSnowball, sRSSnowball=input$sRSSnowball, sRCSSnowball=input$sRCSSnowball
+                   sN_Strata=input$sN_Strata, sR_Strata=input$sR_Strata,
+                   sNClu_Cluster=input$sNClu_Cluster, sRClu_Cluster=input$sRClu_Cluster,
+                   sNClu_Convenience=input$sNClu_Convenience, sRClu_Convenience=input$sRClu_Convenience, sNCont_Convenience=input$sNCont_Convenience, sRCont_Convenience=input$sRCont_Convenience, sRSpread_Convenience=input$sRSpread_Convenience,
+                   sNClu_Snowball=input$sNClu_Snowball, sRClu_Snowball=input$sRClu_Snowball, sNCont_Snowball=input$sNCont_Snowball, sRCont_Snowball=input$sRCont_Snowball, sRSpread_Snowball=input$sRSpread_Snowball
       )
       if (debug) print("     updateDesign - exit")
       design

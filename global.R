@@ -24,10 +24,10 @@ effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,ResidDistr="n
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
-             sNStrata=5, sRStrata=2,
-             sNCluster=5,     sRCluster=0.7,
-             sNConvenience=1, sRConvenience=0.7, sNCConvenience=5, sRCConvenience=0.7, sRCSConvenience=0.5,
-             sNCSnowball=2,   sRCSnowball=0.7,   sNSSnowball=2,    sRSSnowball=0.7,    sRCSSnowball=0.1
+             sN_Strata=5, sR_Strata=2,
+             sNClu_Cluster=5,     sRClu_Cluster=0.7,
+             sNClu_Convenience=1, sRClu_Convenience=0.7, sNCont_Convenience=5, sRCont_Convenience=0.7, sRSpread_Convenience=0.5,
+             sNClu_Snowball=2,   sRClu_Snowball=0.7,   sNCont_Snowball=2,    sRCont_Snowball=0.7,    sRSpread_Snowball=0.1
 )    
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")
