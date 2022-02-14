@@ -752,7 +752,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 if (design$sIV1Use=="Within"){
                   an_name<-"t-test: Paired Samples"
                   df<-paste("(",format(an$Df[nrow(an)]),")")
-                  tv<-t.test(dv~iv1,paired=TRUE,var.equal=TRUE)
+                  tv<-t.test(dv~iv1,paired=TRUE,var.equal=!evidence$Welch)
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
                 } else {
@@ -763,8 +763,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                     tval<-0
                     result$pIV<-1
                   } else {
-                    browser()
-                  tv<-t.test(dv~iv1,var.equal=TRUE)
+                  tv<-t.test(dv~iv1,var.equal=!evidence$Welch)
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
                   }
@@ -862,7 +861,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               df<-paste("(",format(an$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")
               
               chiResult<-chisq.test(iv1,dv,correct = FALSE)
-              result$rIV<-sqrt(chiResult$statistic/n)
+              result$rIV<-sqrt(chiResult$statistic/n)*sign(result$rIV)
               result$pIV<-chiResult$p.value
               result$rFull<-result$rIV
               result$rFullse<-r2se(result$rFull,n)

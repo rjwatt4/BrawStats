@@ -139,7 +139,6 @@ HypothesisTab <-
                                         tags$td(width = "30%", 
                                                 numericInput("Heteroscedasticity",label=NULL,value=effect$Heteroscedasticity,min=-2, max=2, step=0.1),
                                                 ),
-                                        tags$td(width = "35%", tags$div(style = localStyle, " ")                                        )
                                       ),
                                       tags$tr(
                                         tags$td(width = "35%", tags$div(style = localStyle, "Residuals:")),

@@ -151,7 +151,7 @@ getCases<-function(var) {
   }
 }
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0)
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE)
 # effect<-list(rIV=0.3,rIV2=0.3,rIVIV2=0,rIVIV2DV=0)
 
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 

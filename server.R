@@ -793,7 +793,7 @@ inspectHistory<-c()
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
       prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity,ResidDistr=input$ResidDistr)
+                       Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr)
       if (debug) print("     updatePrediction - exit")
       prediction
     }
@@ -817,7 +817,7 @@ inspectHistory<-c()
       evidence<-list(rInteractionOn=input$rInteractionOn,
                      showType=input$Effect_type,
                      ssqType=input$ssqType,
-                     evidenceCaseOrder=input$evidenceCaseOrder)
+                     evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch)
       if (debug) print("     updateEvidence - exit")
       evidence
     }

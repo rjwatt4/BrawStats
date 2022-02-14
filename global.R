@@ -19,7 +19,7 @@ IV<-list(name="IV",type="Interval",mu=0,sd=1,ncats=2,cases="C1,C2",proportions="
 IV2<-list(name="none",type="Interval",mu=0,sd=1,ncats=2,cases="D1,D2",proportions="1,1")
 DV<-list(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2",proportions="1,1")
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,ResidDistr="normal")
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,ResidDistr="normal")
 
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
@@ -33,6 +33,7 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
 evidence<-list(rInteractionOn=TRUE,showType="direct")
 
 showLikelihood=TRUE
+t.var.assume.equal<-TRUE
 
 fullRange<-3
 allScatter<-"all"

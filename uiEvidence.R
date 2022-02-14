@@ -78,11 +78,20 @@ wellPanel(
                         style = paste("background: ",subpanelcolours$simulateC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$simulateC,";"),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Analysis")),
+                                     ),
+                                     tags$tr(
+                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "Welch")),
+                                       tags$td(width = "25%", 
+                                               checkboxInput("Welch",label=NULL,value=effect$Welch),
+                                       ),
+                                       tags$td(width = "45%", tags$div(style = localPlainStyle, " ")),
+                                     )
+                                     ),
                           conditionalPanel(condition="input.IV2choice != 'none'",
                                            tags$table(width = "100%",class="myTable",
-                                                      tags$tr(
-                                                        tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Analysis")),
-                                                      ),
                                                       tags$tr(
                                                         tags$td(width = "30%", tags$div(style = localPlainStyle, "Interaction:")),
                                                         tags$td(width = "25%", tags$div(style = localPlainStyle, "analyse")),

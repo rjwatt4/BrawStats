@@ -64,7 +64,6 @@ expected_hist<-function(vals,nsvals,valType){
               nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
               binStep<-(high_p-target)/nbs
               bins<-rev(seq(high_p,low_p-binStep,-binStep))
-              browser()
             }
           },
           "w"=  { # ns is small
