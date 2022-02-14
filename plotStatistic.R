@@ -10,7 +10,7 @@ CI=0.95
 
 get_target<-function(nsvals,vals){
   target1<-max(nsvals,na.rm=TRUE)
-  if (any(vals>target1)){
+  if (any(vals>target1,na.rm=TRUE)){
     target2<-min(vals[vals>target1],na.rm=TRUE)
     target<-(target1+target2)/2
   } else target<-target1+0.001
@@ -20,6 +20,7 @@ expected_hist<-function(vals,nsvals,valType){
 
   nv=max(length(nsvals),length(vals))
   nb<-round(sqrt(nv)*0.75)
+  
   switch (valType,
           "r"=  { # ns is small
             target<-get_target(abs(nsvals),abs(vals))
@@ -51,7 +52,7 @@ expected_hist<-function(vals,nsvals,valType){
               vals<-log10(vals)
               nsvals<-log10(nsvals)
               target<-log10(target)
-              low_p<-max(log10(min_p),min(vals,na.rm=TRUE))
+              low_p<-min(max(log10(min_p),min(vals,na.rm=TRUE),na.rm=TRUE),log10(alpha))
               high_p<-max(vals,na.rm=TRUE)
             } else {
               low_p<-max(min_p,min(vals,na.rm=TRUE))
@@ -63,6 +64,7 @@ expected_hist<-function(vals,nsvals,valType){
               nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
               binStep<-(high_p-target)/nbs
               bins<-rev(seq(high_p,low_p-binStep,-binStep))
+              browser()
             }
           },
           "w"=  { # ns is small
@@ -373,20 +375,20 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
   for (i in 1:length(xoff)){
     single<-TRUE
     if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
+      if (nrow(ps)>points_threshold) {single<-FALSE}
     }
     if (single) {
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
+        xr<-runif(nrow(ps),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]
         pvals<-ps[i]
         xr=0
       }
-
+     
       pvals[pvals<min_p]<-min_p
       if (pPlotScale=="log10") {
         pts=data.frame(x=xoff[i]+xr,y=log10(pvals))
@@ -438,10 +440,10 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
     }
     if (length(xoff)>1) {
       lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
-                       label = paste0("p(sig) = ",format(mean(pvals<alpha),digits=graph_precision)))
+                       label = paste0("p(sig) = ",format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)))
     } else {
     lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
-                     label = paste0("p(sig) = ",format(mean(pvals<alpha),digits=graph_precision),"  (",format(sum(pvals<alpha)),"/",format(length(pvals)),")"))
+                     label = paste0("p(sig) = ",format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision),"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")"))
     }
     g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     if (length(xoff)>1)

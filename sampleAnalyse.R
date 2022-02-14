@@ -404,6 +404,10 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     result<-makeSample(IV,IV2,DV,effect,design)
     res<-analyseSample(IV,IV2,DV,design,evidence,result)
 
+    if (is.na(res$rIV)) {
+      res$rIV<-0
+      res$pIV<-1
+      res$nval<-0}
     main_res$rIV<-rbind(main_res$rIV,res$rIV)
     main_res$pIV<-rbind(main_res$pIV,res$pIV)
     main_res$nval<-rbind(main_res$nval,res$nval)
@@ -471,6 +475,13 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   iv1<-result$iv
   iv2<-result$iv2
   dv<-result$dv
+  
+  if (is.factor(iv1) && all(iv1==iv1[1])) {
+    result$rIV<-NA
+    result$pIV<-NA
+    return(result)
+    }
+  # if (is.factor(iv2) && all(iv2==iv2[1])) {return(NA)}
   
   n<-length(dv)
   resultRawData<-data.frame(participant=result$participant,iv1=iv1,iv2=iv2,dv=dv)
@@ -741,15 +752,22 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 if (design$sIV1Use=="Within"){
                   an_name<-"t-test: Paired Samples"
                   df<-paste("(",format(an$Df[nrow(an)]),")")
-                  tv<-t.test(dv~iv1,paired=TRUE)
+                  tv<-t.test(dv~iv1,paired=TRUE,var.equal=TRUE)
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
                 } else {
                   an_name<-"t-test: Independent Samples"
                   df<-paste("(",format(an$Df[nrow(an)]),")")
-                  tv<-t.test(dv~iv1)
+                  if (any(c(sum(iv1==levels(iv1)[1]),sum(iv1==levels(iv1)[2]))<3))
+                  {             
+                    tval<-0
+                    result$pIV<-1
+                  } else {
+                    browser()
+                  tv<-t.test(dv~iv1,var.equal=TRUE)
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
+                  }
                 }
                 t_name<-"t"
                 tval<-sqrt(an$`F value`[2])*sign(result$rIV)

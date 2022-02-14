@@ -1011,9 +1011,10 @@ inspectHistory<-c()
         
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
         # set the result into likelihood: populations
+        if (!is.na(result$rIV)) {
         updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
         updateNumericInput(session,"likelihoodSampRhoS",value=result$rIV)
-        
+        }
         result
       }
     })
@@ -1036,7 +1037,7 @@ inspectHistory<-c()
       # make the sample
       result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
-
+  
       # draw the sample
         switch (no_ivs,{
           drawSample(IV,DV,effect,result)
@@ -1084,6 +1085,10 @@ inspectHistory<-c()
           validate("Sample is empty")
           return(ggplot()+plotBlankTheme)
           }
+        if (is.na(result$rIV)) {
+          validate("IV has no variability")
+          return(ggplot()+plotBlankTheme)
+        }
         
         # draw the description
         switch (no_ivs,
@@ -1202,6 +1207,10 @@ inspectHistory<-c()
         
         result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
+        if (is.na(result$rIV)) {
+          validate("IV has no variability")
+          return(ggplot()+plotBlankTheme)
+        }
         
         result$showType<-evidence$showType
         
@@ -1230,6 +1239,9 @@ inspectHistory<-c()
       
         result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
+        if (is.na(result$rIV)) {
+          return(ggplot()+plotBlankTheme)
+        }
         
         result$showType<-evidence$showType
         
@@ -1278,6 +1290,10 @@ inspectHistory<-c()
       
         result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
+        if (is.na(result$rIV)) {
+          validate("IV has no variability")
+          return(ggplot()+plotBlankTheme)
+        }
         result$showType<-evidence$showType
         
         reportDescription(IV,IV2,DV,result)
@@ -1299,6 +1315,10 @@ inspectHistory<-c()
         
         result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
+        if (is.na(result$rIV)) {
+          validate("IV has no variability")
+          return(ggplot()+plotBlankTheme)
+        }
         
         result$showType<-evidence$showType
         

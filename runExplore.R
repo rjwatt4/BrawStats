@@ -78,7 +78,11 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
                    r3=list(direct=c(),unique=c(),total=c()))
   
     for (i in 1:length(vals)){
+      if (explore$doNull) {
+        showNotification(paste("H0:  n=",format(ni), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+      } else {
     showNotification(paste("n=",format(ni), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+      }
     switch (explore$Explore_type,
             "IVType"={
               switch (vals[i],
