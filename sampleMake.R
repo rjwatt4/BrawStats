@@ -644,7 +644,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
           if (DV$type=="Interval"){
             mn1=mean(dv[use1])
             sd1=sd(dv[use1])
-            x2plot[use1]<-i-1+rnorm(length(x2plot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15
+            x2plot[use1]<-i-1+rnorm(length(x2plot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15*2*sum(use1)/length(x2plot)
           } else {
             x2plot[use1]<-i-1+rnorm(length(x2plot[use1]))*mean(use1)*0.3
           }
@@ -664,7 +664,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
         if (IV$type=="Interval"){
           mn1<-mean(iv[use1])
           sd1<-sd(iv[use1])
-          jitter<-rnorm(length(yplot[use1]),mean=0,sd=exp(-0.5*((iv[use1]-mn1)/sd1)^2))*0.15
+          jitter<-rnorm(length(yplot[use1]),mean=0,sd=exp(-0.5*((iv[use1]-mn1)/sd1)^2))*0.15*2*sum(use1)/length(yp)
           yplot[use1]<-i-1+jitter
         } else{
           jitter<-rnorm(length(yplot[use1]),0,1)*mean(use1)*0.3

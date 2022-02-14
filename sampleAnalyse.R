@@ -24,6 +24,10 @@ model2effect<-function(mF,DVvarType,variable=NULL){
       } else {
         d<-data.frame(a=c(-1,1))
       }
+      # this finds within designs
+      if (!is.null(mF$model$participant)) {
+        d$participant<-mF$model$participant[1]
+      }
       names(d)[1]<-variable
       v<-predict.m(mF,d)
       r<-r*sign(mean(diff(v)))
@@ -45,8 +49,13 @@ model2effect<-function(mF,DVvarType,variable=NULL){
       w<-meshgrid(w1,w2)
       w<-w$X*w$Y
       
-      d<-expand.grid(d1,d2)
-      v<-predict.m(mF,data.frame(iv1=d$Var1,iv2=d$Var2))
+      da<-expand.grid(d1,d2)
+      d<-data.frame(iv1=da$Var1,iv2=da$Var2)
+      # this finds within designs
+      if (!is.null(mF$model$participant)) {
+        d$participant<-mF$model$participant[1]
+      }
+      v<-predict.m(mF,d)
       v<-matrix(v,nrow=length(d1),ncol=length(d2))
       
       r<-r*sign(cor(c(v),c(w)))
@@ -592,7 +601,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
           "Categorical"={Df<-an$`Resid. Df`[1]}
   )
   switch (no_ivs,
-          {
+          { 
             result$rIV<-model2effect(lmNorm,DV$type,"iv1")
             result$pIV<-an[prow,pcol]
             rCI<-r2ci(result$rIV,n)
