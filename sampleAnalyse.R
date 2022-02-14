@@ -524,8 +524,8 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                 else  {contrasts<-c()}
         }
   }
-  
-  # get linear model and anova
+
+    # get linear model and anova
   switch (DV$type,
           "Interval"={
             lmRaw<-lm(formula=formula,data=resultRawData)

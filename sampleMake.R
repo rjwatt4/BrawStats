@@ -11,7 +11,6 @@ makeSampleVals<-function(n,mn,sdv,MV,distr="normal"){
   switch (distr,
           "normal"= {
             if (MV$type=="Interval" && (MV$skew!=0 || MV$kurtosis!=3)){
-              print('Johnson')
               a<-f_johnson_M(0,sdv,MV$skew,MV$kurtosis)
               ivr<-rJohnson(n,parms=a)
             } else {

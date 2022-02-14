@@ -187,7 +187,11 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     rs<-result$rIV
     ps<-result$pIV
   } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
+    if (is.na(result$rIVIV2DV[1])){
+      xoff=c(0,2)
+    } else {
+        xoff=c(0,2,4)
+        }
         switch (result$showType,
             "direct"={
               rs<-result$r$direct
@@ -286,8 +290,8 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
         geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
     }
     if (length(xoff)>1)
-      if (i<=3)
-      switch (i,
+      if (rem(i,3)==1)
+      switch (xoff[i]/2+1,
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}

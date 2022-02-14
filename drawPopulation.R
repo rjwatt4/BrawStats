@@ -30,10 +30,14 @@ drawParParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   x=cos(theta+d/2)
   y=cos(theta-d/2)
   y<-(y-x*rho)*(1+x/3*Heteroscedasticity)+x*rho
-  pts=data.frame(x=x*2*IV$sd+IV$mu,y=y*2*DV$sd+DV$mu)
-  g<-ggplot(pts,aes(x=x, y=y))+
-    geom_polygon(fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=alpha)
-  
+  pts=data.frame(x=x,y=y)
+  g<-ggplot(pts,aes(x=x,y=y))
+  radius<-qnorm(seq(0.55,0.95,0.1))*1.5
+  for (ir in 1:length(radius)) {
+    pts<-data.frame(x=x*radius[ir]*IV$sd+IV$mu,y=y*radius[ir]*DV$sd+DV$mu)
+    g<-g+geom_polygon(data=pts,aes(x=x,y=y), fill = plotcolours$sampleC, color=NA, alpha=alpha/length(radius))
+  }
+  return(g)
 }
 
 drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -80,6 +84,8 @@ drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
 
 drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ng<-DV$nlevs
+  pp<-OrdProportions(DV)
+  pp<-pp/max(pp)
   l=paste(1:ng,sep="")
   b<-1:ng
 
@@ -90,13 +96,21 @@ drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   pts=data.frame(x=x,y=x*0)
   g<-ggplot(pts,aes(x=x,y=y))
   xshape<-c(x,rev(x))
+  yshape<-(c(0,1,1,0)-0.5)
+  xshape<-c(0,0,1,1)
   for (id in 1:ng) {
     y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])
-    y<-y/max(y)
-    yshape<-c(-y,rev(y))/ng*1.75
-    pts<-data.frame(x=xshape*IV$sd+IV$mu,y=yshape+b[id])
-    g<-g+
-      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=1)
+    y<-cumsum(y)/sum(y)
+    levs<-seq(0.1,0.45,0.05)
+    x1<-approx(y,x,levs)$y*2
+    x2<-approx(y,x,1-levs)$y*2
+    for (i in 1:length(levs)) {
+      pts<-data.frame(x=xshape*(x2[i]-x1[i])+x1[i],y=yshape+b[id])
+      g<-g+geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha/length(levs)*pp[id])
+    }
+    # # 
+    # # g<-g+
+    # #   geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=1)
   }
   g+scale_y_continuous(breaks=b,labels=l)
   

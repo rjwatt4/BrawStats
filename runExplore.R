@@ -26,12 +26,12 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
           "IVIV2Type"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVDVType"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
           "IVcats"={vals<-2:7},
-          "IVlevels"={vals<-2:7},
+          "IVlevels"={vals<-2:10},
           "IVprop"={vals<-seq(min_prop,1,length.out=npoints)},
           "IVskew"={vals<-vals},
           "IVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
           "DVcats"={vals<-2:7},
-          "DVlevels"={vals<-2:7},
+          "DVlevels"={vals<-2:10},
           "DVprop"={vals<-seq(min_prop,1,length.out=npoints)},
           "DVskew"={vals<-vals},
           "DVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
@@ -225,6 +225,8 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "DVlevels"={
               DV$type<-"Ordinal"
               DV$nlevs<-vals[i]
+              DV$median<-(DV$nlevs+1)/2
+              DV$iqr<-(DV$nlevs-1)/2
             },
             "DVcats"={
               DV$type<-"Categorical"

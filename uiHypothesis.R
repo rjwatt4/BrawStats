@@ -159,7 +159,10 @@ HypothesisTab <-
                                                                  conditionalPanel(condition="input.local == 'y'",
                                                                                   selectInput("Hypchoice", label = NULL,
                                                                                             choices=
-                                                                                              list("ii"="ii","ci"="ci","io"="io","co"="co","ic"="ic","cc"="cc"," ","iii"="iii","cii"="cii","ici"="ici","cci"="cci","  ","iic"="iic","cic"="cic","icc"="icc","ccc"="ccc"),
+                                                                                              list("i~i"="ii","i~c"="ci","o~i"="io",
+                                                                                                   "o~c"="co","c~i"="ic","c~c"="cc"," ",
+                                                                                                   "i~i+i"="iii","i~c+i"="cii","i~i+c"="ici","i~c+c"="cci","  ",
+                                                                                                   "c~i+i"="iic","c~c+i"="cic","c~i+c"="icc","c~c+c"="ccc"),
                                                                                             selected="none",
                                                                                             selectize=FALSE))
                                                          ),
