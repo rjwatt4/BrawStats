@@ -18,7 +18,7 @@ drawVar<-function(pts,var){
       theme(plot.margin=varplotMargins)+
     coord_cartesian(xlim = c(-1,1), ylim = c(0, 1))
   } else {
-  ggplot(pts,aes(x=r,y=dens))+geom_area(fill=plotcolours$sampleC)+
+  ggplot(pts,aes(x=r,y=dens))+geom_polygon(fill=plotcolours$sampleC)+
     # geom_line(lwd=0.5)+
     labs(x=var$name,y="")+
     plotTheme+
@@ -44,8 +44,7 @@ drawCategorical<-function(var){
     r<-c(r,r1+b[i])
     dens<-c(dens,d1*pp[i])
   }
-  # r<-r/max(abs(r[1]),2)*2.5
-  
+
   l=var$cases[1:ng]
   
   xlim<-c(-ng,ng)+c(-1,1)*ng/10
@@ -60,7 +59,7 @@ drawCategorical<-function(var){
 }
 
 drawOrdinal<-function(var){
-  r1<-c(-1, -1, 1, 1)*0.499
+  r1<-c(-1, -1, 1, 1)*0.5
   d1<-c(0,1,1,0)
   
     ng<-var$nlevs
@@ -70,21 +69,20 @@ drawOrdinal<-function(var){
     lt=1:ng
 
     
-  r<-c()
-  dens<-c()
-  for (i in 1:length(b)){
-    r<-c(r,r1+b[i])
-    dens<-c(dens,d1*pp[i])
+  r<-r1[1:3]+b[1]
+  dens<-d1[1:3]*pp[1]
+  for (i in 2:length(b)){
+    r<-c(r,r1[2:3]+b[i])
+    dens<-c(dens,d1[2:3]*pp[i])
   }
-  b<-b/max(abs(r[1]),2)*2.5
-  r<-r/max(abs(r[1]),2)*2.5
-  r<-c(-fullRange,r,fullRange)
-  dens<-c(0,dens,0)
+  r<-c(r,r[length(r)])
+  dens<-c(dens,0)
   
+  xlim<-c(-ng,ng)/2+c(-1,1)*ng/10
+  r<-c(xlim[1],r,xlim[2])
+  dens<-c(0,dens,0)
   pts=data.frame(r=r,dens=dens)
-  x1=r[1]
-  x2=r[length(r)]
-  xlim<-c(x1-(x2-x1)/10,x2+(x2-x1)/10)
+  
   drawVar(pts,var)+
     scale_x_continuous(breaks=bt,labels=lt)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))

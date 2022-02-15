@@ -131,7 +131,7 @@ drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   pp<-pp/max(pp)
   s<-division/max(division)
   x<-c(-1,-1,1,1)*min(diff(b1))/2*0.9
-  y<-c(-1,1,1,-1)*min(diff(b2))/2*0.9
+  y<-c(-1,1,1,-1)*min(diff(b2))/2*0.99
   
   pts=data.frame(x=x,y=y)
   g<-ggplot(pts,aes(x=x,y=y))
