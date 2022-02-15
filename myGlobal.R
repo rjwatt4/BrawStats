@@ -1,7 +1,5 @@
 library(ggplot2)
 
-switches<-list(do_explore=TRUE,do_files=FALSE)
-
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
 subpanelcolours<-list(hypothesisC="#FFD6DB",designC="#F6DFBD",simulateC="#CFF8CF",exploreC="#DDBBDD",filesC="#EEBB88",likelihoodC="#DDDDBB")
@@ -15,6 +13,7 @@ useSignificanceCols<-FALSE
 
 localStyle="font-size:8pt;font-weight:bold;text-align: right;"
 helpStyle=paste("font-size:7pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
+
 fullShowHelp<-FALSE
 
 report_precision<-3
@@ -39,7 +38,6 @@ plotBlankTheme=theme(panel.background = element_rect(fill=maincolours$graphC, co
 mergeVariables<-FALSE
 showInteractionOnly<-TRUE
 hideIV2Tab<-FALSE
-debug<-FALSE
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
@@ -131,6 +129,11 @@ for (i in 2:length(vars)){
   variables<-rbind(variables,vars[[i]])
 }
 
+if (switches$startBlank) {
+  variables[1,]$type="empty"
+  variables[3,]$type="empty"
+}
+
 emptyVariable<-makeVar(name="none")
 
 # make basic variables    
@@ -138,7 +141,6 @@ IV<-variables[1,]
 IV2<-emptyVariable
 DV<-variables[3,]
 MV<-IV
-startBlank=FALSE
 
 no_ivs<-1
 simData<-TRUE

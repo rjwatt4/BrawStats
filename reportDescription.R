@@ -77,6 +77,9 @@ makeFormula<-function(IV,IV2,DV,result,an_vars){
           "Interval"={
             an_model<-paste(DV$name,assign_string,sep="")
           },
+          "Ordinal"={
+            an_model<-paste(DV$name,assign_string,sep="")
+          },
           "Categorical"={
             an_model<-paste("logit(", DV$name, when_string, DV$cases[2], ") ", assign_string, sep="")
           }
@@ -102,6 +105,9 @@ reportDescription<-function(IV,IV2,DV,result){
   
   switch (DV$type,
           "Interval"={
+            outputText<-c("\bLinear Model", "","","")
+          },
+          "Ordinal"={
             outputText<-c("\bLinear Model", "","","")
           },
           "Categorical"={

@@ -50,6 +50,7 @@ shinyServer(function(input, output, session) {
   source("myGlobal.R")
   source("testDebug.R")
   
+  # print(session$clientData$url_hostname)
   
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
@@ -58,7 +59,7 @@ shinyServer(function(input, output, session) {
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
 
-  if (!showLikelihood) {
+  if (!switches$showLikelihood) {
     shinyjs::hideElement(id= "MainLikelihood")
     hideTab("Graphs", "Possible", session)
     hideTab("Reports", "Possible", session)
@@ -299,10 +300,6 @@ shinyServer(function(input, output, session) {
 ####################################
 # VARIABLES  
   # make basic variables    
-  if (startBlank) {
-    variables[1,]$type="empty"
-    variables[3,]$type="empty"
-  }
   IV<-variables[1,]
   IV2<-variables[2,]
   DV<-variables[3,]
@@ -412,8 +409,8 @@ shinyServer(function(input, output, session) {
 
 
   setIVanyway<-function(newMV=NULL){
-    if (debug) {print(setIVanyway)}
-    newName<-FALSE
+    if (debug) {print("setIVanyway")}
+    newName<-FALSE    
     if (is.null(newMV)) {
       use<-match(input$IVchoice,variables$name)
       if (!is.na(use)){
@@ -458,7 +455,7 @@ shinyServer(function(input, output, session) {
   }
   
   setIV2anyway<-function(newMV=NULL){
-    if (debug) {print(setIV2anyway)}
+    if (debug) {print("setIV2anyway")}
     newName<-FALSE
     if (is.null(newMV)) {
       if (input$IV2choice=="none") {
@@ -513,7 +510,7 @@ shinyServer(function(input, output, session) {
   }
   
   setDVanyway<-function(newMV=NULL){
-    if (debug) {print(setDVanyway)}
+    if (debug) {print("setDVanyway")}
     newName<-FALSE
     if (is.null(newMV)) {
       use<-match(input$DVchoice,variables$name)
@@ -670,7 +667,6 @@ inspectHistory<-c()
   
     updateIV<-function(){
       if (debug) print("     updateIV")
-      
       use<-match(input$IVchoice,variables$name)
       if (is.na(use)) return(NULL)
       
@@ -826,7 +822,7 @@ inspectHistory<-c()
     output$HypothesisPlot<-renderPlot({
       doIt<-editVar$data
       if (debug) print("HypothesisPlot")
-      
+
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
@@ -911,7 +907,7 @@ inspectHistory<-c()
         design<-updateDesign()
         effect<-updatePrediction()
         evidence<-updateEvidence()
-        
+
         switch (no_ivs,
                 {g<-drawPrediction(IV,IV2,DV,effect,design)},
                 {

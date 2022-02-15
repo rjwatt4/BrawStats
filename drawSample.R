@@ -5,7 +5,7 @@ drawSample<-function(IV,DV,effect,result){
   y<-result$dvplot
   
   result$Heteroscedasticity<-effect$Heteroscedasticity
-  g<-drawPopulation(IV,DV,effect,alpha=0.5)
+  g<-drawPopulation(IV,DV,effect,alpha=0.75)
 
   dotSize<-7
   if (length(x)>100) {

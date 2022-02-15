@@ -1,4 +1,5 @@
-switches<-list(do_explore=TRUE,do_files=FALSE)
+switches<-list(do_explore=TRUE,do_files=FALSE,startBlank=TRUE,showLikelihood=TRUE)
+debug<-FALSE
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
@@ -32,8 +33,6 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")
 
-showLikelihood=TRUE
-t.var.assume.equal<-TRUE
 
 fullRange<-3
 allScatter<-"all"

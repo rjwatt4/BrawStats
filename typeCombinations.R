@@ -4,32 +4,51 @@ getTypecombination<-function(HypType) {
   IV2<-variables[2,]
   DV<-variables[3,]
   switch (HypType,
+    "ee"={
+            IV2$name<-"none"
+    },
     "ii"={ #print(1)
             IV$type<-"Interval"
             DV$type<-"Interval"
             IV2$name<-"none"
           },
-    "ci"={ #print(2)
-            IV$type<-"Categorical"
-            IV$ncats<-3
-            IV$cases<-"C1,C2,C3"
-            IV$proportions<-"1,1,1"
-            DV$type<-"Interval"
-            IV2$name<-"none"
-          },
+    "c2i"={ #print(2)
+      IV$type<-"Categorical"
+      IV$ncats<-2
+      IV$cases<-"C1,C2"
+      IV$proportions<-"1,1"
+      DV$type<-"Interval"
+      IV2$name<-"none"
+    },
+    "c3i"={ #print(2)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      DV$type<-"Interval"
+      IV2$name<-"none"
+    },
     "io"={ #print(3)
             IV$type<-"Interval"
             DV$type<-"Ordinal"
             IV2$name<-"none"
           },
-    "co"={ #print(4)
-            IV$type<-"Categorical"
-            IV$ncats<-3
-            IV$cases<-"C1,C2,C3"
-            IV$proportions<-"1,1,1"
-            DV$type<-"Ordinal"
-            IV2$name<-"none"
-          },
+    "c2o"={ #print(4)
+      IV$type<-"Categorical"
+      IV$ncats<-2
+      IV$cases<-"C1,C2"
+      IV$proportions<-"1,1"
+      DV$type<-"Ordinal"
+      IV2$name<-"none"
+    },
+    "c3o"={ #print(4)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      DV$type<-"Ordinal"
+      IV2$name<-"none"
+    },
     "ic"={ #print(5)
             IV$type<-"Interval"
             DV$type<-"Categorical"

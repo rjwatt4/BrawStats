@@ -151,19 +151,17 @@ HypothesisTab <-
                                       conditionalPanel(condition="false",selectInput("local",label=NULL,choices=c("y","n"),selected=quickHypos)),
                                       tags$tr(
                                                          tags$td(width = "35%",
-                                                                 conditionalPanel(condition="input.local == 'y'",
-                                                                                  tags$div(style = localStyle, "Hypothesis:"))
+                                                                                  tags$div(style = localStyle, "Hypothesis:")
                                                          ),
                                                          tags$td(width = "30%",
-                                                                 conditionalPanel(condition="input.local == 'y'",
                                                                                   selectInput("Hypchoice", label = NULL,
                                                                                             choices=
-                                                                                              list("i~i"="ii","i~c"="ci","o~i"="io",
-                                                                                                   "o~c"="co","c~i"="ic","c~c"="cc"," ",
+                                                                                              list("i~i"="ii","i~c2"="c2i","i~c3"="c3i","o~i"="io",
+                                                                                                   "o~c2"="c2o","o~c3"="c3o","c~i"="ic","c~c"="cc"," ",
                                                                                                    "i~i+i"="iii","i~c+i"="cii","i~i+c"="ici","i~c+c"="cci","  ",
-                                                                                                   "c~i+i"="iic","c~c+i"="cic","c~i+c"="icc","c~c+c"="ccc"),
-                                                                                            selected="none",
-                                                                                            selectize=FALSE))
+                                                                                                   "c~i+i"="iic","c~c+i"="cic","c~i+c"="icc","c~c+c"="ccc","empty"="ee"),
+                                                                                            selected="ee",
+                                                                                            selectize=FALSE)
                                                          ),
                                                          tags$td(width = "35%", tags$div(style = localStyle, " ")
                                                          )

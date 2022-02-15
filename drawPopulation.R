@@ -35,7 +35,7 @@ drawParParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   radius<-qnorm(seq(0.55,0.95,0.1))*1.5
   for (ir in 1:length(radius)) {
     pts<-data.frame(x=x*radius[ir]*IV$sd+IV$mu,y=y*radius[ir]*DV$sd+DV$mu)
-    g<-g+geom_polygon(data=pts,aes(x=x,y=y), fill = plotcolours$sampleC, color=NA, alpha=alpha/length(radius))
+    g<-g+geom_polygon(data=pts,aes(x=x,y=y), fill = plotcolours$sampleC, color=NA, alpha=alpha/(length(radius)-2))
   }
   return(g)
 }
@@ -76,7 +76,7 @@ drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
     xshape<-c(-x,rev(x))*pp[id]
     pts<-data.frame(x=xshape+b[id],y=yshape*hsy[id]*sdv[id]+muv[id])
     g<-g+
-      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=alpha)
+      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
   }
   g+scale_x_continuous(breaks=b,labels=l)
 
@@ -93,25 +93,37 @@ drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ebreaks<-(pbreaks-0.5)*2
 
   x<-seq(-1,1,0.01)*fullRange
+  np<-length(x)
   pts=data.frame(x=x,y=x*0)
   g<-ggplot(pts,aes(x=x,y=y))
-  xshape<-c(x,rev(x))
   yshape<-(c(0,1,1,0)-0.5)
-  xshape<-c(0,0,1,1)
+  xshape<-c(0,0,1,1)*(x[2]-x[1])
+  ids<-1:np
+  xd<-c()
+  yd<-c()
+  idd<-c()
+  vd<-c()
   for (id in 1:ng) {
-    y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])
-    y<-cumsum(y)/sum(y)
-    levs<-seq(0.1,0.45,0.05)
-    x1<-approx(y,x,levs)$y*2
-    x2<-approx(y,x,1-levs)$y*2
-    for (i in 1:length(levs)) {
-      pts<-data.frame(x=xshape*(x2[i]-x1[i])+x1[i],y=yshape+b[id])
-      g<-g+geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha/length(levs)*pp[id])
-    }
+    xd<-c(xd,rep(xshape,np)+rep(x,each=4))
+    yd<-c(yd,rep(yshape,np)+id)
+    y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])*pp[id]
+    vd<-c(vd,rep(y,each=4))
+    ids<-ids+(id-1)*np
+    idd<-c(idd,rep(ids,each=4))
+  }
+    pts<-data.frame(x=xd,y=yd,value=vd,ids=idd)
+    g<-g+geom_polygon(data=pts,aes(x=x,y=y,group=ids,alpha=value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
+    # y<-cumsum(y)/sum(y)
+    # levs<-seq(0.1,0.4,length.out=10)
+    # x1<-approx(y,x,levs)$y*2
+    # x2<-approx(y,x,1-levs)$y*2
+    # for (i in 1:length(levs)) {
+    #   pts<-data.frame(x=xshape*(x2[i]-x1[i])+x1[i],y=yshape+b[id])
+    #   g<-g+geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha/length(levs)*pp[id])
+    # }
     # # 
     # # g<-g+
     # #   geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=1)
-  }
   g+scale_y_continuous(breaks=b,labels=l)
   
 }
@@ -142,7 +154,7 @@ drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
       # pts<-data.frame(x=x*s[iy,ix]+b1[ix]-xoff, y=y*s[iy,ix]+b2[iy]-yoff)
       pts<-data.frame(x=x*pp[iy]*pp1[ix]+b1[ix], y=y*s[iy,ix]+b2[iy])
       g<-g+
-        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=plotcolours$sampleC,alpha=alpha)
+        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha)
     }
   }
   g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
@@ -168,7 +180,7 @@ drawParCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
     yshape<-c(-y,rev(y))*pp[id]
     pts<-data.frame(x=xshape*IV$sd+IV$mu,y=yshape+b[id])
     g<-g+
-      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=plotcolours$sampleC,alpha=alpha)
+      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
   }
   g+scale_y_continuous(breaks=b,labels=l)
 
@@ -199,7 +211,7 @@ drawCatCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
       # pts<-data.frame(x=x*s[iy,ix]+b1[ix]-xoff, y=y*s[iy,ix]+b2[iy]-yoff)
       pts<-data.frame(x=x*s[iy,ix]*pp1[ix]*pp2[iy]+b1[ix], y=y*s[iy,ix]*pp1[ix]*pp2[iy]+b2[iy])
       g<-g+
-        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=plotcolours$sampleC,alpha=alpha)
+        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha)
     }
   }
   g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)

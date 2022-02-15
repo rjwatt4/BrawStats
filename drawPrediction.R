@@ -52,7 +52,7 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
     off=offset-2
     col<- col2rgb(plotcolours$descriptionC1)*(1-off)+col2rgb(plotcolours$descriptionC2)*off
     col<- rgb(col[1]/255,col[2]/255,col[3]/255)
-    xoff=-0.25+off*0.5
+    xoff=-0.25+off*0.2
   }
   
   ncats<-IV$ncats
