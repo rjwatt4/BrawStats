@@ -23,6 +23,19 @@ drawCatPositions<-function(ncats){
   -1/sqrt(2*pi)*diff(ebreaks)/diff(pbreaks)
 }
 
+drawRibbon<-function(x,y,yoff) {
+  np<-length(x)
+  xshape<-(c(0,0,1,1)-0.5)*(x[2]-x[1])
+  yshape<-(c(0,1,1,0)-0.5)
+  ids<-1:np
+  xd<-rep(xshape,np)+rep(x,each=4)
+  yd<-rep(yshape,np)
+  yo<-rep(yoff,np*4)
+  id<-rep(ids,each=4)+(yoff-1)*np
+  vd<-rep(y,each=4)
+  pts<-data.frame(x=xd,y=yd,yoff=yo,value=vd,ids=id)
+  return(pts)
+}
 
 drawParParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   theta=seq(0,2*pi,2*pi/101)
@@ -37,7 +50,7 @@ drawParParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
     pts<-data.frame(x=x*radius[ir]*IV$sd+IV$mu,y=y*radius[ir]*DV$sd+DV$mu)
     g<-g+geom_polygon(data=pts,aes(x=x,y=y), fill = plotcolours$sampleC, color=NA, alpha=alpha/(length(radius)-2))
   }
-  return(g)
+  return(g+scale_alpha_continuous(range = c(0, 1)))
 }
 
 drawOrdParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -52,26 +65,19 @@ drawOrdParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   
   y<-seq(-1,1,0.01)*fullRange
   np<-length(y)
-  pts=data.frame(x=y*0,y=y)
-  g<-ggplot(pts,aes(x=x,y=y))
-  xshape<-(c(0,1,1,0)-0.5)
-  yshape<-c(0,0,1,1)*(y[2]-y[1])
-  ids<-1:np
-  xd<-c()
-  yd<-c()
-  idd<-c()
-  vd<-c()
+  pts<-data.frame(x=c(),y=c(),yoff=c(),value=c(),ids=c())
   for (id in 1:ng) {
-    yd<-c(yd,rep(yshape,np)+rep(y,each=4))
-    xd<-c(xd,rep(xshape,np)+id)
     x<-mv2dens(y,rho,ebreaks[id],ebreaks[id+1])*pp[id]
-    vd<-c(vd,rep(x,each=4))
-    ids<-ids+(id-1)*np
-    idd<-c(idd,rep(ids,each=4))
+    pts<-rbind(pts,drawRibbon(y,x,id))
   }
-  pts<-data.frame(x=xd,y=yd*DV$sd+DV$mu,value=vd,ids=idd)
-  g<-g+geom_polygon(data=pts,aes(x=x,y=y,group=ids,alpha=value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
-  g+scale_x_continuous(breaks=b,labels=l)
+  pts$value<-pts$value-min(pts$value)
+  pts$value<-pts$value/max(pts$value)
+  # pts$y<-pts$y*pts$value+pts$yoff
+  pts$y<-pts$y+pts$yoff
+  
+  g<-ggplot(pts,aes(x=y,y=x))
+  g<-g+geom_polygon(data=pts,aes(x=y,y=x*DV$sd+DV$mu,group=ids,alpha=alpha*value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
+  g+scale_x_continuous(breaks=b,labels=l)+scale_alpha_continuous(range = c(0, 1))
   
 }
 
@@ -85,8 +91,6 @@ drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ebreaks<-qnorm(pbreaks)
   
   y<-seq(-1,1,0.01)*fullRange
-  pts=data.frame(x=y*0,y=y)
-  g<-ggplot(pts,aes(x=x,y=y))
   yshape<-c(y,rev(y))
   if (length(IV$vals)>0){
     # dealing with a sample
@@ -104,17 +108,35 @@ drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
     if (rho<0) {mu_order<-rev(mu_order)}
   }
   hsy<-1+seq(-1,1,length.out=ncats)*Heteroscedasticity
+
+  np<-length(y)
+  pts<-data.frame(x=c(),y=c(),yoff=c(),value=c(),ids=c())
   for (id in 1:ncats) {
     use<-mu_order[id]
-        x<-mv2dens(y,abs(rho),ebreaks[use],ebreaks[use+1])
-    x<-x/max(x,na.rm=TRUE)*(b[2]-b[1])/2.2
-    xshape<-c(-x,rev(x))*pp[id]
-    pts<-data.frame(x=xshape+b[id],y=yshape*hsy[id]*sdv[id]+muv[id])
-    g<-g+
-      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
+    x<-mv2dens(y,abs(rho),ebreaks[use],ebreaks[use+1])*pp[use]
+    pts<-rbind(pts,drawRibbon(y,x,b[id]))
   }
-  g+scale_x_continuous(breaks=b,labels=l)
+  pts$value<-pts$value/max(pts$value)
+  pts$y<-pts$y*pts$value*0.9+pts$yoff
 
+  g<-ggplot(pts,aes(x=y,y=x))
+  g<-g+geom_polygon(data=pts,aes(x=y,y=x*DV$sd+DV$mu,group=ids,alpha=alpha*value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
+  g+scale_x_continuous(breaks=b,labels=l)+scale_alpha_continuous(range = c(0, 1))
+  
+  #   
+  # pts=data.frame(x=y*0,y=y)
+  # g<-ggplot(pts,aes(x=x,y=y))
+  # for (id in 1:ncats) {
+  #   use<-mu_order[id]
+  #       x<-mv2dens(y,abs(rho),ebreaks[use],ebreaks[use+1])
+  #   x<-x/max(x,na.rm=TRUE)*(b[2]-b[1])/2.2
+  #   xshape<-c(-x,rev(x))*pp[id]
+  #   pts<-data.frame(x=xshape+b[id],y=yshape*hsy[id]*sdv[id]+muv[id])
+  #   g<-g+
+  #     geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
+  # }
+  # g+scale_x_continuous(breaks=b,labels=l)
+  # 
 }
 
 drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -129,26 +151,18 @@ drawParOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
 
   x<-seq(-1,1,0.01)*fullRange
   np<-length(x)
-  pts=data.frame(x=x,y=x*0)
-  g<-ggplot(pts,aes(x=x,y=y))
-  yshape<-(c(0,1,1,0)-0.5)
-  xshape<-c(0,0,1,1)*(x[2]-x[1])
-  ids<-1:np
-  xd<-c()
-  yd<-c()
-  idd<-c()
-  vd<-c()
+  pts<-data.frame(x=c(),y=c(),yoff=c(),value=c(),ids=c())
   for (id in 1:ng) {
-    xd<-c(xd,rep(xshape,np)+rep(x,each=4))
-    yd<-c(yd,rep(yshape,np)+id)
     y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])*pp[id]
-    vd<-c(vd,rep(y,each=4))
-    ids<-ids+(id-1)*np
-    idd<-c(idd,rep(ids,each=4))
+    pts<-rbind(pts,drawRibbon(x,y,id))
   }
-    pts<-data.frame(x=xd*IV$sd+IV$mu,y=yd,value=vd,ids=idd)
-    g<-g+geom_polygon(data=pts,aes(x=x,y=y,group=ids,alpha=value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
-  g+scale_y_continuous(breaks=b,labels=l)
+  pts$value<-pts$value-min(pts$value)
+  pts$value<-pts$value/max(pts$value)
+  pts$y<-pts$y+pts$yoff
+  
+  g<-ggplot(pts,aes(x=x*IV$sd+IV$mu,y=y))
+  g<-g+geom_polygon(data=pts,aes(x=x*IV$sd+IV$mu,y=y,group=ids,alpha=alpha*value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
+  g+scale_y_continuous(breaks=b,labels=l)+scale_alpha_continuous(range = c(0, 1))
   
 }
 
@@ -163,25 +177,26 @@ drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   l2=1:ng2
   
   division<-r2CatProportions(rho,ncats1,ng2)  
-  pp<-exp(-0.5*(((1:ng2)-DV$median)/(DV$iqr/2))^2)
-  pp<-pp/max(pp)
+  pp<-OrdProportions(DV)
   s<-division/max(division)
   x<-c(-1,-1,1,1)*min(diff(b1))/2*0.9
   y<-c(-1,1,1,-1)*min(diff(b2))/2*0.99
   
-  pts=data.frame(x=x,y=y)
-  g<-ggplot(pts,aes(x=x,y=y))
+  pts=data.frame(x=c(),y=c(),value=c(),ids=c())
+  idc<-0
   for (ix in 1:ncats1) {
     for (iy in 1:ng2) {
-      # xoff<-sign(b1[ix])*abs(x[1])*(1-s[iy,ix])
-      # yoff<-sign(b2[iy])*abs(y[1])*(1-s[iy,ix])
-      # pts<-data.frame(x=x*s[iy,ix]+b1[ix]-xoff, y=y*s[iy,ix]+b2[iy]-yoff)
-      pts<-data.frame(x=x*pp[iy]*pp1[ix]+b1[ix], y=y*s[iy,ix]+b2[iy])
-      g<-g+
-        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha)
+      idc<-idc+1
+      newpts<-data.frame(x=x*s[iy,ix]*pp1[ix]*pp[iy]+b1[ix], y=y+b2[iy], value=rep(s[iy,ix]*pp1[ix]*pp[iy],4),ids=idc)
+      pts<-rbind(pts,newpts)
     }
   }
-  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
+  pts$value<-pts$value/max(pts$value)
+
+  g<-ggplot()
+  g<-g+
+    geom_polygon(data=pts,aes(x=x,y=y,group=ids,alpha=alpha*value),fill = plotcolours$sampleC,colour=NA,show.legend=FALSE)
+  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)+scale_alpha_continuous(range = c(0, 1))
 }
 
 drawOrdCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -195,25 +210,42 @@ drawOrdCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   l1=1:ng1
   
   division<-r2CatProportions(rho,ncats2,ng1)  
-  pp<-exp(-0.5*(((1:ng1)-IV$median)/(IV$iqr/2))^2)
-  pp<-pp/max(pp)
+  pp<-OrdProportions(IV)
   s<-division/max(division)
   x<-c(-1,-1,1,1)*min(diff(b2))/2*0.999
   y<-c(-1,1,1,-1)*min(diff(b1))/2*0.9
   
-  pts=data.frame(x=x,y=y)
-  g<-ggplot(pts,aes(x=x,y=y))
+  pts=data.frame(x=c(),y=c(),value=c(),ids=c())
+  idc<-0
   for (iy in 1:ncats2) {
     for (ix in 1:ng1) {
-      # xoff<-sign(b1[ix])*abs(x[1])*(1-s[iy,ix])
-      # yoff<-sign(b2[iy])*abs(y[1])*(1-s[iy,ix])
-      # pts<-data.frame(x=x*s[iy,ix]+b1[ix]-xoff, y=y*s[iy,ix]+b2[iy]-yoff)
-      pts<-data.frame(y=y*pp[ix]*pp2[iy]+b2[iy], x=x*s[ix,iy]+b1[ix])
-      g<-g+
-        geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha)
+      idc<-idc+1
+      newpts<-data.frame(y=y*s[ix,iy]*pp[ix]*pp2[iy]+b2[iy], x=x+b1[ix], value=rep(s[ix,iy]*pp[ix]*pp2[iy],4),ids=idc)
+      pts<-rbind(pts,newpts)
     }
   }
-  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
+  pts$value<-pts$value/max(pts$value)
+  
+  g<-ggplot()
+  g<-g+
+    geom_polygon(data=pts,aes(x=x,y=y,group=ids,alpha=alpha*value),fill = plotcolours$sampleC,colour=NA,show.legend=FALSE)
+  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)+scale_alpha_continuous(range = c(0, 1))
+  
+  # 
+  # 
+  # pts=data.frame(x=x,y=y)
+  # g<-ggplot(pts,aes(x=x,y=y))
+  # for (iy in 1:ncats2) {
+  #   for (ix in 1:ng1) {
+  #     # xoff<-sign(b1[ix])*abs(x[1])*(1-s[iy,ix])
+  #     # yoff<-sign(b2[iy])*abs(y[1])*(1-s[iy,ix])
+  #     # pts<-data.frame(x=x*s[iy,ix]+b1[ix]-xoff, y=y*s[iy,ix]+b2[iy]-yoff)
+  #     pts<-data.frame(y=y*pp[ix]*pp2[iy]+b2[iy], x=x*s[ix,iy]+b1[ix])
+  #     g<-g+
+  #       geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha*pp[ix])
+  #   }
+  # }
+  # g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
 }
 
 drawParCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -226,19 +258,34 @@ drawParCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ebreaks<-qnorm(pbreaks)
   
   x<-seq(-1,1,0.01)*fullRange
-  pts=data.frame(x=x,y=x*0)
-  g<-ggplot(pts,aes(x=x,y=y))
-  xshape<-c(x,rev(x))
+  np<-length(x)
+  pts<-data.frame(x=c(),y=c(),yoff=c(),value=c(),ids=c())
   for (id in 1:ncats) {
-    y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])
-    y<-y/max(y)/2.5
-    
-    yshape<-c(-y,rev(y))*pp[id]
-    pts<-data.frame(x=xshape*IV$sd+IV$mu,y=yshape+b[id])
-    g<-g+
-      geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
+    y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])*pp[id]
+    pts<-rbind(pts,drawRibbon(x,y,id-1))
   }
-  g+scale_y_continuous(breaks=b,labels=l)
+  pts$value<-pts$value/max(pts$value)
+  pts$y<-pts$y*pts$value*0.9+pts$yoff
+  
+  g<-ggplot(pts,aes(x=x*IV$sd+IV$mu,y=y))
+  g<-g+geom_polygon(data=pts,aes(x=x*IV$sd+IV$mu,y=y,group=ids,alpha=alpha*value),fill=plotcolours$sampleC,color=NA,show.legend=FALSE)
+  g+scale_y_continuous(breaks=b,labels=l)+scale_alpha_continuous(range = c(0, 1))
+  
+  # 
+  # 
+  # pts=data.frame(x=x,y=x*0)
+  # g<-ggplot(pts,aes(x=x,y=y))
+  # xshape<-c(x,rev(x))
+  # for (id in 1:ncats) {
+  #   y<-mv2dens(x,rho,ebreaks[id],ebreaks[id+1])
+  #   y<-y/max(y)/2.5
+  #   
+  #   yshape<-c(-y,rev(y))*pp[id]
+  #   pts<-data.frame(x=xshape*IV$sd+IV$mu,y=yshape+b[id])
+  #   g<-g+
+  #     geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,color=NA,alpha=alpha)
+  # }
+  # g+scale_y_continuous(breaks=b,labels=l)
 
 }
 
@@ -270,7 +317,7 @@ drawCatCatPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
         geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha)
     }
   }
-  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)
+  g+scale_x_continuous(breaks=b1,labels=l1)+scale_y_continuous(breaks=b2,labels=l2)+scale_alpha_continuous(range = c(0, 1))
 }
 
 drawOrdOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
@@ -296,7 +343,7 @@ drawOrdOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
         geom_polygon(data=pts,aes(x=x,y=y),fill = plotcolours$sampleC,colour=NA,alpha=alpha*pp1[ix]*pp2[iy])
     }
   }
-  g+scale_x_continuous(breaks=b1)+scale_y_continuous(breaks=b2)
+  g+scale_x_continuous(breaks=b1)+scale_y_continuous(breaks=b2)+scale_alpha_continuous(range = c(0, 1))
 }
 
 drawPopulation<-function(IV,DV,effect,alpha=1){
