@@ -179,6 +179,9 @@ drawParCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
 
   x<-seq(-fullRange,fullRange,0.01)
   yv<-get_logistic_r(rho,ncats,x)
+  x1<-x*IV$sd+IV$mu
+  xv<-c(x1,rev(x1))
+  
   for (i in 1:ncats) {
     y<-yv[,i]
     se=sqrt((1+x^2)/n)*qnorm(0.975)
@@ -186,11 +189,7 @@ drawParCatPrediction<-function(g,IV,DV,rho,n,offset= 1){
     y_lower<-pnorm(qnorm(y)-se)
     y_upper<-pnorm(qnorm(y)+se)
 
-    x<-x*IV$sd+IV$mu
-
-    xv<-c(x,rev(x))
-    
-    pts2<-data.frame(x=x,y=y)
+    pts2<-data.frame(x=x1,y=y)
     pts1<-data.frame(x=xv,y=c(y_lower,rev(y_upper)))
     col<-CatCatcols[i]
     g<-g+

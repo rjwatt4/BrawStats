@@ -1,4 +1,4 @@
-switches<-list(do_explore=TRUE,do_files=FALSE,startBlank=TRUE,showLikelihood=TRUE)
+switches<-list(do_explore=TRUE,do_files=FALSE,startBlank=FALSE,showLikelihood=TRUE)
 debug<-FALSE
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")

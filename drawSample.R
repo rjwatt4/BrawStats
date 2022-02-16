@@ -3,7 +3,6 @@ drawSample<-function(IV,DV,effect,result){
   # the scattered points
   x<-result$ivplot
   y<-result$dvplot
-  
   result$Heteroscedasticity<-effect$Heteroscedasticity
   g<-drawPopulation(IV,DV,effect,alpha=0.75)
 

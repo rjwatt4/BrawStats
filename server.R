@@ -258,6 +258,15 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$Hypchoice,{
     
+    if (grepl("rjwatt42",session$clientData$url_hostname))
+    {
+      switches$startBlank<<-TRUE
+      variables[1,]$type<<-"empty"
+      variables[3,]$type<<-"empty"
+    } else {
+      switches$startBlank<<-FALSE
+    }
+    
     result<-getTypecombination(input$Hypchoice)
     
     setIVanyway(result$IV)

@@ -658,6 +658,11 @@ makeSample<-function(IV,IV2,DV,effect,design){
            "Categorical"={yplot<-match(dv,levels(dv))}
     )
     
+    if (DV$type=="Ordinal" && IV$type=="Ordinal"){
+      xplot<-xplot+rnorm(length(xplot))*0.05
+      yplot<-yplot+rnorm(length(yplot))*0.05
+    }
+    
     if (DV$type=="Categorical"){
       for (i in 1:DV$ncats) {
         use1=(yplot==i)

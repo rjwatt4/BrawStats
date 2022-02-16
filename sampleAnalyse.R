@@ -449,13 +449,24 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
   main_res
 }
 
+convert2Interval<-function(var) {
+  var$type<-"Interval"
+  var$mu<-var$median
+  var$sd<-var$iqr*qnorm(0.75)
+}
 
 analyseSample<-function(IV,IV2,DV,design,evidence,result){
 
   if (is.null(IV2)) {no_ivs<-1} else {no_ivs<-2}
-  if (IV$type=="Ordinal") {IV$type<-"Interval"}
-  if (!is.null(IV2) && IV2$type=="Ordinal") {IV2$type<-"Interval"}
-  if (!is.null(IV2) && DV$type=="Ordinal") {DV$type<-"Interval"}
+  if (IV$type=="Ordinal") {
+    IV$type<-"Interval"
+    }
+  if (!is.null(IV2) && IV2$type=="Ordinal") {
+    IV2$type<-"Interval"
+    }
+  if (!is.null(IV2) && DV$type=="Ordinal") {
+    DV$type<-"Interval"
+    }
   
   # collect the data
   

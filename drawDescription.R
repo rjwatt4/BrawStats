@@ -9,7 +9,7 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
           barwidth=1
           } else { 
           col <-plotDescriptionCols[[colindex-1]]
-          xoff=-0.25+off*0.5
+          xoff=-0.25+off*0.2
           barwidth=0.5
           }
 

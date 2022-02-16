@@ -7,6 +7,13 @@
 #    http://shiny.rstudio.com/
 #
 
+list.of.packages<-c("shiny","shinyWidgets","shinyjs","shinyBS",
+                    "ggplot2","tidyr","tools",
+                    "mnormt","readxl","writexl","car","stringr","clipr","SuppDists","e1071","pracma"
+                    )
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(shiny)
 library(shinyWidgets)
 library(shinyjs)
