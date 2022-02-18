@@ -8,6 +8,25 @@ se_size=0.75
 se_arrow=0.3
 CI=0.95
 
+makeFiddle<-function(r,rd){
+  rz<-r*0
+  xd<-0.1
+  
+  for (i in 1:length(r)) {
+    closeness<-abs(r[1:(i-1)]-r[i])
+    if (any(closeness<rd)) {
+    shift1<-max(rz[closeness<rd])
+    shift2<-min(rz[closeness<rd])
+    if (abs(shift1)>abs(shift2)) {
+      rz[i] <- shift2-xd
+    } else {
+      rz[i] <- shift1+xd
+    }
+    }
+  }
+  return(rz)
+}
+
 get_target<-function(nsvals,vals){
   target1<-max(nsvals,na.rm=TRUE)
   if (any(vals>target1,na.rm=TRUE)){
@@ -232,7 +251,8 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
+        xr<-makeFiddle(rvals,0.025)
+        # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
         rvals<-rs[i]
@@ -312,7 +332,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
         coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
     }
     g<-g+theme(legend.position = "none")+plotTheme
-    g<-g+ylab("r")
+    g<-g+ylab("r")+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
@@ -380,7 +400,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(ps),min=-1,max=1)/length(xoff)*horiz_scatter
+        xr<-makeFiddle(pvals,0.025)
       }
       else {
         rvals<-rs[i]
@@ -469,6 +489,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))+ 
       ylab(bquote(p(H[0])))
   }
+  g<-g+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
@@ -518,14 +539,16 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
+        wvals<-rn2w(rvals,result$nval)
+        xr<-makeFiddle(wvals,0.025)
       }
       else {
         rvals<-rs[i]
         pvals<-ps[i]
+        wvals<-rn2w(rvals,result$nval)
         xr=0
       }
-      wvals<-rn2w(rvals,result$nval)
+      
       
       if (wPlotScale=="log10") {
         pts=data.frame(x=xoff[i]+xr,y=log10(wvals))
@@ -604,6 +627,7 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
          scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))+ 
          ylab(bquote(w[est]))
   }
+  g<-g+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
@@ -651,14 +675,15 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
+        nwvals<-rw2n(rvals,0.8)
+        xr<-makeFiddle(nwvals,5)
       }
       else {
         rvals<-rs[i]
         pvals<-ps[i]
+        nwvals<-rw2n(rvals,0.8)
         xr=0
       }
-      nwvals<-rw2n(rvals,0.8)
       
       pts=data.frame(x=xoff[i]+xr,y=log10(nwvals))
 
@@ -719,6 +744,7 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     geom_hline(yintercept=log10(500), linetype="dotted", color="#FFFF22", size=0.5)+
     scale_y_continuous(breaks=seq(0,4,1),labels=10^seq(0,4,1))+ 
     ylab(bquote(log[10](n[w=80])))
+  g<-g+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
@@ -810,6 +836,7 @@ w1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
   }
 
     g<-g+coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(-1,1)*diff(ylim)/16)
+    g<-g+scale_x_continuous(breaks=NULL)
     g+theme(axis.title.x=element_blank(),
             axis.text.x=element_blank(),
             axis.ticks.x=element_blank())
@@ -869,6 +896,7 @@ nw1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     scale_y_continuous(breaks=seq(0,4,1),labels=10^seq(0,4,1))+ 
     coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(-1,1)*diff(ylim)/16)+
     ylab(bquote(log[10](n[w=80])))
+  g<-g+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())

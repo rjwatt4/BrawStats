@@ -50,8 +50,6 @@ shinyServer(function(input, output, session) {
   source("myGlobal.R")
   source("testDebug.R")
   
-  # print(session$clientData$url_hostname)
-  
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
   shinyjs::hideElement(id= "hypothesisApply")
@@ -134,16 +132,16 @@ shinyServer(function(input, output, session) {
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
       } 
       doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-      op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold)
+      op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult)
       
       if (!is.null(IV2)) {
         effect$rIVIV2=0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
+        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
         
         effect$rIVIV2=-0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResultHold))
+        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
       }
       
       output$plotPopUp<-renderPlot(reportPlot(op,nc,length(op)/nc,2))
@@ -759,7 +757,7 @@ inspectHistory<-c()
       validExpected<<-FALSE
       validExplore<<-FALSE
       
-      # expectedResultHold<-c()
+      # expectedResult<-c()
       exploreResultHold<-c()
       likelihoodPResultHold<-c()
       likelihoodSResultHold<-c()
@@ -1219,43 +1217,24 @@ inspectHistory<-c()
         
         result$showType<-evidence$showType
         
-        # draw the first inference "r" or "w"
-        # drawInference(IV,IV2,DV,effect,design,result,"r")
         switch (input$Infer_type,
-                "Power"= drawInference(IV,IV2,DV,effect,design,result,"w"),
-                "EffectSize"=drawInference(IV,IV2,DV,effect,design,result,"r")
+                "Power"= {
+                  g1<-drawInference(IV,IV2,DV,effect,design,result,"w")
+                  g2<-drawInference(IV,IV2,DV,effect,design,result,"nw")
+                },
+                "EffectSize"={
+                  g1<-drawInference(IV,IV2,DV,effect,design,result,"r")
+                  g2<-drawInference(IV,IV2,DV,effect,design,result,"p")
+                }
         )
+        gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
+                         axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
         
-    })
-    
-    # single second inferential plot
-    output$InferentialPlot2 <- renderPlot({
-      if (debug) print("Inferential2Plot")
-      doIt<-editVar$data
-      # doIt<-input$MVok
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-        if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
-        
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      
-        result<-sampleAnalysis()
-        if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
-        if (is.na(result$rIV)) {
-          return(ggplot()+plotBlankTheme)
-        }
-        
-        result$showType<-evidence$showType
-        
-        # draw the second inference - "p" or "nw"        
-        # drawInference(IV,IV2,DV,effect,design,result,"p")
-        switch (input$Infer_type,
-                "Power"= drawInference(IV,IV2,DV,effect,design,result,"nw"),
-                "EffectSize"=drawInference(IV,IV2,DV,effect,design,result,"p")
-        )
+        g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
+          scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+        g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=10)
+        g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=10)
+        return(g)
     })
     
 # SINGLE reports    
@@ -1337,14 +1316,28 @@ inspectHistory<-c()
     # calculations
     # outputs (2 graphs and report)
 # 
-    expectedResultHold<-reactiveValues()
-    expectedResultHold$result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c())
-    expectedResultHold$count<-0
-    
-    expectedResultNullHold<-reactiveValues()
-    expectedResultNullHold$result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c())
-    expectedResultNullHold$count<-0
+    resetExpected<-function(){
+    expectedResult<<-list(result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
+                         count=0,
+                         nsims=0,
+                         running=FALSE)
 
+    expectedResultNull<<-list(result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
+                             count=0,
+                             nsims=0,
+                             running=FALSE)
+    }
+    
+    # here's where we start a run
+    observeEvent(input$expectedRun,{
+      if (!input$expectedAppend) {
+        resetExpected()
+      } 
+      expectedResult$nsims<<-expectedResult$nsims+as.numeric(input$Expected_length)
+      expectedResult$running<<-TRUE
+    })
+    
+    showProgress<-TRUE
 
 # UI changes
     # go to the expected tabs 
@@ -1365,150 +1358,146 @@ inspectHistory<-c()
       list(type=input$Expected_type,nsims=as.numeric(input$Expected_length),append=input$expectedAppend)
     }    
     
+    
 # make this a stand-alone function to be called from observEvent
-    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected) {
+    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected,nsim=1) {
+      if (debug) {print("     doExpectedAnalysis - start")}
       
-      effectNull<-effect
-      effectNull$rIV<-0
-      effectNull$rIV2<-0
-      effectNull$rIVIV2DV<-0
-
-      showProgress<-TRUE
-      append<-expected$append
-      if (showProgress) {showNotification(paste0(format(0),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
-      for (i in 1:expected$nsims) {
-        expectedResultHold$result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,append,expectedResultHold$result)
-        expectedResultHold$count<-length(expectedResultHold$result$rIV)
-        if (expected$type=="NHSTErrors"){
-          expectedResultNullHold$result<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,1,append,expectedResultNullHold$result)
-          expectedResultNullHold$count<-length(expectedResultNullHold$result$rIV)
-        }
-        append<-TRUE
-        if (showProgress && (expected$nsims<=50 || (expected$nsims>50 && i==round(i/25)*25))) {
-          showNotification(paste0(format(i),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
-        }
+      if (nsim==expectedResult$nsims) {showProgress<-FALSE} else {showProgress<-TRUE}
+      if (showProgress) {showNotification(paste0(format(expectedResult$count),"/",format(expectedResult$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
+      append<-TRUE
+      expectedResult$result<<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,nsim,append,expectedResult$result,showProgress=!showProgress)
+      expectedResult$count<<-length(expectedResult$result$rIV)
+      if (expected$type=="NHSTErrors"){
+        effectNull<-effect
+        effectNull$rIV<-0
+        effectNull$rIV2<-0
+        effectNull$rIVIV2DV<-0
+        expectedResultNull$result<<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,nsim,append,expectedResultNull$result,showProgress=FALSE)
+        expectedResultNull$count<<-length(expectedResultNull$result$rIV)
       }
-      if (showProgress) {removeNotification(id = "counting")}
-      expectedResultHold
+      if (expectedResult$count>=expectedResult$nsims) {
+        expectedResult$running<<-FALSE
+        if (showProgress) {removeNotification(id = "counting")}
+      }
+      if (debug) {print("     doExpectedAnalysis - end")}
+      expectedResult
       
     }
     
-# main expected calculations
-    expectedAnalysis<-observeEvent(input$expectedRun,{
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      
-      effectNull<-effect
-      effectNull$rIV<-0
-      effectNull$rIV2<-0
-      effectNull$rIVIV2DV<-0
-  
-      expected<-updateExpected()
-      expectedResultHold$result$showType<-input$Effect_type
-      
-      showProgress<-TRUE
-      append<-expected$append
-      if (showProgress) {showNotification(paste0(format(0),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
-      for (i in 1:expected$nsims) {
-        expectedResultHold$result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,append,expectedResultHold$result)
-        expectedResultHold$count<-length(expectedResultHold$result$rIV)
-        if (input$Expected_type=="NHSTErrors"){
-          expectedResultNullHold$result<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,1,append,expectedResultNullHold$result)
-          expectedResultNullHold$count<-length(expectedResultNullHold$result$rIV)
-        }
-        append<-TRUE
-        if (showProgress && (expected$nsims<=50 || (expected$nsims>50 && i==round(i/25)*25))) {
-          showNotification(paste(format(i),"/",format(expected$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
-        }
-      }
-      if (showProgress) {removeNotification(id = "counting")}
-      expectedResultHold
-      
-    })
-
 # Expected outputs
     # show expected result    
     output$ExpectedPlot <- renderPlot({
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      
-      effect<-updatePrediction()
-      design<-updateDesign()
-      
-      expected<-updateExpected()
-      
-      if (expectedResultHold$count>1) {
-        switch (input$Expected_type,
-                "EffectSize"=g<-r_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "Power"=     g<-w_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "NHSTErrors"=g<-e2_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "CILimits"=  g<-ci1_plot(expectedResultHold$result,r=effect$rIV,n=design$sN)
-                # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"r"),
-                # "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"w"),
-                # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"e2"),
-                # "CILimits"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"ci1")
-        )
-        return(g)
-      } else {
-        return(ggplot()+plotBlankTheme)
+      doIt<-input$expectedRun
+      if (debug) {print("ExpectedPlot1 - start")}
+      if (expectedResult$running) {
+        IV<-updateIV()
+        IV2<-updateIV2()
+        DV<-updateDV()
+        
+        effect<-updatePrediction()
+        design<-updateDesign()
+        evidence<-updateEvidence()
+        
+        expected<-updateExpected()
+        expectedResult$result$showType<<-input$Effect_type
+        # expectedResult$nsims<<-expected$nsims
+        
+        if (input$showAnimation) {
+        ns<-max(round(expectedResult$count/5),2)
+        } else {
+        ns<-expectedResult$nsims-expectedResult$count
+        }
+        if (expectedResult$count+ns>expectedResult$nsims) {ns<-expectedResult$nsims-expectedResult$count}
+        expectedResult<<-doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected,ns)
+        # if (debug) {print("ExpectedPlo1t - sims done ")}
       }
-    })
-
-    # second graph    
-    output$ExpectedPlot2 <- renderPlot({
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-
-      effect<-updatePrediction()
-      design<-updateDesign()
-
-      expected<-updateExpected()
-      expectedResultHold$result$showType<-input$Effect_type
       
-      if (input$Expected_type=="NHSTErrors" && expectedResultNullHold$count<=1) 
-        {return(ggplot()+plotBlankTheme)}
-      if (expectedResultHold$count>1) {
-        switch (input$Expected_type,
-                "EffectSize"=g<-p_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "Power"=     g<-nw_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "NHSTErrors"=g<-e1_plot(expectedResultHold$result,r=effect$rIV,n=design$sN),
-                "CILimits"=  g<-ci2_plot(expectedResultHold$result,r=effect$rIV,n=design$sN)
-                # "EffectSize"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"p"),
-                #   "Power"= drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"nw"),
-                # "NHSTErrors"=drawInference(IV,IV2,DV,effect,design,expectedResultNullHold$result,"e1"),
-                # "CILimits"=drawInference(IV,IV2,DV,effect,design,expectedResultHold$result,"ci2")
+      if (expectedResult$count==0) { return(ggplot()+plotBlankTheme) }
+      
+      if (expectedResult$count<expectedResult$nsims) {
+        # if (debug) {print("ExpectedPlot1 - timer set ")}
+        invalidateLater(1)
+      } 
+      switch (input$Expected_type,
+              "EffectSize"={
+                g1<-r_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g2<-p_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+              },
+              "Power"=     {
+                g1<-w_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g2<-nw_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+              },
+              "NHSTErrors"={
+                g1<-e2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g2<-e1_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+              },
+              "CILimits"=  {
+                g1<-ci1_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g2<-ci2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+              }
       )
-        return(g)
-      } else {
-        return(ggplot()+plotBlankTheme)
-      }
+
+      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
+                       axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+      
+      g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
+        scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+      g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=10)
+      g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=10)
+      if (debug) {print("ExpectedPlot1 - plots done ")}
+      return(g)
     })
+
+    # # second graph    
+    # output$ExpectedPlot2 <- renderPlot({
+    #   doIt<-input$expectedRun
+    #   if (debug) {print("ExpectedPlot2 - start")}
+    #   if (expectedResult$count<expectedResult$nsims) {
+    #     # if (debug) {print("ExpectedPlot2 - timer set ")}
+    #     invalidateLater(1)
+    #   } 
+    #   
+    #   if (expectedResult$count>1) {
+    #     switch (input$Expected_type,
+    #             "EffectSize"=g<-p_plot(expectedResult$result,r=effect$rIV,n=design$sN),
+    #             "Power"=     g<-nw_plot(expectedResult$result,r=effect$rIV,n=design$sN),
+    #             "NHSTErrors"=g<-e1_plot(expectedResult$result,r=effect$rIV,n=design$sN),
+    #             "CILimits"=  g<-ci2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+    #   )
+    #   } else {
+    #     g<-ggplot()+plotBlankTheme
+    #   }
+    #   if (debug) {print("ExpectedPlot2 - end")}
+    #   return(g)
+    # })
     
     # expected report
     output$ExpectedReport <- renderPlot({
+      doIt<-input$expectedRun
+      if (debug) {print("ExpectedReport - start")}
+      if (expectedResult$count<expectedResult$nsims) {
+        # if (debug) {print("ExpectedPlot2 - timer set ")}
+        invalidateLater(1)
+      } 
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
-      
+
       effect<-updatePrediction()
       design<-updateDesign()
       evidence<-updateEvidence()
 
       expected<-updateExpected()
-      expectedResultHold$result$showType<-input$Effect_type
-      
-            if (expectedResultHold$count>1) {
-        reportExpected(IV,IV2,DV,evidence,expectedResultHold$result,input$Expected_type)
+      expectedResult$result$showType<-input$Effect_type
+
+      if (expectedResult$count>1) {
+        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,input$Expected_type)
       } else {
-        return(ggplot()+plotBlankTheme)
+        g<-ggplot()+plotBlankTheme
       }
+      if (debug) {print("ExpectedReport - start")}
+      return(g)
     })
     
     

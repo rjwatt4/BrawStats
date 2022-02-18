@@ -392,10 +392,9 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
   } else {
     main_res<-list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=design$showType)
   }
+  
   for (i in 1:n_sims){
     if (showProgress && (n_sims<=50 || (n_sims>50 && i==round(i/25)*25))) {
-      # expectedResultHold$result<<-main_res
-      if (n_sims>1)
       showNotification(paste(format(i),"/",format(n_sims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
     } 
     effect$rIV<-rho[i]
@@ -403,7 +402,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     
     result<-makeSample(IV,IV2,DV,effect,design)
     res<-analyseSample(IV,IV2,DV,design,evidence,result)
-
+    
     if (is.na(res$rIV)) {
       res$rIV<-0
       res$pIV<-1
@@ -411,7 +410,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     main_res$rIV<-rbind(main_res$rIV,res$rIV)
     main_res$pIV<-rbind(main_res$pIV,res$pIV)
     main_res$nval<-rbind(main_res$nval,res$nval)
-    
+
     if (!is.null(IV2)){
       main_res$rIV2<-rbind(main_res$rIV2,res$rIV2)
       main_res$pIV2<-rbind(main_res$pIV2,res$pIV2)
@@ -444,7 +443,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
       
     }
   }
-  if (n_sims>1) removeNotification(id="counting")
+  if (showProgress) removeNotification(id="counting")
   main_res$showType<-evidence$showType
   main_res
 }

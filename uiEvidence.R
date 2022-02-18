@@ -32,7 +32,7 @@ wellPanel(
                          style = paste("background: ",subpanelcolours$simulateC,";"),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
-                                      tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
+                                      tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
                                       tags$td(width = "50%", 
                                               selectInput("Expected_type",label=NULL,
                                                           c("Basic" = "EffectSize",
@@ -41,7 +41,7 @@ wellPanel(
                                                             "CI limits" = "CILimits"),
                                                       selectize=FALSE)
                                       ),
-                                      tags$td(width = "35%", 
+                                      tags$td(width = "30%", 
                                               conditionalPanel(condition="input.IV2choice != 'none'",
                                               selectInput("Effect_type",label=NULL,
                                                           c("direct" = "direct",
@@ -50,10 +50,12 @@ wellPanel(
                                                             "all" = "all",
                                                             "coefficients" = "coefficients"),
                                                           selectize=FALSE)
-                                      )
-                                    )),
+                                      )),
+                                      tags$td(width = "5%", tags$div(style = localStyle, "animate:")),
+                                        tags$td(width = "5%", checkboxInput("showAnimation", label=NULL, value=FALSE)),
+                                      ),
                                     tags$tr(
-                                      tags$td(width = "15%", tags$div(style = localStyle, "Runs:")),
+                                      tags$td(width = "10%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "50%", 
                                               selectInput("Expected_length",label=NULL,
                                                           c("10" = "10",

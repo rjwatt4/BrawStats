@@ -56,6 +56,8 @@ source("uiInspectDiagram.R")
 shinyUI(fluidPage(
     useShinyjs(),
     
+    tags$style(type="text/css",".recalculating {opacity: 1.0;}" ),   
+               
     tags$script('
     pressedKeyCount = 0;
     $(document).on("keydown", function (e) {
