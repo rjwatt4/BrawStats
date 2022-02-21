@@ -2,10 +2,20 @@ colS="#88DD99"
 colP="#8899DD"
 
 drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
-  rho<-effect$rIV
-  
+
   # make the distribution        
   n<-design$sN
+
+  switch (likelihood$type,
+  "Samples"={
+    likelihoodResult<-likelihoodResult$samples
+    ylab<-"Probability"
+    },
+  "Populations"={
+    likelihoodResult<-likelihoodResult$populations
+    ylab<-"Likelihood"
+  }
+  )
 
   pRho<-likelihood$populationES
   sRho<-mean(likelihood$sampleES)
@@ -36,7 +46,7 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                   ticktype = "detailed", 
                   expand = 0.5, col = "#aaaaaa",
                   cex.axis=0.6,
-                  xlab = "Populations", ylab = "Samples", zlab = "Likelihood"
+                  xlab = "Populations", ylab = "Samples", zlab = ylab
             )->mapping
             
             
@@ -49,8 +59,9 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
             # make the back wall
             rpw<-seq(-1,1,length=200)
             rpw_dens<-populationDensityFunction(rpw,likelihood)
+            rpw_dens[rpw_dens>1 | is.na(rpw_dens)]<-1
             
-            polygon(trans3d(x=rpw,y=rpw*0+1,z=rpw_dens,pmat=mapping),col="lightgrey")
+            polygon(trans3d(x=c(rpw[1],rpw,rpw[length(rpw)]),y=c(1,rpw*0+1,1),z=c(0,rpw_dens,0)*(1-likelihood$likelihoodNullp),pmat=mapping),col="lightgrey")
 
             theoryAlpha=1
             # simulations
@@ -91,19 +102,18 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
             
             
             if (likelihood$showTheory){
-              rs<-likelihoodResult$rs
-              rp<-likelihoodResult$rp
-              rp_peak<-likelihoodResult$rp_peak
-              rp_ci<-likelihoodResult$rp_ci
-              
-              r_at_peak_dens<-likelihoodResult$r_at_peak_dens
-              expected_r_at_peak_dens<-likelihoodResult$expected_r_at_peak_dens
-              
               # horizontal lines
               switch (likelihood$type,
                       "Samples"={
+                        rs<-likelihoodResult$rs
                       },
                       "Populations"={
+                        rp_peak<-likelihoodResult$rp_peak
+                        rp_ci<-likelihoodResult$rp_ci
+                        r_at_peak_dens<-likelihoodResult$r_at_peak_dens
+                        expected_r_at_peak_dens<-likelihoodResult$expected_r_at_peak_dens
+                        rp<-likelihoodResult$rp
+                        
                         lines(trans3d(x=c(rp_ci[1],rp_ci[1]),y=c(-1,1),z=c(0,0),pmat=mapping),col="red",lty=3)
                         lines(trans3d(x=c(rp_ci[2],rp_ci[2]),y=c(-1,1),z=c(0,0),pmat=mapping),col="red",lty=3)
                         lines(trans3d(x=c(rp_peak,rp_peak),y=c(-1,1),z=c(0,0),pmat=mapping),col="red")
@@ -167,7 +177,7 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
     )
     rpw<-c(-1,rpw,1)
     rpw_dens<-c(0,rpw_dens,0)
-    plot(x=rpw,y=rpw_dens,xlab="Populations",ylab="Likelihood",type="n",xlim=c(-1,1),ylim=c(0,1))
+    plot(x=rpw,y=rpw_dens,xlab="Populations",ylab=ylab,type="n",xlim=c(-1,1),ylim=c(0,1))
     u <- par("usr") # The coordinates of the plot area
     rect(u[1], u[3], u[2], u[4], col="#AAAAAA", border=NA)
     
@@ -246,27 +256,15 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
       # vertical lines
       switch (likelihood$type,
               "Samples"={
-                lines(x=c(sRho,sRho),y=c(0,rSamplingDistr(sRho,pRho,n)/rSamplingDistr(0,0,n)-0.01),col="black", lwd=1)
+                lines(x=c(sRho,sRho),y=c(0,rSamplingDistr(sRho,pRho,n)/rSamplingDistr(0,0,n)-0.01),col="black", lwd=1.5)
               },
               "Populations"={
-                if (likelihood$populationDist=="Exp"){
+                lines(x=c(sRho,sRho),y=c(0,expected_r_at_peak_dens-0.01),col="black",lwd=1.5)
+                if (likelihood$populationDist!="Uniform_r" && !is.null(rp_peak)){
+                  lines(x=c(rp_peak,rp_peak),y=c(0,r_at_peak_dens-0.01),col="white",lwd=1)
                   lines(x=c(rp_peak,rp_peak),y=c(0,r_at_peak_dens-0.01),col="red",lty=3,lwd=1)
-                  lines(x=c(sRho,sRho),y=c(0,expected_r_at_peak_dens-0.01),col="black",lty=3,lwd=1)
-                }
-                else
-                {
-                  lines(x=c(rp_peak,rp_peak),y=c(0,r_at_peak_dens-0.01),col="red", lwd=1)
                 }
               }
-              # "Populations"={
-              #   if (likelihood$populationDist=="Exp"){
-              #     lines(trans3d(x=c(rp_peak,rp_peak),y=c(sRho,sRho),z=c(0,r_at_peak_dens-0.01),pmat=mapping),col="red", lwd=1)
-              #     lines(trans3d(x=c(sRho,sRho),y=c(sRho,sRho),z=c(0,expected_r_at_peak_dens-0.01),pmat=mapping),col="black",lty=3,lwd=1)
-              #   }
-              #   else
-              #   {
-              #     lines(trans3d(x=c(rp_peak,rp_peak),y=c(sRho,sRho),z=c(0,r_at_peak_dens-0.01),pmat=mapping),col="red", lwd=1)
-              #   }
       )
       
     }

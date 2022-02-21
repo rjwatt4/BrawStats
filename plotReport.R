@@ -12,10 +12,10 @@ reportPlot<-function(outputText,nc,nr,rd=1){
   oT<-matrix(outputText,ncol=nc,byrow=TRUE)
   nT<-nchar(oT)
   nrT<-rowSums(nT)
-  
   # now break into blocks separated by empty rows
   blockEnds<-c(0,which(nrT==0),nrow(nT))
   colX<-c()
+  if (length(blockEnds)>1) {
   for (i in 2:length(blockEnds)){
     block<-nT[(blockEnds[i-1]+1):blockEnds[i],]
     if (is.null(dim(block))){
@@ -28,6 +28,7 @@ reportPlot<-function(outputText,nc,nr,rd=1){
       colOffset<-cumsum(c(0,colSize))
       colX<-c(colX,rep(colOffset[1:ncol(block)],nrow(block)))
     }
+  }
   }
   x_gap1<-colX*font_size*characterWidth
   

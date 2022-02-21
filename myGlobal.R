@@ -179,8 +179,8 @@ lastSample<-c()
 expectedRunning<-FALSE
 
 exploreResultHold<-c()
-likelihoodPResultHold<-c()
-likelihoodSResultHold<-c()
+likelihood_P_ResultHold<-c()
+likelihood_S_ResultHold<-c()
 
 allInputs=c("DVname", "DVtype", "DVmu", "DVsd", "DVncats", "DVcases", 
             "IVname", "IVtype", "IVmu", "IVsd", "IVncats", "IVcases", 

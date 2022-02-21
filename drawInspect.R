@@ -170,11 +170,20 @@ pile<-function(data) {
   x<-c()
   y<-c()
   xspacing<-(max(data)-min(data))/20
-  yspacing<-1.5
+  yspacing<-2
   for (i in 1:length(data)){
-    found<-sum((x-data[i])^2<xspacing^2)
-    y<-c(y,(found-1)*yspacing)
+    found<-(abs(x-data[i])<xspacing)
+    if (any(found)) {
+    y_max<-max(y[found])
+    y_which<-which.max(y[found])
+    x_max<-x[found][y_which]
+    y_inc<-sqrt(yspacing^2-(data[i]-x_max)^2)
+    y<-c(y,y_max+y_inc)
     x<-c(x,data[i])
+    } else {
+      y<-c(y,0)
+      x<-c(x,data[i])
+    }
   }
   return(y)
 }

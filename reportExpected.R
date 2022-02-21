@@ -1,5 +1,5 @@
 
-reportExpected<-function(IV,IV2,DV,evidence,result,expectedType){
+reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
   
   if (is.null(IV2) | is.null(result$rIVIV2DV)){nc=3}
   else{
@@ -51,7 +51,7 @@ reportExpected<-function(IV,IV2,DV,evidence,result,expectedType){
   outputText<-c(outputText,rep(outputText1,nc/3))
   
   if (expectedType=="NHSTErrors"){
-    e1=paste(format(mean(result$e1IV<alpha)*100,digits=report_precision),"%")
+    e1=paste(format(mean(nullresult$pIV<alpha)*100,digits=report_precision),"%")
     e2=paste(format(mean(result$pIV>=alpha)*100,digits=report_precision),"%")
     outputText<-c(outputText,"",e1,e2)
     

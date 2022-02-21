@@ -58,7 +58,11 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
   )
 
   if (explore$Append){
-    exploreResult<-exploreResultHold
+    if (explore$doNull) {
+      exploreResult<-exploreResultHold$null
+    } else {
+      exploreResult<-exploreResultHold
+    }
   } else { 
     exploreResult<-c(explore,list(rIVs=c(),pIVs=c(),nvals=c(),psig=c(),
                                   r1=list(direct=c(),unique=c(),total=c()),
@@ -344,7 +348,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
     exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
   }
   exploreResult$vals<-vals
-  
-  exploreResultHold<<-exploreResult
+  if (explore$doNull) {
+    exploreResultHold$null<<-exploreResult
+  } else {
+    exploreResultHold<<-exploreResult
+  }
   exploreResult
 }

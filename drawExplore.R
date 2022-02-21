@@ -222,21 +222,37 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     if (explore$Explore_show=="NHSTErrors") {
       pts2<-data.frame(vals=vals+vals_offset,y50e=y50e,y25e=y25e,y75e=y75e)
       
-      areaVals<-c(vals[1],vals,vals[length(vals)])
-      areaData<-c(1,y50,1)
-      ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
-      g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=col,alpha=0.5)
-      areaData<-c(0,y50e,0)
-      ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
-      g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=cole,alpha=0.5)
-      
       if (doLine) {
+        # shaded fills
+        areaVals<-c(vals[1],vals,vals[length(vals)])
+        # type 2 errors
+        areaData<-c(1,y50,1)
+        ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
+        g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=col,alpha=0.5)
+        # type 1 errors
+        areaData<-c(0,y50e,0)
+        ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
+        g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=cole,alpha=0.5)
+        # lines & points        
         g<-g+geom_line(data=pts1,aes(x=vals,y=y50),color=col)
         g<-g+geom_line(data=pts2,aes(x=vals,y=y50e),color=cole)
-      } 
-      g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black", fill = col, size = 7)
-      g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=21, colour = "black", fill = cole, size = 7)
-      
+        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black", fill = col, size = 7)
+        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=21, colour = "black", fill = cole, size = 7)
+      } else {
+        # shaded fills
+        outline<-c(-1,-1,1,1)*0.1
+        areaVals<-rep(vals,each=4)+rep(outline,length(vals))
+        ids<-rep(1:length(vals),each=4)
+        areaData<-1-rep(c(0,1,1,0),length(vals))*rep(1-y50,each=4)
+        ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData,ids=ids)
+        g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y,group=ids),colour = "black",fill=col,alpha=0.5)
+        areaData<-rep(c(0,1,1,0),length(vals))*rep(y50e,each=4)
+        ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData,ids=ids)
+        g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y,group=ids),colour = "black",fill=cole,alpha=0.5)
+        # points        
+        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black", fill = col, size = 7)
+        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=21, colour = "black", fill = cole, size = 7)
+      }
     } else {
       if (doLine) {
         pts1f<-data.frame(x=c(vals,rev(vals))+vals_offset,y=c(y25,rev(y75)))

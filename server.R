@@ -568,7 +568,7 @@ inspectHistory<-c()
     req(input$changed)
     switch (input$changed,
             "inspectIV"={var<-updateIV()},
-            "inspectDV"={var<-updateDV()},
+            "inspectDV"={var<-updateDV()}
     )
     inspectSource<<-input$changed
     inspectVar<<-var
@@ -599,7 +599,7 @@ inspectHistory<-c()
               updateSliderInput(session,"ResidVal",min=var$mu-var$sd*3,max=var$mu+var$sd*3,value=var$mu-var$sd)
               updateSelectInput(session,"inspectOrder",choices=c("unsorted","sorted","piled"),selected="unsorted")
               shinyjs::showElement(id= "showSD")
-            },
+            }
     )
     toggleModal(session, modalId = "inspectOutput", toggle = "open")
   }
@@ -619,7 +619,7 @@ inspectHistory<-c()
     sample<-makeSample(IV,NULL,DV,effect,design)
     switch (inspectSource,
             "inspectIV"={inspectData<<-sample$iv},
-            "inspectDV"={inspectData<<-sample$dv},
+            "inspectDV"={inspectData<<-sample$dv}
     )
     
   })
@@ -759,8 +759,8 @@ inspectHistory<-c()
       
       # expectedResult<-c()
       exploreResultHold<-c()
-      likelihoodPResultHold<-c()
-      likelihoodSResultHold<-c()
+      likelihood_P_ResultHold<-c()
+      likelihood_S_ResultHold<-c()
       
       updateCheckboxInput(session,"expectedAppend",value=FALSE)
       updateCheckboxInput(session,"exploreAppendH",value=FALSE)
@@ -1318,27 +1318,25 @@ inspectHistory<-c()
 # 
     resetExpected<-function(){
     expectedResult<<-list(result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
-                         count=0,
-                         nsims=0,
-                         running=FALSE)
-
-    expectedResultNull<<-list(result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
-                             count=0,
-                             nsims=0,
-                             running=FALSE)
+                          nullresult=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
+                          count=0,
+                          nullcount=0,
+                          nsims=0,
+                          running=FALSE)
     }
-    
+
     # here's where we start a run
     observeEvent(input$expectedRun,{
       if (!input$expectedAppend) {
         resetExpected()
       } 
-      expectedResult$nsims<<-expectedResult$nsims+as.numeric(input$Expected_length)
+      expectedResult$nsims<<-expectedResult$count+as.numeric(input$Expected_length)
       expectedResult$running<<-TRUE
     })
     
-    showProgress<-TRUE
-
+  showProgress<-TRUE
+  resetExpected()
+  
 # UI changes
     # go to the expected tabs 
     expectedUpdate<-observeEvent(input$expectedRun,{
@@ -1373,8 +1371,8 @@ inspectHistory<-c()
         effectNull$rIV<-0
         effectNull$rIV2<-0
         effectNull$rIVIV2DV<-0
-        expectedResultNull$result<<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,nsim,append,expectedResultNull$result,showProgress=FALSE)
-        expectedResultNull$count<<-length(expectedResultNull$result$rIV)
+        expectedResult$nullresult<<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,nsim,append,expectedResult$nullresult,showProgress=!showProgress)
+        expectedResult$nullcount<<-length(expectedResult$nullresult$rIV)
       }
       if (expectedResult$count>=expectedResult$nsims) {
         expectedResult$running<<-FALSE
@@ -1429,8 +1427,8 @@ inspectHistory<-c()
                 g2<-nw_plot(expectedResult$result,r=effect$rIV,n=design$sN)
               },
               "NHSTErrors"={
-                g1<-e2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-                g2<-e1_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g2<-e2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+                g1<-e1_plot(expectedResult$nullresult,r=0,n=design$sN)
               },
               "CILimits"=  {
                 g1<-ci1_plot(expectedResult$result,r=effect$rIV,n=design$sN)
@@ -1492,7 +1490,7 @@ inspectHistory<-c()
       expectedResult$result$showType<-input$Effect_type
 
       if (expectedResult$count>1) {
-        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,input$Expected_type)
+        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,expectedResult$nullresult,input$Expected_type)
       } else {
         g<-ggplot()+plotBlankTheme
       }
@@ -1726,6 +1724,7 @@ inspectHistory<-c()
     # outputs
 #    
 
+    likelihoodResult<-list(samples=c(),populations=c())
 # UI changes
     # if the tabs are selected
     likelihoodUpdateTabs<-observeEvent(input$Likelihood,{
@@ -1745,31 +1744,23 @@ inspectHistory<-c()
       DV<-updateDV()
       effect<-updatePrediction()
       
-      if (validSample) {
-        result<-sampleAnalysis()
-        sampleES<-result$rIV
-      }
-      else {
-        sampleES<-effect$rIV
-        }
-      
       switch (input$Likelihood,
               "Populations"={
                 list(type=input$Likelihood,
-                     populationDist=input$Population_distrP, populationDistK=input$Population_distr_kP,
-                     sampleES=sampleES,populationES=effect$rIV,
-                     showTheory=input$likelihoodTheoryP,appendSim=input$likelihoodAppendP,
+                     populationDist=paste0(input$Population_distrP,'_',input$Population_RZ), populationDistK=input$Population_distr_kP,
+                     likelihoodNullp=input$likelihoodNullp,
+                     sampleES=input$likelihoodSampRho,populationES=effect$rIV,sampleN=input$sN,
+                     showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendP,
                      Likelihood_length=as.numeric(input$likelihood_lengthP)
-                     # view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
                 )
               },
               "Samples"={
                 list(type=input$Likelihood,
-                     populationDist="Uniform", populationDistK=0,
-                     sampleES=sampleES,populationES=input$likelihoodPopRho,
-                     showTheory=input$likelihoodTheoryS,appendSim=input$likelihoodAppendS,
+                     populationDist=input$Population_distrP, populationDistK=input$Population_distr_kP,
+                     likelihoodNullp=input$likelihoodNullp,
+                     sampleES=input$likelihoodSampRhoS,populationES=input$likelihoodPopRho,sampleN=input$sN,
+                     showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendS,
                      Likelihood_length=as.numeric(input$likelihood_lengthS)
-                     # view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
                 )
               }
       )
@@ -1777,6 +1768,7 @@ inspectHistory<-c()
     
 # main likelihood calcuations    
     likelihoodAnalysis<-eventReactive(c(input$likelihoodRunS,input$likelihoodRunP,
+                                        input$likelihoodNullp,
                                         input$likelihoodPopRho,
                                         input$likelihoodSampRho,
                                         input$newSample,input$expectedRun,
@@ -1794,10 +1786,15 @@ inspectHistory<-c()
 
         if (input$likelihoodRunS+input$likelihoodRunP>validLikelihood){
           validLikelihood<<-input$likelihoodRunS+input$likelihoodRunP
-          likelihoodResult<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = TRUE)
+          likelihoodRes<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = TRUE)
         } else {
-          likelihoodResult<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = FALSE)
+          likelihoodRes<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = FALSE)
         }
+        
+        switch (likelihood$type,
+                "Samples"={likelihoodResult$samples<<-likelihoodRes},
+                "Populations"={likelihoodResult$populations<<-likelihoodRes}
+                )
         likelihoodResult
     })
     

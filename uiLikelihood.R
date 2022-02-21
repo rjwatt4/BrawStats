@@ -25,38 +25,16 @@ LikelihoodTab <-
                        style = paste("background: ",subpanelcolours$likelihoodC), 
                        wellPanel(
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
-                         tags$table(width = "100%",class="myTable",
-                                    # tags$tr(
-                                    #   tags$td(width = "50%", tags$div(style = localStyle, "Population Distrib:")),
-                                    #   tags$td(width = "30%", 
-                                    #           selectInput("Population_distrS", label=NULL,
-                                    #                       c("Uniform" = "Uniform",
-                                    #                         "Exp" = "Exp"),selectize=FALSE)
-                                    #   ),
-                                    #   tags$td(width = "20%", 
-                                    #           numericInput("Population_distr_kS",label=NULL,
-                                    #                        min = 0,
-                                    #                        max = 1,
-                                    #                        step = 0.05,
-                                    #                        value = 0.2)
-                                    #   )
-                                    # ),
+                         tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Source Population:")),
+                                      tags$td(width = "48%", tags$div(style = localStyle, "Source Population:")),
                                       tags$td(width = "30%", numericInput("likelihoodPopRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
-                                      tags$td(width = "20%")
+                                      tags$td(width = "22%")
                                     ),
                                     tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Target Sample:")),
+                                      tags$td(width = "48%", tags$div(style = localStyle, "Target Sample:")),
                                       tags$td(width = "30%", numericInput("likelihoodSampRhoS", label=NULL,min=-1,max=1, step=0.1,value=0)),
-                                      tags$td(width = "20%")
-                                    ),
-                         ),
-                                          tags$table(width = "100%",class="myTable",
-                                                     tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Show theory:")),
-                                      tags$td(width = "30%", checkboxInput("likelihoodTheoryS", value=FALSE, label=NULL)),
-                                      tags$td(width = "20%")
+                                      tags$td(width = "22%")
                                     ),
                          ),
                          tags$table(width = "100%",class="myTable",
@@ -77,37 +55,49 @@ LikelihoodTab <-
                        style = paste("background: ",subpanelcolours$likelihoodC), 
                        wellPanel(
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
-                         tags$table(width = "100%",class="myTable",
+                         tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Population Distrib:")),
+                                      tags$td(width = "40%", tags$div(style = localStyle, "Population PDF:")),
                                       tags$td(width = "30%", 
                                               selectInput("Population_distrP", label=NULL,
                                                           c("Uniform" = "Uniform",
+                                                            "Gauss"="Gauss",
                                                             "Exp" = "Exp"),selectize=FALSE)
                                       ),
-                                      conditionalPanel(condition="input.Population_distrP!='Uniform'",
-                                      tags$td(width = "20%", 
-                                              numericInput("Population_distr_kP",label=NULL,
-                                                           min = 0,
-                                                           max = 1,
-                                                           step = 0.05,
-                                                           value = 0.2)
+                                      tags$td(width = "15%", 
+                                              selectInput("Population_RZ", label=NULL,
+                                                          c("r" = "r",
+                                                            "z" = "z"),selectize=FALSE)
+                                      ),
+                                      tags$td(width = "15%", 
+                                              conditionalPanel(condition="input.Population_distrP!=='Uniform'",
+                                                               numericInput("Population_distr_kP",label=NULL,
+                                                                            min = 0,
+                                                                            max = 1,
+                                                                            step = 0.05,
+                                                                            value = 0.2)
+                                              )
                                       )
-                                      )
-                                    ),
-                                    tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Target Sample:")),
-                                      tags$td(width = "30%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
-                                      tags$td(width = "20%")
-                                    ),
-                         ),
-                         tags$table(width = "100%",class="myTable",
-                                    tags$tr(
-                                      tags$td(width = "50%", tags$div(style = localStyle, "Show theory:")),
-                                      tags$td(width = "30%", checkboxInput("likelihoodTheoryP", value=FALSE, label=NULL)),
-                                      tags$td(width = "20%")
                                     )
-                         ),
+                                    ),
+                                    conditionalPanel(condition="input.includeNulls",
+                                                     tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
+                                                                tags$tr(
+                                                       tags$td(width = "40%", tags$div(style = localStyle, "p(null):")),
+                                                       tags$td(width = "30%", numericInput("likelihoodNullp", label=NULL,min=0,max=1, step=0.025,value=0)),
+                                                       tags$td(width = "15%"),
+                                                       tags$td(width = "15%")
+                                                     )
+                                                     )
+                                    ),
+                                    tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
+                                               tags$tr(
+                                      tags$td(width = "40%", tags$div(style = localStyle, "Target Sample:")),
+                                      tags$td(width = "30%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
+                                      tags$td(width = "15%"),
+                                      tags$td(width = "15%")
+                                    )
+                                    ),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
@@ -128,16 +118,26 @@ LikelihoodTab <-
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
-                                      tags$td(width = "5%", tags$div(style = localStyle, "view:")),
-                                      tags$td(width = "25%", 
+                                      tags$td(width = "50%", tags$div(style = localStyle, "include nulls:")),
+                                      tags$td(width = "30%", checkboxInput("includeNulls", value=FALSE, label=NULL)),
+                                      tags$td(width = "20%")
+                                    ),
+                                    tags$tr(
+                                      tags$td(width = "50%", tags$div(style = localStyle, "show theory:")),
+                                      tags$td(width = "30%", checkboxInput("likelihoodTheory", value=FALSE, label=NULL)),
+                                      tags$td(width = "20%")
+                                    )
+                         ),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "15%", tags$div(style = localStyle, "view:")),
+                                      tags$td(width = "20%", 
                                               selectInput("LikelihoodView", label=NULL,
                                                           c("3D" = "3D",
                                                             "2D" = "2D"),selectize=FALSE)
-                                      )
                                       ),
-                                    tags$tr(
                                       tags$td(width = "5%", tags$div(style = localStyle, "az:")),
-                                      tags$td(width = "25%", 
+                                      tags$td(width = "15%", 
                                               numericInput("LikelihoodAzimuth",label=NULL,
                                                            min = -180,
                                                            max = 180,
@@ -145,7 +145,7 @@ LikelihoodTab <-
                                                            value = 35)
                                       ),
                                       tags$td(width = "5%", tags$div(style = localStyle, "elev:")),
-                                      tags$td(width = "25%", 
+                                      tags$td(width = "15%", 
                                               numericInput("LikelihoodElevation",label=NULL,
                                                            min = 0,
                                                            max = 90,
@@ -153,13 +153,13 @@ LikelihoodTab <-
                                                            value = 15)
                                       ),
                                       tags$td(width = "5%", tags$div(style = localStyle, "r:")),
-                                      tags$td(width = "25%", 
+                                      tags$td(width = "20%", 
                                               numericInput("LikelihoodRange",label=NULL,
                                                            min = 0,
                                                            max = 10000,
                                                            step = 100,
                                                            value = 1000)
-                                      )
+                                      ),
                                     )
                          )
                        )

@@ -8,23 +8,49 @@ se_size=0.75
 se_arrow=0.3
 CI=0.95
 
-makeFiddle<-function(r,rd){
-  rz<-r*0
-  xd<-0.1
+makeFiddle<-function(y,yd){
+  yz<-c()
+  xz<-c()
+  xd<-0.15
   
-  for (i in 1:length(r)) {
-    closeness<-abs(r[1:(i-1)]-r[i])
-    if (any(closeness<rd)) {
-    shift1<-max(rz[closeness<rd])
-    shift2<-min(rz[closeness<rd])
-    if (abs(shift1)>abs(shift2)) {
-      rz[i] <- shift2-xd
+  for (i in 1:length(y)){
+    found<-(abs(yz-y[i])<yd)
+    if (any(found)) {
+      x_max<-max(xz[found])
+      x_which<-which.max(xz[found])
+      y_at_max<-yz[found][x_which]
+      x_min<-min(xz[found])
+      x_which<-which.min(xz[found])
+      y_at_min<-yz[found][x_which]
+      if (abs(x_min)<x_max) {
+        x_inc<-sqrt(1-((y[i]-y_at_min)/yd)^2)
+        xz<-c(xz,x_min-x_inc*xd)
+        yz<-c(yz,y[i])
+      } else {
+      x_inc<-sqrt(1-((y[i]-y_at_max)/yd)^2)
+      xz<-c(xz,x_max+x_inc*xd)
+      yz<-c(yz,y[i])
+      }
     } else {
-      rz[i] <- shift1+xd
-    }
+      xz<-c(xz,0)
+      yz<-c(yz,y[i])
     }
   }
-  return(rz)
+  
+  # for (i in 1:length(r)) {
+  #   closeness<-abs(r[1:(i-1)]-r[i])
+  #   use<-closeness<rd
+  #   if (any(use)) {
+  #     shift1<-max(rz[use])
+  #     shift2<-min(rz[uuse])
+  #     if (abs(shift1)>abs(shift2)) {
+  #       rz[i] <- shift2-xd
+  #     } else {
+  #       rz[i] <- shift1+xd
+  #     }
+  #   }
+  # }
+  return(xz)
 }
 
 get_target<-function(nsvals,vals){
@@ -251,7 +277,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-makeFiddle(rvals,0.025)
+        xr<-makeFiddle(rvals,2/40)
         # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
       }
       else {
@@ -259,6 +285,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
         pvals<-ps[i]
         xr=0
       }
+
       if (result$showType=="all") {
       pts=data.frame(x=xoff[i]+xr,y=(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
       } else {
@@ -275,6 +302,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       }
 
       dotSize=min(10,20/sqrt(length(rvals)))
+      dotSize=6
       if (useSignificanceCols){
         c1=plotcolours$infer_sigC
         c2=plotcolours$infer_nsigC
@@ -400,7 +428,11 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        xr<-makeFiddle(pvals,0.025)
+        if (pPlotScale=="log10") {
+          xr<-makeFiddle(pvals,4/40)
+        } else{
+          xr<-makeFiddle(pvals,1/40)
+        }
       }
       else {
         rvals<-rs[i]
@@ -432,6 +464,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
+      dotSize=6
       pt_col<-pt_nsigcol
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -457,12 +490,30 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       g <- expected_plot(g,pts,result,IV,DV,ptype)
       
     }
+    
+    # make annotations
+    switch (ptype,
+            "p"={
+              labelPt1<-"p(sig) = "
+              labelPt2<-format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)
+              labelPt3<-paste0("  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+            },
+            "e1"={
+              labelPt1<-"p(Type I) = "
+              labelPt2<-format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)
+              labelPt3<-paste0("  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+            },
+            "e2"={
+              labelPt1<-"p(Type II) = "
+              labelPt2<-format(mean(pvals>=alpha,na.rm=TRUE),digits=graph_precision)
+              labelPt3<-paste0("  (",format(sum(pvals>=alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+            }
+    )
+    
     if (length(xoff)>1) {
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
-                       label = paste0("p(sig) = ",format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)))
+      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = paste0(labelPt1,labelPt2))
     } else {
-    lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], 
-                     label = paste0("p(sig) = ",format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision),"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")"))
+      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = paste0(labelPt1,labelPt2,labelPt3))
     }
     g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     if (length(xoff)>1)
@@ -540,7 +591,11 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
         rvals<-rs[,i]
         pvals<-ps[,i]
         wvals<-rn2w(rvals,result$nval)
-        xr<-makeFiddle(wvals,0.025)
+        if (wPlotScale=="log10") {
+          xr<-makeFiddle(wvals,4/40)
+        } else{
+          xr<-makeFiddle(wvals,1/40)
+        }
       }
       else {
         rvals<-rs[i]
@@ -573,6 +628,7 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
+      dotSize=6
       pt_col<-plotcolours$infer_nsigC
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -675,17 +731,17 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       if (is.matrix(rs) && nrow(rs)>1){
         rvals<-rs[,i]
         pvals<-ps[,i]
-        nwvals<-rw2n(rvals,0.8)
-        xr<-makeFiddle(nwvals,5)
+        nwvals<-log10(rw2n(rvals,0.8))
+        xr<-makeFiddle(nwvals,4/40)
       }
       else {
         rvals<-rs[i]
         pvals<-ps[i]
-        nwvals<-rw2n(rvals,0.8)
+        nwvals<-log10(rw2n(rvals,0.8))
         xr=0
       }
       
-      pts=data.frame(x=xoff[i]+xr,y=log10(nwvals))
+      pts=data.frame(x=xoff[i]+xr,y=nwvals)
 
       if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
       
@@ -704,6 +760,7 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
+      dotSize=6
       pt_col<-plotcolours$infer_nsigC
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -715,13 +772,13 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     else {
       rvals<-rs[,i]
       pvals<-ps[,i]
-      nwvals<-rw2n(rvals,0.8)
+      nwvals<-log10(rw2n(rvals,0.8))
       
       nwvals_sig<-nwvals
       nwvals_sig[pvals>=alpha]<-NA
       nwvals_nsig<-nwvals
       nwvals_nsig[pvals<alpha]<-NA
-        pts<-data.frame(x=nwvals*0+xoff[i],y1=log10(nwvals),y2=log10(nwvals_nsig))
+        pts<-data.frame(x=nwvals*0+xoff[i],y1=nwvals,y2=nwvals_nsig)
 
       if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
       g <- expected_plot(g,pts,result,IV,DV,"nw")
@@ -778,6 +835,7 @@ w1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     } else { pts=data.frame(x=0+xoff[i],y=wvals)
     }
     dotSize=min(10,20/sqrt(length(wvals)))
+    dotSize=6
     pt_col<-plotcolours$infer_nsigC
     if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
     
@@ -862,6 +920,7 @@ nw1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     if (length(nwvals)==1) {
       pts=data.frame(x=0+xoff[i],y=log10(nwvals))
       dotSize=min(10,20/sqrt(length(nwvals)))
+      dotSize=6
       pt_col<-plotcolours$infer_nsigC
       if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
       
