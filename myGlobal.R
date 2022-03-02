@@ -104,7 +104,7 @@ makeVar<-function(name,type="Interval",
   var
 }
 
-vars<-list(
+defaultVars<-list(
   makeVar(name="IV",type="Interval",mu=0,sd=1,ncats=2,cases="C1,C2"),
   makeVar(name="IV2",type="Interval",mu=0,sd=1,ncats=2,cases="D1,D2"),
   makeVar(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2"),
@@ -124,10 +124,13 @@ vars<-list(
   makeVar(name="BirthOrder",type="Categorical",ncats=4,cases="first,middle,last,only",proportions="1,0.4,0.6,0.2")
 )
 
-variables<-data.frame(vars[[1]])
-for (i in 2:length(vars)){
-  variables<-rbind(variables,vars[[i]])
+variables<-data.frame(defaultVars[[1]])
+for (i in 2:length(defaultVars)){
+  variables<-rbind(variables,defaultVars[[i]])
 }
+
+defaultVariables<-variables
+variablesHeld<-"Simulations"
 
 if (switches$startBlank) {
   variables[1,]$type="empty"

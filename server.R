@@ -53,6 +53,7 @@ shinyServer(function(input, output, session) {
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
   shinyjs::hideElement(id= "hypothesisApply")
+  shinyjs::hideElement(id= "Using")
   updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
@@ -311,6 +312,60 @@ shinyServer(function(input, output, session) {
   IV2<-variables[2,]
   DV<-variables[3,]
   MV<-IV
+  
+  observeEvent(input$Using,{
+    if (variablesHeld==input$Using) {return()}
+    
+    local<-variables
+    variables<<-defaultVariables
+    defaultVariables<<-local
+    
+    switch(input$Using,
+           "Simulations"={
+             shinyjs::enable(id= "rIV")
+             shinyjs::enable(id= "rIV2")
+             shinyjs::enable(id= "rIVIV2")
+             shinyjs::enable(id= "rIVIV2DV")
+             
+             shinyjs::enable(id= "sN")
+             shinyjs::enable(id= "sMethod")
+             shinyjs::enable(id= "sIV1Use")
+             shinyjs::enable(id= "sIV2Use")
+             updateActionButton(session,"newSample", label="New Sample")
+             shinyjs::hideElement(id= "hypothesisApply")
+             updateNumericInput(session,"rIV",value=0)
+             updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+             updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+             updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
+             variablesHeld<<-"Simulations"
+             runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$hypothesisC))
+           },
+           "Data"={
+             shinyjs::disable(id= "rIV")
+             shinyjs::disable(id= "rIV2")
+             shinyjs::disable(id= "rIVIV2")
+             shinyjs::disable(id= "rIVIV2DV")
+             
+             shinyjs::disable(id= "sN")
+             shinyjs::disable(id= "sMethod")
+             shinyjs::disable(id= "sIV1Use")
+             shinyjs::disable(id= "sIV2Use")
+             updateActionButton(session,"newSample", label="Analyze")
+             shinyjs::showElement(id= "hypothesisApply")
+             updateTabsetPanel(session, "Hypothesis",selected = "Variables")
+             updateNumericInput(session,"rIV",value=NA)
+             updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+             updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+             updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
+             variablesHeld<<-"Data"
+             runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$filesC))
+           })
+    # get the variables into the ui
+    setIVanyway()
+    setIV2anyway()
+    setDVanyway()
+  })
+  
   
   observeEvent(c(input$IVchoice,input$IV2choice,input$DVchoice),
                 {
@@ -1848,6 +1903,9 @@ inspectHistory<-c()
 
       newVariables<-readSample(raw_data,input$ImportOrdinals,input$MaxOrdinals,header)
 
+      # save the current set of variables
+      defaultVariables<<-variables
+      
       # store the variables in global workspace
       if (mergeVariables){
         variables<<-rbind(newVariables,variables)
@@ -1879,6 +1937,11 @@ inspectHistory<-c()
       shinyjs::disable(id= "sIV1Use")
       shinyjs::disable(id= "sIV2Use")
       
+      updateSelectInput(session,"Using",choices=c("Simulations"="Simulations","Data"="Data"),selected="Data")
+      variablesHeld<<-"Data"
+      shinyjs::showElement(id= "Using")
+      runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$filesC))
+      
     }    
 
     # respond to file selection by getting sheet names
@@ -1900,10 +1963,7 @@ inspectHistory<-c()
       # get the raw data
       raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
-        getNewVariables(raw_data) 
-      # shinyjs::hideElement(id= "editIV")
-      # shinyjs::hideElement(id= "editIV2")
-      # shinyjs::hideElement(id= "editDV")
+        getNewVariables(raw_data)
     })
     
     readCLipDataFile<-observeEvent(input$dPaste, {
@@ -1916,9 +1976,6 @@ inspectHistory<-c()
       colnames(raw_data)<-header
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
       getNewVariables(raw_data)
-      shinyjs::hideElement(id= "editIV")
-      shinyjs::hideElement(id= "editIV2")
-      shinyjs::hideElement(id= "editDV")
     })
     
     exportData<-function() {
