@@ -19,7 +19,7 @@ DesignTab <-
                                                 numericInput("sN",label=NULL,value=design$sN)
                                         )
                                       ),
-                                      tags$tr(
+                                      tags$tr(id="DesignMethod",
                                         tags$td(width = "30%", tags$div(style = localStyle, "Method:")),
                                         tags$td(width = "70%", 
                                                 selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball"),

@@ -85,14 +85,20 @@ wellPanel(
                          ))
               )
               # options tab
-              ,tabPanel("#",value="#",
+              ,tabPanel("#",value="##",
                         style = paste("background: ",subpanelcolours$filesC),
                         wellPanel(
                           style = paste("background: ",subpanelcolours$filesC,";"),
                           tags$table(width = "100%",class="myTable",
                                      tags$tr(
-                                       tags$td(width = "30%", checkboxInput("ImportOrdinals", value=FALSE, label=NULL)),
-                                       tags$td(width = "30%", numericInput("MaxOrdinals", value=9, label=NULL)),
+                                       tags$td(width = "40%", tags$div(style = localPlainStyle, "Import Ordinals: ")),
+                                       tags$td(width = "5%", checkboxInput("ImportOrdinals", value=FALSE, label=NULL)),
+                                       tags$td(width = "35%", tags$div(style = localPlainStyle, "Ordinal Range: ")),
+                                       tags$td(width = "20%", numericInput("MaxOrdinals", value=9, label=NULL))
+                                     ),
+                                     tags$tr(
+                                       tags$td(width = "40%", tags$div(style = localPlainStyle, "Export Header: ")),
+                                       tags$td(width = "5%", checkboxInput("ExportHeader", value=TRUE, label=NULL)),
                                      )
                           )
                         )

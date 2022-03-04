@@ -1,4 +1,3 @@
-longHand=FALSE # do real simulations
 max_bins=51
 
 zdens2rdens<-function(zdens,rvals){
@@ -144,7 +143,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
   
   switch (likelihood$type,
           "Samples"={
-            if (longHand){
+            if (switches$longHandLikelihood){
               effect$rIV<-pRho
               res<-multipleAnalysis(IV,NULL,DV,effect,design,evidence,nsims)
               r_effects<-res$rIV
@@ -201,7 +200,7 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
               pops[1:change]<-0
             }
 
-            if (longHand){
+            if (switches$longHandLikelihood){
               effect$rIV<-pops
               res<-multipleAnalysis(IV,NULL,DV,effect,design,evidence,length(pops))
               r_effects<-res$rIV

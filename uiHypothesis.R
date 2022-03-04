@@ -13,8 +13,20 @@ HypothesisTab <-
                 # variables tab
                 tabPanel("Variables",value="Variables",
                          style = paste("background: ",subpanelcolours$hypothesisC), 
-                         wellPanel(
+                         wellPanel(id="Variables",
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),
+                           conditionalPanel(condition="input.Using!='OK'",
+                           tags$table(width = "100%",class="myTable",
+                                      tags$tr(
+                                        tags$td(width = "40%", selectInput("Using", label = NULL,
+                                                                           choices=c("Simulations"="Simulations","OK"="OK"),
+                                                                           selected="OK",
+                                                                           selectize=FALSE
+                                        )),
+                                        tags$td(width = "60%", tags$div(style = localStyle, " ")),
+                                      )
+                           )
+                           ),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
                                         tags$td(width = "5%", tags$div(style = localStyle, "IV:")),
@@ -49,7 +61,7 @@ HypothesisTab <-
                                                                            selectize=FALSE
                                         )),
                                         tags$td(width = "25%", actionButton("editDV","Edit DV")),
-                                        tags$td(width = "25%", actionButton("hypothesisApply","Apply")),
+                                        tags$td(width = "25%", actionButton("hypothesisApply1","Apply")),
                                         tags$td(width = "5%", tags$div(style = localStyle, " ")),
                                         tags$td(width = "10%", actionButton("inspectDV","i")),
                                       ),
@@ -59,7 +71,7 @@ HypothesisTab <-
                 ),
                 
                 # prediction tab
-                tabPanel("Effects",id="Prediction",
+                tabPanel("Effects",id="Effects",
                          style = paste("background: ",subpanelcolours$hypothesisC), 
                          wellPanel(
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),

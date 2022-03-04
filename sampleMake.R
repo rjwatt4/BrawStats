@@ -186,11 +186,29 @@ makeSample<-function(IV,IV2,DV,effect,design){
     if (design$sMethod=="Resample"){
       use=ceiling(runif(n,min=0,max=1)*n)
       id<-1:n
+      if (is.null(lastSample)) {
+        useIV<-match(IV$name,variables$name)
+        iv<-importedData[[useIV+1]]    
+        
+        useDV<-match(DV$name,variables$name)
+        dv<-importedData[[useDV+1]] 
+        
+        if (!is.null(IV2)) {
+          useIV2<-match(IV2$name,variables$name)
+          iv2<-importedData[[useIV2+1]]    
+        } else {
+          iv2<-rep(0,length(iv))
+        }
+        
+        lastSample$iv<-iv
+        lastSample$iv2<-iv2
+        lastSample$dv<-dv
+      }
       iv<-lastSample$iv[use]
       if (!is.null(IV2)){
         iv2<-lastSample$iv2[use]
       } else{
-        iv2<-NULL
+        iv2<-0
       }
       dv<-lastSample$dv[use]
       sampleRho<-0

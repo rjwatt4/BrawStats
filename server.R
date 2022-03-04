@@ -52,13 +52,14 @@ shinyServer(function(input, output, session) {
   
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
+  shinyjs::hideElement(id= "hypothesisApply1")
   shinyjs::hideElement(id= "hypothesisApply")
   shinyjs::hideElement(id= "Using")
   updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
 
-  if (!switches$showLikelihood) {
+  if (!switches$doLikelihood) {
     shinyjs::hideElement(id= "MainLikelihood")
     hideTab("Graphs", "Possible", session)
     hideTab("Reports", "Possible", session)
@@ -304,6 +305,129 @@ shinyServer(function(input, output, session) {
 
   })
   
+####################################
+# change between data and simulation
+  
+  changeUI2Data<-function() {
+    # get the variables into the ui
+    updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+    updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+    updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
+    setIVanyway()
+    setIV2anyway()
+    setDVanyway()
+    
+    updateNumericInput(session,"sN",value=length(unique(importedData[[1]])))
+    if (switches$extraApply) {
+    shinyjs::showElement(id= "hypothesisApply")
+    }
+    updateTabsetPanel(session, "Hypothesis",selected = "Variables")
+    updateTabsetPanel(session, "Evidence",selected = "Single")
+    updateNumericInput(session,"rIV",value=NA)
+    
+    shinyjs::disable(id= "rIV")
+    shinyjs::disable(id= "rIV2")
+    shinyjs::disable(id= "rIVIV2")
+    shinyjs::disable(id= "rIVIV2DV")
+    
+    shinyjs::disable(id= "sN")
+    shinyjs::disable(id= "sMethod")
+    shinyjs::disable(id= "sIV1Use")
+    shinyjs::disable(id= "sIV2Use")
+    shinyjs::disable(id= "sDependence")
+    shinyjs::disable(id= "sOutliers")
+    shinyjs::disable(id= "sRangeOn")
+    
+    if (!switches$doBootstrap) {
+      updateActionButton(session,"newSample", label="Analyze")
+      hideTab("Hypothesis","Effects")
+      hideTab("Evidence","Multiple")
+      shinyjs::hideElement(id="uiExplore")
+    } else {
+      updateActionButton(session,"newSample", label="Resample")
+      if (input$IV2choice=="none") {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2Plain)
+      }
+      else {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3Plain)
+      }
+      updateSelectInput(session,"Explore_VtypeH",choices=c("& type"="Type"))
+      updateSelectInput(session,"Explore_typeD",choices=c("Sample Size" = "SampleSize"))
+    }
+    hideTab("Design","Anomalies")
+    shinyjs::hideElement(id="DesignMethod")
+    runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",darkpanelcolours$hypothesisC))
+    runjs(sprintf("document.getElementById('Sampling').style.backgroundColor = '%s';",darkpanelcolours$designC))
+    runjs(sprintf("document.getElementById('Single').style.backgroundColor = '%s';",darkpanelcolours$simulateC))
+    runjs(sprintf("document.getElementById('Multiple').style.backgroundColor = '%s';",darkpanelcolours$simulateC))
+    runjs(sprintf("document.getElementById('ExploreHypothesis').style.backgroundColor = '%s';",darkpanelcolours$exploreC))
+    runjs(sprintf("document.getElementById('ExploreDesign').style.backgroundColor = '%s';",darkpanelcolours$exploreC))
+    
+    variablesHeld<<-"Data"
+    
+    updateSelectInput(session,"Using",choices=c("Simulations"="Simulations","Data"="Data"),selected="Data")
+    shinyjs::showElement(id= "Using")
+
+  }
+  
+  
+  changeUI2Simulations<-function() {
+    # get the variables into the ui
+    updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+    updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+    updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
+    setIVanyway()
+    setIV2anyway()
+    setDVanyway()
+    
+    updateActionButton(session,"newSample", label="New Sample")
+    if (switches$extraApply) {
+      shinyjs::hideElement(id= "hypothesisApply")
+    }
+    updateTabsetPanel(session, "Hypothesis",selected = "Variables")
+    updateNumericInput(session,"rIV",value=0)
+    
+    shinyjs::enable(id= "rIV")
+    shinyjs::enable(id= "rIV2")
+    shinyjs::enable(id= "rIVIV2")
+    shinyjs::enable(id= "rIVIV2DV")
+    
+    shinyjs::enable(id= "sN")
+    shinyjs::enable(id= "sMethod")
+    shinyjs::enable(id= "sIV1Use")
+    shinyjs::enable(id= "sIV2Use")
+    shinyjs::enable(id= "sDependence")
+    shinyjs::enable(id= "sOutliers")
+    shinyjs::enable(id= "sRangeOn")
+    
+      updateActionButton(session,"newSample", label="New Sample")
+      showTab("Hypothesis","Effects")
+      showTab("Evidence","Multiple")
+      shinyjs::showElement(id="uiExplore")
+      if (input$IV2choice=="none") {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2)
+      } else {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3)
+      }
+      updateSelectInput(session,"Explore_VtypeH",choices=variableChoices)
+      updateSelectInput(session,"Explore_typeD",choices=designChoices)
+
+    showTab("Design","Anomalies")
+    shinyjs::showElement(id="DesignMethod")
+    
+    runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$hypothesisC))
+    runjs(sprintf("document.getElementById('Sampling').style.backgroundColor = '%s';",subpanelcolours$designC))
+    runjs(sprintf("document.getElementById('Single').style.backgroundColor = '%s';",subpanelcolours$simulateC))
+    runjs(sprintf("document.getElementById('Multiple').style.backgroundColor = '%s';",subpanelcolours$simulateC))
+    runjs(sprintf("document.getElementById('ExploreHypothesis').style.backgroundColor = '%s';",subpanelcolours$exploreC))
+    runjs(sprintf("document.getElementById('ExploreDesign').style.backgroundColor = '%s';",subpanelcolours$exploreC))
+    
+    updateSelectInput(session,"Using",choices=c("Simulations"="Simulations","Data"="Data"),selected="Simulations")
+    shinyjs::showElement(id= "Using")
+    
+    variablesHeld<<-"Simulations"
+    
+  }
   
 ####################################
 # VARIABLES  
@@ -322,43 +446,10 @@ shinyServer(function(input, output, session) {
     
     switch(input$Using,
            "Simulations"={
-             shinyjs::enable(id= "rIV")
-             shinyjs::enable(id= "rIV2")
-             shinyjs::enable(id= "rIVIV2")
-             shinyjs::enable(id= "rIVIV2DV")
-             
-             shinyjs::enable(id= "sN")
-             shinyjs::enable(id= "sMethod")
-             shinyjs::enable(id= "sIV1Use")
-             shinyjs::enable(id= "sIV2Use")
-             updateActionButton(session,"newSample", label="New Sample")
-             shinyjs::hideElement(id= "hypothesisApply")
-             updateNumericInput(session,"rIV",value=0)
-             updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
-             updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
-             updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
-             variablesHeld<<-"Simulations"
-             runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$hypothesisC))
+             changeUI2Simulations()
            },
            "Data"={
-             shinyjs::disable(id= "rIV")
-             shinyjs::disable(id= "rIV2")
-             shinyjs::disable(id= "rIVIV2")
-             shinyjs::disable(id= "rIVIV2DV")
-             
-             shinyjs::disable(id= "sN")
-             shinyjs::disable(id= "sMethod")
-             shinyjs::disable(id= "sIV1Use")
-             shinyjs::disable(id= "sIV2Use")
-             updateActionButton(session,"newSample", label="Analyze")
-             shinyjs::showElement(id= "hypothesisApply")
-             updateTabsetPanel(session, "Hypothesis",selected = "Variables")
-             updateNumericInput(session,"rIV",value=NA)
-             updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
-             updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
-             updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
-             variablesHeld<<-"Data"
-             runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$filesC))
+             changeUI2Data()
            })
     # get the variables into the ui
     setIVanyway()
@@ -866,6 +957,7 @@ inspectHistory<-c()
                    sNClu_Convenience=input$sNClu_Convenience, sRClu_Convenience=input$sRClu_Convenience, sNCont_Convenience=input$sNCont_Convenience, sRCont_Convenience=input$sRCont_Convenience, sRSpread_Convenience=input$sRSpread_Convenience,
                    sNClu_Snowball=input$sNClu_Snowball, sRClu_Snowball=input$sRClu_Snowball, sNCont_Snowball=input$sNCont_Snowball, sRCont_Snowball=input$sRCont_Snowball, sRSpread_Snowball=input$sRSpread_Snowball
       )
+      if (variablesHeld=="Data" && !applyingAnalysis && switches$doBootstrap) {design$sMethod<-"Resample"}
       if (debug) print("     updateDesign - exit")
       design
     } 
@@ -1016,7 +1108,8 @@ inspectHistory<-c()
     # graphs (sample, describe, infer)
     # report (sample, describe, infer)
 #    
-
+    applyingAnalysis<-FALSE
+    
     # UI changes
     # go to the sample tabs 
     sampleUpdate<-observeEvent(c(input$Single,input$newSample,input$hypothesisApply),{
@@ -1030,19 +1123,41 @@ inspectHistory<-c()
       }
     }
     )
-
+    
+    whichAnalysisSample<-observeEvent(input$newSample,{
+      applyingAnalysis<<-FALSE
+    },priority=100)
+    whichAnalysisApply<-observeEvent(input$hypothesisApply,{
+      applyingAnalysis<<-TRUE
+    },priority=100)
+    
 # single sample calculations
     doSampleAnalysis<-function(IV,IV2,DV,effect,design,evidence){
-
+      
+      if (IV$type=="Ordinal") {
+        if (warnOrd==FALSE) {
+          hmm("Ordinal IV will be treated as Interval.")
+          warnOrd<<-TRUE
+        }
+      }
+      if (!is.null(IV2)) {
+        if (IV2$type=="Ordinal") {
+          if (warnOrd==FALSE) {
+            hmm("Ordinal IV2 will be treated as Interval.")
+            warnOrd<<-TRUE
+          }
+        }
+      }
+      
       sample<-makeSample(IV,IV2,DV,effect,design)
       if (is.null(sample)) return(NULL)
       analyseSample(IV,IV2,DV,design,evidence,sample)
       
     }
-    
+
     # eventReactive wrapper
-    sampleAnalysis<-eventReactive(c(input$newSample,input$hypothesisApply),{
-      if (any(c(input$newSample,input$hypothesisApply)>0)){
+    sampleAnalysis<-eventReactive(c(input$hypothesisApply,input$newSample),{
+      if (any(input$hypothesisApply,input$newSample)>0){
         validSample<<-TRUE
         IV<-updateIV()
         IV2<-updateIV2()
@@ -1052,32 +1167,18 @@ inspectHistory<-c()
         design<-updateDesign()
         evidence<-updateEvidence()
         
-        if (IV$type=="Ordinal") {
-          if (warnOrd==FALSE) {
-            hmm("Ordinal IV will be treated as Interval.")
-            warnOrd<<-TRUE
-          }
-        }
-        if (!is.null(IV2)) {
-        if (IV2$type=="Ordinal") {
-          if (warnOrd==FALSE) {
-            hmm("Ordinal IV2 will be treated as Interval.")
-            warnOrd<<-TRUE
-          }
-        }
-        }
-        
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
         # set the result into likelihood: populations
         if (!is.na(result$rIV)) {
-        updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
-        updateNumericInput(session,"likelihoodSampRhoS",value=result$rIV)
+          updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
+          updateNumericInput(session,"likelihoodSampRhoS",value=result$rIV)
         }
         result
       }
     })
     
-  # SINGLE graphs
+        
+    # SINGLE graphs
     # single sample graph
     output$SamplePlot <- renderPlot({
       if (debug) print("SamplePlot")
@@ -1451,6 +1552,7 @@ inspectHistory<-c()
         effect<-updatePrediction()
         design<-updateDesign()
         evidence<-updateEvidence()
+        if (variablesHeld=="Data" && !applyingAnalysis && switches$doBootstrap) {design$sMethod<-"Resample"}
         
         expected<-updateExpected()
         expectedResult$result$showType<<-input$Effect_type
@@ -1610,26 +1712,10 @@ inspectHistory<-c()
     
     observeEvent(input$IV2choice,{
       if (input$IV2choice=="none") {
-        updateSelectInput(session,"Explore_typeH",
-                          choices=list("Variables"=list("IV" = "IV",
-                                                        "DV" = "DV",
-                                                        "IV/DV Types" = "IVDVType"),
-                                       "Effects"=list("Effect Size" = "EffectSize1")
-                          )
-        )
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2)
       }
       else {
-        updateSelectInput(session,"Explore_typeH",
-                          choices=list("Variables"=list("IV" = "IV",
-                                                        "IV2" = "IV2",
-                                                        "DV" = "DV",
-                                                        "IV/IV2 Types" = "IVIV2Type"),
-                                       "Effects"=list("Effect Size1" = "EffectSize1",
-                                                      "Effect Size2" = "EffectSize2",
-                                                      "Interaction" = "Interaction",
-                                                      "Covariation" = "Covariation")
-                          )
-        )
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3)
       }
     })
     
@@ -1913,35 +1999,7 @@ inspectHistory<-c()
         variables<<-newVariables
         simData<<-FALSE
       }
-      # get the variables into the ui
-      updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
-      updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
-      updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
-      setIVanyway()
-      setIV2anyway()
-      setDVanyway()
-      
-      updateNumericInput(session,"sN",value=length(unique(importedData[[1]])))
-      updateActionButton(session,"newSample", label="Analyze")
-      shinyjs::showElement(id= "hypothesisApply")
-      updateTabsetPanel(session, "Hypothesis",selected = "Variables")
-      updateNumericInput(session,"rIV",value=NA)
-      
-      shinyjs::disable(id= "rIV")
-      shinyjs::disable(id= "rIV2")
-      shinyjs::disable(id= "rIVIV2")
-      shinyjs::disable(id= "rIVIV2DV")
-      
-      shinyjs::disable(id= "sN")
-      shinyjs::disable(id= "sMethod")
-      shinyjs::disable(id= "sIV1Use")
-      shinyjs::disable(id= "sIV2Use")
-      
-      updateSelectInput(session,"Using",choices=c("Simulations"="Simulations","Data"="Data"),selected="Data")
-      variablesHeld<<-"Data"
-      shinyjs::showElement(id= "Using")
-      runjs(sprintf("document.getElementById('Variables').style.backgroundColor = '%s';",subpanelcolours$filesC))
-      
+      changeUI2Data()
     }    
 
     # respond to file selection by getting sheet names
@@ -1961,9 +2019,11 @@ inspectHistory<-c()
     importDataFile<-observeEvent(input$dataInputFileLoad, {
       mergeVariables<<-FALSE
       # get the raw data
+      if (is.character(input$dataInputFile$datapath)) {
       raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
         getNewVariables(raw_data)
+      }
     })
     
     readCLipDataFile<-observeEvent(input$dPaste, {
@@ -2001,7 +2061,7 @@ inspectHistory<-c()
     
     exportDataClip<-observeEvent(input$dCopy, {
       data<-exportData()      
-      if (!is.null(data)) write_clip(data,allow_non_interactive = TRUE)
+      if (!is.null(data)) write_clip(data,allow_non_interactive = TRUE,col.names=input$ExportHeader)
     })
     
     exportDataFile<-observeEvent(input$dataOutputFileSave, {
@@ -2087,8 +2147,10 @@ inspectHistory<-c()
     })
     
     importWSFile<-observeEvent(input$wsInputFileLoad, {
-      readWS(session,input$wsInputFile$datapath,input$wsInputSheet)
+      if (is.character(input$dataInputFile$datapath)) {
+              readWS(session,input$wsInputFile$datapath,input$wsInputSheet)
       editVar$data<<-editVar$data+1
+      }
     })
     
     importWSClip<-observeEvent(input$wsPaste, {

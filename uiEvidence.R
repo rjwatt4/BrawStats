@@ -1,6 +1,6 @@
 EvidenceTab <-
   
-wellPanel(
+wellPanel(id="EvidenceMain",
   style = paste("background: ",panelcolours$simulateC), 
   fluidRow(headerText("Make a simulated sample; run multiple samples")),
   # h5("Evidence"),
@@ -8,27 +8,30 @@ wellPanel(
               tabPanel("Evidence:",value="Evidence",
               ),
               # single tab
-              tabPanel("Single",value="Single",
+              tabPanel("Single",value="Single",id="uiSingle",
                        style = paste("background: ",subpanelcolours$simulateC), 
-                       # fluidRow(h1("  ")),
+                       wellPanel(id="Single",
+                                 style = paste("background: ",subpanelcolours$simulateC,";"),
                        tags$table(width = "100%",class="myTable",
                                   tags$tr(
                                     tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
-                                    tags$td(width = "50%", 
+                                    tags$td(width = "35%", 
                                             selectInput("Infer_type",label=NULL,
                                                         c("Basic" = "EffectSize",
                                                           "Power" = "Power"),
                                                         selectize=FALSE)
                                     ),
-                                    tags$td(width = "10%", tags$div(style = localStyle, "")),
+                                    # tags$td(width = "10%", tags$div(style = localStyle, "")),
+                                    tags$td(width = "25%", actionButton("hypothesisApply", "Analyze")),
                                     tags$td(width = "25%", actionButton("newSample", "New Sample"))
                                   )
                        )
+                       )
               ),
               # multiple tab
-              tabPanel("Multiple",id="Multiple",
+              tabPanel("Multiple",value="Multiple",id="uiMultiple",
                        style = paste("background: ",subpanelcolours$simulateC), 
-                       wellPanel(
+                       wellPanel(id="Multiple",
                          style = paste("background: ",subpanelcolours$simulateC,";"),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(

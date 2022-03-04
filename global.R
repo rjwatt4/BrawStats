@@ -1,10 +1,54 @@
-switches<-list(do_explore=TRUE,do_files=FALSE,startBlank=FALSE,showLikelihood=TRUE)
+# doBootstrap and extraApply should really go together
+switches<-list(do_explore=TRUE,do_files=TRUE,startBlank=FALSE,doLikelihood=TRUE,doBootstrap=FALSE,extraApply=FALSE,longHandLikelihood=TRUE)
 debug<-FALSE
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
-subpanelcolours<-list(hypothesisC="#FFD6DB",designC="#F6DFBD",simulateC="#CFF8CF",exploreC="#DDBBDD",filesC="#EEBB88",likelihoodC="#DDDDBB")
-panelcolours<-list(hypothesisC="#F3B6BB",designC="#E6CFAD",simulateC="#ADE6AD",exploreC="#BB99BB",filesC="#BE966D",likelihoodC="#BBBB99")
+
+hypHue=0.986667
+desHue=0.1
+eviHue=0.33333
+posHue=0.583
+expHue=0.65
+filHue=0.0833
+
+mainSat=0.25
+mainBright=0.95
+
+subSat=0.16
+subBright=1
+
+darkSat=0.5
+darkBright=0.85
+
+fileBright=0.9
+likeBright=0.8
+exploreSat=0.8
+
+panelcolours<-list(hypothesisC=hsv(hypHue,mainSat,mainBright),
+                   designC=hsv(desHue,mainSat,mainBright),
+                   simulateC=hsv(eviHue,mainSat,mainBright),
+                   exploreC=hsv(expHue,mainSat*exploreSat,mainBright),
+                   likelihoodC=hsv(posHue,mainSat,mainBright*likeBright),
+                   filesC=hsv(filHue,mainSat,mainBright*fileBright)
+)
+subpanelcolours<-list(hypothesisC=hsv(hypHue,subSat,subBright),
+                      designC=hsv(desHue,subSat,subBright),
+                      simulateC=hsv(eviHue,subSat,subBright),
+                      exploreC=hsv(expHue,subSat*exploreSat,subBright),
+                      likelihoodC=hsv(posHue,subSat,subBright),
+                      filesC=hsv(filHue,subSat,subBright*fileBright)
+)
+darkpanelcolours<-list(hypothesisC=hsv(hypHue,darkSat,darkBright),
+                      designC=hsv(desHue,darkSat,darkBright),
+                      simulateC=hsv(eviHue,darkSat,darkBright),
+                      exploreC=hsv(expHue,darkSat*exploreSat,darkBright),
+                      likelihoodC=hsv(posHue,darkSat,darkBright*likeBright),
+                      filesC=hsv(filHue,darkSat,darkBright*fileBright)
+)
+# 
+# subpanelcolours<-list(hypothesisC="#FFD6DB",designC="#F6DFBD",simulateC="#CFF8CF",exploreC="#DDBBDD",filesC="#EEBB88",likelihoodC="#DDDDBB")
+# panelcolours<-list(hypothesisC="#F3B6BB",designC="#E6CFAD",simulateC="#ADE6AD",exploreC="#BB99BB",filesC="#BE966D",likelihoodC="#BBBB99")
 
 plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   descriptionC1="#FF5533",descriptionC2="#CCBB33",
