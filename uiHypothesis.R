@@ -145,6 +145,15 @@ HypothesisTab <-
                          style = paste("background: ",subpanelcolours$hypothesisC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),
+                           conditionalPanel(condition="input.Using=='Data'",
+                                            tags$table(width = "100%",class="myTable",
+                                                       tags$tr(
+                                                         tags$td(width = "35%", tags$div(style = localStyle, "Allow Resampling:")),
+                                                         tags$td(width = "30%", 
+                                                                 checkboxInput("AllowResampling",label=NULL,value=switches$doBootstrap),
+                                                         ),
+                                                       ))),
+                           conditionalPanel(condition="input.Using!='Data'",
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
                                         tags$td(width = "35%", tags$div(style = localStyle, "Heteroscedasticity:")),
@@ -195,7 +204,9 @@ HypothesisTab <-
                                         ),
                                       )
                            )
+                           )
                          )
+                         
                 ),
                 # help tab
                 tabPanel(helpChar,value="?",

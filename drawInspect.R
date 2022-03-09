@@ -190,10 +190,11 @@ pile<-function(data) {
 
 
 showMean<-function(g,inspect) {
-  var<-inspect$var
-  data<-inspect$data
-  # show mean
   if (inspect$showMean) {
+    var<-inspect$var
+    data<-inspect$data
+    if (var$type=="Categorical") {data<-as.numeric(data)}
+    # show mean
     # vertical line
     switch (var$type,
             "Categorical"={
@@ -211,10 +212,11 @@ showMean<-function(g,inspect) {
 }
 
 showSD<-function(g,inspect) {
-  var<-inspect$var
-  data<-inspect$data
-  # show mean
   if (inspect$showSd) {
+    var<-inspect$var
+    data<-inspect$data
+    if (var$type=="Categorical") {data<-as.numeric(data)}
+    # show sd
     # vertical lines
     switch (var$type,
             "Categorical"={

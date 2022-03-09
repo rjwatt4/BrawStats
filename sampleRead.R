@@ -1,4 +1,4 @@
-readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinals=9, header=c()){
+readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
   if (is.null(raw_data)) {return(NULL)}
   if (nrow(raw_data)==0) {return(NULL)}
 

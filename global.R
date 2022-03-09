@@ -1,5 +1,5 @@
 # doBootstrap and extraApply should really go together
-switches<-list(do_explore=TRUE,do_files=TRUE,startBlank=FALSE,doLikelihood=TRUE,doBootstrap=FALSE,extraApply=FALSE,longHandLikelihood=TRUE)
+switches<-list(do_explore=TRUE,do_files=TRUE,startBlank=FALSE,doLikelihood=TRUE,doBootstrap=FALSE,longHandLikelihood=TRUE,importOrdinals=TRUE)
 debug<-FALSE
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
@@ -46,9 +46,6 @@ darkpanelcolours<-list(hypothesisC=hsv(hypHue,darkSat,darkBright),
                       likelihoodC=hsv(posHue,darkSat,darkBright*likeBright),
                       filesC=hsv(filHue,darkSat,darkBright*fileBright)
 )
-# 
-# subpanelcolours<-list(hypothesisC="#FFD6DB",designC="#F6DFBD",simulateC="#CFF8CF",exploreC="#DDBBDD",filesC="#EEBB88",likelihoodC="#DDDDBB")
-# panelcolours<-list(hypothesisC="#F3B6BB",designC="#E6CFAD",simulateC="#ADE6AD",exploreC="#BB99BB",filesC="#BE966D",likelihoodC="#BBBB99")
 
 plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   descriptionC1="#FF5533",descriptionC2="#CCBB33",
@@ -87,6 +84,7 @@ warn3Ord<-FALSE
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
+  switches$doBootstrap<-TRUE
   quickHypos<-"y"
 } else {
   quickHypos<-"n"

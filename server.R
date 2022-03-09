@@ -261,6 +261,7 @@ shinyServer(function(input, output, session) {
     if (grepl("rjwatt42",session$clientData$url_hostname))
     {
       switches$startBlank<<-TRUE
+      switches$doBootstrap<<-TRUE
       variables[1,]$type<<-"empty"
       variables[3,]$type<<-"empty"
     } else {
@@ -318,7 +319,7 @@ shinyServer(function(input, output, session) {
     setDVanyway()
     
     updateNumericInput(session,"sN",value=length(unique(importedData[[1]])))
-    if (switches$extraApply) {
+    if (switches$doBootstrap) {
     shinyjs::showElement(id= "hypothesisApply")
     }
     updateTabsetPanel(session, "Hypothesis",selected = "Variables")
@@ -381,7 +382,7 @@ shinyServer(function(input, output, session) {
     setDVanyway()
     
     updateActionButton(session,"newSample", label="New Sample")
-    if (switches$extraApply) {
+    if (switches$doBootstrap) {
       shinyjs::hideElement(id= "hypothesisApply")
     }
     updateTabsetPanel(session, "Hypothesis",selected = "Variables")
@@ -436,6 +437,30 @@ shinyServer(function(input, output, session) {
   IV2<-variables[2,]
   DV<-variables[3,]
   MV<-IV
+  
+  observeEvent(input$AllowResampling,{
+    switches$doBootstrap<<-input$AllowResampling
+    
+    if (switches$doBootstrap) {
+      shinyjs::showElement(id= "hypothesisApply")
+      showTab("Evidence","Multiple")
+      updateActionButton(session,"newSample", label="Resample")
+      if (input$IV2choice=="none") {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2Plain)
+      }
+      else {
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3Plain)
+      }
+      updateSelectInput(session,"Explore_VtypeH",choices=c("& type"="Type"))
+      updateSelectInput(session,"Explore_typeD",choices=c("Sample Size" = "SampleSize"))
+      shinyjs::showElement(id="uiExplore")
+    } else {
+      shinyjs::hideElement(id= "hypothesisApply")
+      updateActionButton(session,"newSample", label="Analyze")
+      hideTab("Evidence","Multiple")
+      shinyjs::hideElement(id="uiExplore")
+    } 
+  })
   
   observeEvent(input$Using,{
     if (variablesHeld==input$Using) {return()}
@@ -718,7 +743,12 @@ inspectHistory<-c()
     )
     inspectSource<<-input$changed
     inspectVar<<-var
+    if (!simData) {
+      use<-which(variables$name==var$name)
+      inspectData<<-importedData[,use+1]
+    } else {
     inspectData<<-c()
+    }
     inspectHistory<<-c()
     
     updateCheckboxInput(session,"showResiduals",value=FALSE)
@@ -1986,8 +2016,11 @@ inspectHistory<-c()
     getNewVariables<-function(raw_data,header=c()){
       keep<-!apply(is.na(raw_data),2,all)
       raw_data<-raw_data[,keep]
-
-      newVariables<-readSample(raw_data,input$ImportOrdinals,input$MaxOrdinals,header)
+      
+      keep<-!apply(is.na(raw_data),1,all)
+      raw_data<-raw_data[keep,]
+      
+      newVariables<-readSample(raw_data,input$ImportOrdinals,input$MaxOrdinal,header)
 
       # save the current set of variables
       defaultVariables<<-variables
