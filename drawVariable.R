@@ -29,6 +29,7 @@ drawVar<-function(pts,var){
 }
 }
 
+shrinkString<-function(s,n) {return(substr(s,1,n))}
 
 drawCategorical<-function(var){
   ng<-var$ncats
@@ -45,8 +46,11 @@ drawCategorical<-function(var){
     dens<-c(dens,d1*pp[i])
   }
 
-  l=var$cases[1:ng]
-  
+  l<-var$cases[1:ng]
+  if (sum(sapply(l,nchar))>10) {
+    l<-sapply(l,shrinkString,ceil(10/ng))
+  }
+
   xlim<-c(-ng,ng)+c(-1,1)*ng/10
   r<-c(xlim[1],r,xlim[2])
   dens<-c(0,dens,0)
@@ -64,7 +68,7 @@ drawOrdinal<-function(var){
   
     ng<-var$nlevs
     pp<-OrdProportions(var)
-    b<-(1:ng)-var$median
+    b<-(1:ng)
     bt<-b
     lt=1:ng
 
@@ -77,8 +81,8 @@ drawOrdinal<-function(var){
   }
   r<-c(r,r[length(r)])
   dens<-c(dens,0)
-  
-  xlim<-c(-ng,ng)/2+c(-1,1)*ng/10
+
+  xlim<-c(min(r),max(r))+c(-1,1)*ng/10
   r<-c(xlim[1],r,xlim[2])
   dens<-c(0,dens,0)
   pts=data.frame(r=r,dens=dens)

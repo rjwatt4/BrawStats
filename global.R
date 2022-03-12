@@ -84,7 +84,7 @@ warn3Ord<-FALSE
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
-  switches$doBootstrap<-TRUE
+  # switches$doBootstrap<-TRUE
   quickHypos<-"y"
 } else {
   quickHypos<-"n"

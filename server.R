@@ -340,6 +340,7 @@ shinyServer(function(input, output, session) {
     shinyjs::disable(id= "sRangeOn")
     
     if (!switches$doBootstrap) {
+      shinyjs::hideElement(id="hypothesisApply")
       updateActionButton(session,"newSample", label="Analyze")
       hideTab("Hypothesis","Effects")
       hideTab("Evidence","Multiple")
@@ -381,7 +382,6 @@ shinyServer(function(input, output, session) {
     setIV2anyway()
     setDVanyway()
     
-    updateActionButton(session,"newSample", label="New Sample")
     if (switches$doBootstrap) {
       shinyjs::hideElement(id= "hypothesisApply")
     }
@@ -441,29 +441,18 @@ shinyServer(function(input, output, session) {
   observeEvent(input$AllowResampling,{
     switches$doBootstrap<<-input$AllowResampling
     
-    if (switches$doBootstrap) {
-      shinyjs::showElement(id= "hypothesisApply")
-      showTab("Evidence","Multiple")
-      updateActionButton(session,"newSample", label="Resample")
-      if (input$IV2choice=="none") {
-        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2Plain)
-      }
-      else {
-        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3Plain)
-      }
-      updateSelectInput(session,"Explore_VtypeH",choices=c("& type"="Type"))
-      updateSelectInput(session,"Explore_typeD",choices=c("Sample Size" = "SampleSize"))
-      shinyjs::showElement(id="uiExplore")
-    } else {
-      shinyjs::hideElement(id= "hypothesisApply")
-      updateActionButton(session,"newSample", label="Analyze")
-      hideTab("Evidence","Multiple")
-      shinyjs::hideElement(id="uiExplore")
-    } 
+    switch(input$Using,
+           "Simulations"={
+             changeUI2Simulations()
+           },
+           "Data"={
+             changeUI2Data()
+           })
   })
   
   observeEvent(input$Using,{
     if (variablesHeld==input$Using) {return()}
+    if (input$Using=="OK") {return()}
     
     local<-variables
     variables<<-defaultVariables

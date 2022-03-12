@@ -132,11 +132,6 @@ wellPanel(id="EvidenceMain",
                                      #   tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Infer")),
                                      # ),
                                      tags$tr(
-                                       tags$td(width = "30%", tags$div(style = localPlainStyle, "animations:")),
-                                       tags$td(width = "40%", checkboxInput("showAnimation", label=NULL, value=TRUE)),
-                                       tags$td(width = "30%", tags$div(style = localStyle, " ")),
-                                     ),
-                                     tags$tr(
                                        tags$td(width = "30%", tags$div(style = localPlainStyle, "p-scale:")),
                                        tags$td(width = "40%", selectInput("pScale", label=NULL, c("linear"="linear","log10"="log10"), selected="log10", selectize=FALSE)),
                                        tags$td(width = "30%", tags$div(style = localStyle, " ")),
@@ -150,16 +145,13 @@ wellPanel(id="EvidenceMain",
                                        tags$td(width = "30%", tags$div(style = localPlainStyle, "show sig/ns:")),
                                        tags$td(width = "40%", checkboxInput("sig_ns", label=NULL, value=TRUE)),
                                        tags$td(width = "30%", tags$div(style = localStyle, " ")),
-                                     )),
-                          tags$table(width = "100%",class="myTable",
-                                     # tags$tr(
-                                     #   tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Infer")),
-                                     # ),
+                                     ),
                                      tags$tr(
                                        tags$td(width = "30%", tags$div(style = localPlainStyle, "animations:")),
                                        tags$td(width = "40%", checkboxInput("showAnimation", label=NULL, value=TRUE)),
                                        tags$td(width = "30%", tags$div(style = localStyle, " ")),
-                                     )),
+                                     ),
+                          ),
                           )
               )
               # help tab

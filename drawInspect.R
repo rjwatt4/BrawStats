@@ -169,23 +169,22 @@ inspectPenaltyGraph<-function(inspect) {
 pile<-function(data) {
   x<-c()
   y<-c()
-  xspacing<-(max(data)-min(data))/20
-  yspacing<-2
+  space<-5/length(data)
+  data<-data-min(data)
+  data<-data/max(data)
+  
   for (i in 1:length(data)){
-    found<-(abs(x-data[i])<xspacing)
-    if (any(found)) {
-    y_max<-max(y[found])
-    y_which<-which.max(y[found])
-    x_max<-x[found][y_which]
-    y_inc<-sqrt(yspacing^2-(data[i]-x_max)^2)
-    y<-c(y,y_max+y_inc)
-    x<-c(x,data[i])
-    } else {
-      y<-c(y,0)
-      x<-c(x,data[i])
+    for (iy in seq(0,10,by=space)) {
+      distances=sqrt((x-data[i])^2+(y-iy)^2)
+      found<-(distances<space)
+      if (!any(found)) {
+        x<-c(x,data[i])
+        y<-c(y,iy)
+        break
+      }
     }
   }
-  return(y)
+  return(y*length(data))
 }
 
 

@@ -71,6 +71,9 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
     }
   }
   l<-IV$cases
+  if (sum(sapply(l,nchar))>10) {
+    l<-sapply(l,shrinkString,ceil(10/length(l)))
+  }
   
   se<-rep(DV$sd^2*sqrt(1-rho^2)/sqrt(n/ncats),ncats)
   se<-se*2

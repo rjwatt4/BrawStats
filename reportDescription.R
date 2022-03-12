@@ -131,34 +131,12 @@ reportDescription<-function(IV,IV2,DV,result){
   outputText<-c(outputText,"Formula:",paste(an_model),"","")
   outputText<-c(outputText,"R^2",paste(format(result$rFull^2,digits=report_precision),sep=""),"","")
   
-  switch (no_ivs,
-          {
-            if (IV$type=="Categorical" && DV$type=="Interval"){
-              outputText<-c(outputText,"","","","")
-              outputText<-c(outputText,"","Mean","SD","")
-              mn<-c()
-              for (i in 1:IV$ncats){
-                use<-(result$iv==IV$cases[i])
-                v<-result$dv[use]
-                mn[i]<-mean(v)
-                s<-sd(v)
-                outputText<-c(outputText,IV$cases[i],format(mn[i],digits=report_precision),format(s,digits=report_precision),"")
-              }
-              rsd<-sd(result$uModel$residuals,na.rm=TRUE)
-              if (IV$ncats==2){
-                outputText<-c(outputText,"Difference:",format(diff(mn),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
-              } else {
-                outputText<-c(outputText,"sd(means):",format(sd(result$uModel$fitted),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
-              }
-            }
-          })
-  
   outputText<-c(outputText,"","","","")
   outputText<-c(outputText,"\bEffect Size ","\bNormalized","","")
   
   switch (no_ivs,
           { result$rIVse<-r2se(result$rIV,result$nval)
-          outputText<-c(outputText,paste(IV$name," ="),paste(format(result$rIV,digits=report_precision),
+          outputText<-c(outputText,paste0("\b",IV$name," ="),paste(format(result$rIV,digits=report_precision),
                                                              " +/- ",format(result$rIVse,digits=report_precision),
                                                              sep=""),"","")
           },{
@@ -175,9 +153,44 @@ reportDescription<-function(IV,IV2,DV,result){
   
   an_rt<-format(result$rFull,digits=report_precision) 
   an_rset<-format(result$rFullse,digits=report_precision)
-  
-  outputText<-c(outputText,"","","","")
   outputText<-c(outputText,"\bFull model =",paste(an_rt,"+/-",an_rset),"","")
+  
+  switch (no_ivs,
+          {
+            if (IV$type=="Categorical" && DV$type=="Interval"){
+              outputText<-c(outputText,"","","","")
+              # outputText<-c(outputText,"","Mean","SD","")
+              mn<-c()
+              for (i in 1:IV$ncats){
+                use<-(result$iv==IV$cases[i])
+                v<-result$dv[use]
+                mn[i]<-mean(v)
+                s<-sd(v)
+                # outputText<-c(outputText,IV$cases[i],format(mn[i],digits=report_precision),format(s,digits=report_precision),"")
+              }
+              rsd<-sd(result$uModel$residuals,na.rm=TRUE)
+              if (IV$ncats==2){
+                outputText<-c(outputText,"Difference(means):",format(diff(mn),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
+              } else {
+                outputText<-c(outputText,"sd(means):",format(sd(result$uModel$fitted),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
+              }
+            }
+            if (IV$type=="Categorical" && DV$type=="Categorical"){
+              outputText<-c(outputText,"","","","")
+              obs<-matrix(nrow=IV$ncats,ncol=DV$ncats)
+              for (i in 1:IV$ncats){
+                for (j in 1:DV$ncats){
+                  use<-(result$iv==IV$cases[i] && result$dv==DV$cases[j])
+                  obs[j,i]<-sum(use)
+                }
+              }
+              expect<-rowSums(obs)%*%t(colSums(obs))
+              outputText<-c(outputText,"deviance",format(sum(abs(obs-expect))/sum(obs),digits=report_precision),"","")
+            }
+            
+          })
+  
+  
   nc=4
   nr=length(outputText)/nc
   

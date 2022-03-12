@@ -54,21 +54,35 @@ anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
-                  nlevs=7,iqr=3,median=4,discrete=TRUE,
+                  nlevs=7,iqr=3,median=4,discrete=TRUE,ordProportions=NA,
                   ncats=2,cases="C1,C2",proportions="1,1",source="Discrete",
                   deploy="Between",process="sim"){
   
   var<-list(name=name,type=type,
        mu=mu,sd=sd,skew=skew,kurtosis=kurtosis,
-       nlevs=nlevs,iqr=iqr,median=median,discrete=discrete,
+       nlevs=nlevs,iqr=iqr,median=median,discrete=discrete,ordProportions=ordProportions,
        ncats=ncats,cases=cases,proportions=proportions,source=source,
        deploy=deploy,process=process)
   # do ordinal mean and sd (for graphs)
   if (var$type=="Ordinal") {
     var$mu<-var$median
     var$sd<-var$iqr/2
+    if (!is.na(ordProportions)) {
+    pp<-strsplit(var$ordProportions,",")
+    pp<-pp[[1]]
+    if (length(pp)<var$nlevs) {
+      pp<-c(pp,rep("1",var$nlevs-length(pp)))
+    }
+    if (length(pp)>var$nlevs){
+      pp<-pp[1:var$nlevs]
+    }
+    var$ordProportions<-paste(pp,sep='',collapse=',')
+    } else {
+      var$ordProportions<-NA
+    }
   }
   # check for cases
+  if (var$type=="Categorical") {
   cs<-strsplit(var$cases,",")
   cs<-cs[[1]]
   if (length(cs)<var$ncats){
@@ -88,6 +102,7 @@ makeVar<-function(name,type="Interval",
     pp<-pp[1:var$ncats]
   }
   var$proportions<-paste(pp,sep='',collapse=',')
+  }
   # return var
   var
 }

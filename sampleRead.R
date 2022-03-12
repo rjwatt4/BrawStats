@@ -88,6 +88,19 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
   for (i in 2:length(vars)){
     varname<-vars[i]
     data<-raw_data[,i]
+    # set up default values first
+    varmu<-0
+    varsd<-1
+    varskew<-0
+    varkurt<-3
+    varMedian<-3
+    varIQR<-1
+    varnlevs<-5
+    varcases<-"C1,C2"
+    varncats<-2
+    varnprop<-paste(c(1,1),collapse=",")
+    ordProportions<-NA
+    
     if ((is.character(data[[1]]) || 
          is.element(dataTypes[i],c("Categorical","categorical"))) &&
         !is.element(dataTypes[i],c("Interval","interval"))
@@ -100,24 +113,28 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
       proportions<-hist(as.numeric(factor(data)),(0:varncats)+0.5,plot=FALSE)$density
       # proportions<-proportions/max(proportions)
       varnprop<-paste(format(proportions,digits=2),collapse=",")
-      varmu<-0
-      varsd<-1
     } else {
       data<-sapply(data,as.numeric)
       importedData[[ivar+1]]<<-importedData[[i]]
       if (doOrdinals && all(data==round(data)) && all(data>=0) && max(data)<maxOrdinal) {
         vartype<-"Ordinal"
+        varMedian<-median(data,na.rm=TRUE)
+        varIQR<-IQR(data,na.rm=TRUE)/2
+        varnlevs<-max(data)
+        ordProportions<-hist(data,(0:varnlevs)+0.5,plot=FALSE)$density
+        ordProportions<-paste(format(ordProportions,digits=2),collapse=",")
       } else {
         vartype<-"Interval"
+        varmu<-mean(data,na.rm=TRUE)
+        varskew<-skewness(data,na.rm=TRUE)
+        varkurt<-kurtosis(data,na.rm=TRUE)+3
+        varsd<-sd(data,na.rm=TRUE)
       }
-      varcases<-"C1,C2"
-      varncats<-2
-      varnprop<-paste(c(1,1),collapse=",")
-      varmu<-mean(data,na.rm=TRUE)
-      varsd<-sd(data,na.rm=TRUE)
     }
-    var<-makeVar(name=varname,type=vartype,mu=varmu,sd=varsd,
-                 ncats=varncats,cases=paste(varcases,collapse=","),proportions=paste(varnprop,collapse=","),
+    var<-makeVar(name=varname,type=vartype,
+                 mu=varmu,sd=varsd,skew=varskew,kurtosis=varkurt,
+                 median=varMedian,iqr=varIQR,nlevs=varnlevs,ordProportions=ordProportions,discrete=1,
+                 ncats=varncats,cases=paste(varcases,collapse=","),proportions=varnprop,
                  deploy=deploys[i],process="data")
     newVariables[ivar,]<-var
     ivar<-ivar+1

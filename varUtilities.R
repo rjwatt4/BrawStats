@@ -10,16 +10,19 @@ CatProportions<-function(var) {
 
 
 OrdProportions<-function(var) {
-  ng<-var$nlevs
-  centre<-((var$median-(ng+1)/2)/ng+0.5)
-  concentration<-1/(var$iqr/2)*10
-  alpha<-1+centre*(concentration-2)
-  beta<-1+(1-centre)*(concentration-2)
-  pp<-dbeta(seq(0,1,1/(ng+1)),alpha,beta)
-  pp<-pp[2:(ng+1)]
-  # pp<-exp(-0.5*(((1:ng)-(ng+1)/2)/(var$iqr/2)^2)
+  if (isempty(var$ordProportions) || is.na(var$ordProportions)) {
+    ng<-var$nlevs
+    centre<-((var$median-(ng+1)/2)/ng+0.5)
+    concentration<-1/(var$iqr/2)*10
+    alpha<-1+centre*(concentration-2)
+    beta<-1+(1-centre)*(concentration-2)
+    pp<-dbeta(seq(0,1,1/(ng+1)),alpha,beta)
+    pp<-pp[2:(ng+1)]
+    # pp<-exp(-0.5*(((1:ng)-(ng+1)/2)/(var$iqr/2)^2)
+  } else {
+    pp<-as.numeric(unlist(strsplit(var$ordProportions,",")))
+  }
   pp<-pp/max(pp)
-  
 }
 
 r2CatProportions<-function(rho,ncats1,ncats2) {
