@@ -118,6 +118,7 @@ defaultVars<-list(
   makeVar(name="Happiness",type="Interval",mu=50,sd=12),
   makeVar(name="Grade",type="Interval",mu=65,sd=10),
   makeVar(name="RiskTaking",type="Interval",mu=30,sd=6),
+  makeVar(name="Interesting",type="Interval",mu=10,sd=2),
   
   makeVar(name="Smoker?",type="Categorical",ncats=2,cases="no,yes",proportions="2,1"),
   makeVar(name="RiskTaker?",type="Categorical",ncats=2,cases="no,yes"),

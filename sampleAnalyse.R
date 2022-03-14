@@ -387,7 +387,13 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     if (length(rho2)<n_sims) {rho2<-rep(rho2,n_sims)}
   }
 
-  if (appendData) {
+  nterms<-0
+  if (IV$type=="Categorical") {nterms<-nterms+IV$ncats-1} else {nterms<-nterms+1}
+  if (!is.null(IV2)) {
+    if (IV2$type=="Categorical") {nterms<-nterms+IV2$ncats-1} else {nterms<-nterms+1}
+  }
+
+    if (appendData) {
     main_res<-earlierResult
   } else {
     main_res<-list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=design$showType)
@@ -410,6 +416,10 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     main_res$rIV<-rbind(main_res$rIV,res$rIV)
     main_res$pIV<-rbind(main_res$pIV,res$pIV)
     main_res$nval<-rbind(main_res$nval,res$nval)
+    coefficients<-as.double(res$uModel$coefficients)[2:length(res$uModel$coefficients)]
+    if (length(coefficients)<nterms) {
+      
+    }
 
     if (!is.null(IV2)){
       main_res$rIV2<-rbind(main_res$rIV2,res$rIV2)
@@ -545,7 +555,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
     doingWithin<-FALSE
   }
   formula<-as.formula(formula)    
-
+  
   if (IV$type=="Categorical") c1=TRUE else c1=FALSE
   if (!is.null(IV2) && IV2$type=="Categorical") c2=TRUE else c2=FALSE
   if (c1 && c2)       {contrasts<-list(iv1=contr.sum, iv2=contr.sum)}
@@ -842,7 +852,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
                 } else {
-                  an_name<-"Kruskal Wallace Test: Independent Measures"
+                  an_name<-"Kruskal Wallis Test: Independent Measures"
                   op <- options(warn = (-1))
                   tv<-kruskal.test(dv~iv1);
                   options(op)

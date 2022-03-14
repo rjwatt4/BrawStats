@@ -639,12 +639,14 @@ makeSample<-function(IV,IV2,DV,effect,design){
       xp<-xplot
       for (i in 1:IV$ncats) {
         use1=(xp==i)
+        if (sum(use1)>1) {
         if (DV$type=="Interval"){
           mn1=mean(dv[use1])
           sd1=sd(dv[use1])
           xplot[use1]<-i-1+rnorm(length(xplot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15*2*sum(use1)/length(xp)
         } else {
           xplot[use1]<-i-1+rnorm(length(xplot[use1]))*mean(use1)*0.3
+        }
         }
       }
       # xplot<-xplot-(IV$ncats+1)/2
@@ -659,12 +661,14 @@ makeSample<-function(IV,IV2,DV,effect,design){
       if (IV2$type=="Categorical"){
         for (i in 1:IV2$ncats) {
           use1=(x2plot==i)
+          if (sum(use1)>1) {
           if (DV$type=="Interval"){
             mn1=mean(dv[use1])
             sd1=sd(dv[use1])
             x2plot[use1]<-i-1+rnorm(length(x2plot[use1]),mean=0,sd=exp(-0.5*((dv[use1]-mn1)/sd1)^2))*0.15*2*sum(use1)/length(x2plot)
           } else {
             x2plot[use1]<-i-1+rnorm(length(x2plot[use1]))*mean(use1)*0.3
+          }
           }
         }
       }
