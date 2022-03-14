@@ -30,17 +30,19 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
   withins<-grepl("[^[:space:]]{1,}[|]{1}[^[:space:]]{1,}[=]{1}[^[:space:]]{1,}",vars)
   added<-0
   if (any(withins)){
-    DVs<-unique(sub("[|]{1}[^[:space:]]{1,}","",vars[withins]))
-    IVs<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
+    DVs<-sub("[|]{1}[^[:space:]]{1,}","",vars[withins])
+    IVs<-sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins]))
+    DVwiths<-unique(sub("[|]{1}[^[:space:]]{1,}","",vars[withins]))
+    IVwiths<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
     z<-raw_data
-    for (iDV in 1:length(DVs)){
+    for (iDV in 1:length(DVwiths)){
       tempName<-paste("Minions",iDV,sep="")
       
-      z<-gather_(raw_data, tempName, DVs[iDV], vars[startsWith(vars,paste(DVs[iDV],"|",sep=""))])
+      z<-gather_(raw_data, tempName, DVwiths[iDV], vars[startsWith(vars,paste(DVwiths[iDV],"|",sep=""))])
       # pull out the new column "DVname|IVname=Cname|IV2name=C2name"
       v<-z[tempName]
       # remove the "DVname"
-      v1<-sapply(v,function(x) sub(paste(DVs[iDV],"|",sep=""),"",x))
+      v1<-sapply(v,function(x) sub(paste(DVwiths[iDV],"|",sep=""),"",x))
       while (any(str_length(v1)>0)){
         # "|IVname=Cname"
         # find the "|IVname" bit
@@ -63,11 +65,15 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
     vars<-colnames(raw_data)
   }
   deploys<-rep("Between",ncol(raw_data))
+  targets<-rep("",ncol(raw_data))
   if (added>0) {
-    change=(ncol(raw_data)-(added-1)):ncol(raw_data)
-    deploys[change]<-"Within"
+    for (i in 1:length(IVwiths)) {
+      change<-which(vars == IVwiths[i])
+      deploys[change]<-"Within"
+      targets[change]<-paste0(",",paste(unique(DVs[IVs %in% IVwiths[i]]),collapse=","),",")
+    }
   }
-  
+
   keep<-c()
   for (i in 1:length(vars)){
     data<-raw_data[,i]
@@ -78,7 +84,7 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
   vars<-vars[keep]
   raw_data<-raw_data[,keep]
   dataTypes<-dataTypes[keep]
-  
+
   importedData<<-raw_data
   importedData[[1]]<<-factor(importedData[[1]])
   
@@ -135,7 +141,8 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
                  mu=varmu,sd=varsd,skew=varskew,kurtosis=varkurt,
                  median=varMedian,iqr=varIQR,nlevs=varnlevs,ordProportions=ordProportions,discrete=1,
                  ncats=varncats,cases=paste(varcases,collapse=","),proportions=varnprop,
-                 deploy=deploys[i],process="data")
+                 deploy=deploys[i],targetDeploys=targets[i],
+                 process="data")
     newVariables[ivar,]<-var
     ivar<-ivar+1
   }

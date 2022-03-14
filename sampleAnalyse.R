@@ -789,7 +789,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                   }
                 }
                 t_name<-"t"
-                tval<-sqrt(an$`F value`[2])*sign(result$rIV)
+                # tval<-sqrt(an$`F value`[2])*sign(result$rIV)
               } else {
                 if (design$sIV1Use=="Within"){
                   an_name<-"One-Way ANOVA: Repeated Measures"
@@ -888,6 +888,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               tval<-chiResult$statistic
             }
     )
+    if (is.na(result$pIV)) {result$pIV<-1}
   } else {
     switch (DV$type,
             "Interval"={

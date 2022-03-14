@@ -479,6 +479,15 @@ shinyServer(function(input, output, session) {
                   validExplore<<-FALSE
                 })
   
+  observeEvent(input$IVchoice,{
+    use<-match(input$IVchoice,variables$name)
+    if (!is.na(use)){
+      newMV<-variables[use,]
+    }
+    else return(NULL)
+    updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
+  })
+  
   # modalDialog to edit each variable
   # all of this code only gets used if the modalDialog mechanism is set up in ui.R
   # if we are using the older tabs mechanism, then this code never gets called
@@ -604,7 +613,8 @@ shinyServer(function(input, output, session) {
         if (debug) print(paste("IV changed name detected",newMV$name))
         updateSelectInput(session, "IVchoice", selected=newMV$name)
       }
-      
+    }
+    
     updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
     switch (newMV$type,
             "Interval"={
@@ -614,7 +624,6 @@ shinyServer(function(input, output, session) {
               shinyjs::enable(id= "sIV1Use")
             }
     )
-    }
     
     validSample<<-FALSE
     validExpected<<-FALSE
@@ -999,6 +1008,9 @@ inspectHistory<-c()
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
+      if (IV$deploy=="Within" && !isempty(IV$targetDeploys) && !grepl(paste0(",",DV$name,","),IV$targetDeploys)) {
+        hmm(paste0("Warning: ", IV$name," requires matched DV (",substr(IV$targetDeploys,2,nchar(IV$targetDeploys)),")"))
+      }
       effect<-updatePrediction()
 
       PlotNULL<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.1,0,0,"cm"))+

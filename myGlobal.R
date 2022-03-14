@@ -56,13 +56,14 @@ makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
                   nlevs=7,iqr=3,median=4,discrete=TRUE,ordProportions=NA,
                   ncats=2,cases="C1,C2",proportions="1,1",source="Discrete",
-                  deploy="Between",process="sim"){
+                  deploy="Between",targetDeploys="",process="sim"){
   
   var<-list(name=name,type=type,
        mu=mu,sd=sd,skew=skew,kurtosis=kurtosis,
        nlevs=nlevs,iqr=iqr,median=median,discrete=discrete,ordProportions=ordProportions,
        ncats=ncats,cases=cases,proportions=proportions,source=source,
-       deploy=deploy,process=process)
+       deploy=deploy,targetDeploys=targetDeploys,
+       process=process)
   # do ordinal mean and sd (for graphs)
   if (var$type=="Ordinal") {
     var$mu<-var$median
