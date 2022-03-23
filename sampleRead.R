@@ -2,7 +2,6 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
   if (is.null(raw_data)) {return(NULL)}
   if (nrow(raw_data)==0) {return(NULL)}
 
-
   if (is.null(header)) {
   vars<-colnames(raw_data)
   } else {
@@ -34,6 +33,7 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
     IVs<-sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins]))
     DVwiths<-unique(sub("[|]{1}[^[:space:]]{1,}","",vars[withins]))
     IVwiths<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
+    IVwithsadded<-zeros(length(IVwiths),1)
     z<-raw_data
     for (iDV in 1:length(DVwiths)){
       tempName<-paste("Minions",iDV,sep="")
@@ -50,11 +50,16 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
         # now the "=Cname" bits
         IVlocalcases<-str_match(v1,"=([^=|]+)")[,2]
         # add this variable to z
-        # column 1 is participants the last column is the DV
-        z<-cbind(z[1],IVlocalcases,z[2:ncol(z)])
-        # and change its name
-        colnames(z)[2]<-IVlocal[1]
-        added<-added+1
+        # but only if it isn't already there
+        use<-which(IVwiths==IVlocal[1])
+        if (IVwithsadded[use]==0) {
+          # column 1 is participants the last column is the DV
+          z<-cbind(z[1],IVlocalcases,z[2:ncol(z)])
+          # and change its name
+          colnames(z)[2]<-IVlocal[1]
+          added<-added+1
+          IVwithsadded[use]<-1
+        }
         # remove the part we have just dealt with
         v1<-sub("[|].[^|]+","",v1)
       }
@@ -121,8 +126,9 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
       varnprop<-paste(format(proportions,digits=2),collapse=",")
     } else {
       data<-sapply(data,as.numeric)
+      data<-data[!is.na(data)]
       importedData[[ivar+1]]<<-importedData[[i]]
-      if (doOrdinals && all(data==round(data)) && all(data>=0) && max(data)<maxOrdinal) {
+      if (doOrdinals && all(data==round(data),na.rm=TRUE) && all(data>=0,na.rm=TRUE) && max(data,na.rm=TRUE)<maxOrdinal) {
         vartype<-"Ordinal"
         varMedian<-median(data,na.rm=TRUE)
         varIQR<-IQR(data,na.rm=TRUE)/2

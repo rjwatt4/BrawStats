@@ -38,13 +38,16 @@ wellPanel(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
                                               actionButton("WSOutputFileSave","Save")),
                                     ),
-                                    tags$tr(
+                         ),
+                         conditionalPanel(condition=clipBoard,
+                                          tags$table(width = "100%",class="myTable",
+                                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
                                       tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
                                               actionButton("wsPaste","Import")),
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
                                               actionButton("wsCopy","Export")),
-                                    )
+                                    ))
                                     
                          ))
               ),
@@ -75,13 +78,16 @@ wellPanel(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
                                               actionButton("dataOutputFileSave","Save")),
                                     ),
+                         ),
+                         conditionalPanel(condition=clipBoard,
+                         tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
                                       tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
                                               actionButton("dPaste","Import")),
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
                                               actionButton("dCopy","Export")),
-                                    )
+                                    ))
                          ))
               )
               # options tab

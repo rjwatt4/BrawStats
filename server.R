@@ -77,7 +77,7 @@ shinyServer(function(input, output, session) {
     if (input$keypress==18) altKeyOn<<-TRUE
     
     # control-V
-    if (input$keypress==86 && controlKeyOn){
+    if (is_local && input$keypress==86 && controlKeyOn){
       mergeVariables<<-FALSE
       # get the raw data
       raw_h1<-read_clip()
@@ -90,9 +90,9 @@ shinyServer(function(input, output, session) {
     } 
     
     # control-c
-    if (input$keypress==67 && controlKeyOn){
+    if (is_local && input$keypress==67 && controlKeyOn){
       data<-exportData()      
-      write_clip(data)
+      write_clip(data,allow_non_interactive = TRUE)
     }
     
     if (quickHypos) {
@@ -187,12 +187,11 @@ shinyServer(function(input, output, session) {
     showModal(
       modalDialog(style = paste("background: ",subpanelcolours$hypothesisC,";",
                                 "modal {background-color: ",subpanelcolours$hypothesisC,";}"),
-                  title="Alert!",
+                  title="Careful now!",
                   size="s",
                   cause,
                   
                   footer = tagList( 
-                    modalButton("Cancel"),
                     actionButton("MVproceed", "OK")
                   )
       )
@@ -311,9 +310,23 @@ shinyServer(function(input, output, session) {
   
   changeUI2Data<-function() {
     # get the variables into the ui
-    updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
-    updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
-    updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
+    if (switches$rigidWithin) {
+      if (variables$deploy[1]=="Within") {
+        DVchoices<-strsplit(substring(variables$targetDeploys[1],2,nchar(variables$targetDeploys[1])-1),",")[[1]]
+        use<-!(variables$name %in% DVchoices) & (sapply(variables$targetDeploys,nchar)==0)
+        DVchoices<-list("applicable"=c(DVchoices," "),"not applicable"=variables$name[use])
+        updateSelectInput(session, "DVchoice", choices = DVchoices, selected = DVchoices$available[1])
+      } else {
+        DVchoices=variables$name[sapply(variables$targetDeploys,nchar)==0]
+        updateSelectInput(session, "DVchoice", choices = DVchoices, selected = DVchoices[length(DVchoices)])
+      }
+      updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+      updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+    } else {
+      updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
+      updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
+      updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[nrow(variables)])
+    }
     setIVanyway()
     setIV2anyway()
     setDVanyway()
@@ -486,6 +499,17 @@ shinyServer(function(input, output, session) {
     }
     else return(NULL)
     updateSelectInput(session,"sIV1Use", selected=newMV$deploy)
+    if (switches$rigidWithin && variablesHeld=="Data") {
+      if(newMV$deploy=="Within" && nchar(newMV$targetDeploys)>0) {
+        DVchoices<-strsplit(substring(newMV$targetDeploys,2,nchar(newMV$targetDeploys)-1),",")[[1]]
+        use<-!(variables$name %in% DVchoices) & (sapply(variables$targetDeploys,nchar)==0)
+        DVchoices<-list("applicable"=c(DVchoices," "),"not applicable"=variables$name[use])
+        updateSelectInput(session, "DVchoice", choices = DVchoices, selected = DVchoices$available[1])
+      } else {
+        DVchoices<-variables$name[sapply(variables$targetDeploys,nchar)==0]
+        updateSelectInput(session, "DVchoice", choices = DVchoices, selected = DVchoices[length(DVchoices)])
+      }
+    }
   })
   
   # modalDialog to edit each variable
@@ -1008,8 +1032,13 @@ inspectHistory<-c()
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
+      if (variablesHeld=="Data") {
       if (IV$deploy=="Within" && !isempty(IV$targetDeploys) && !grepl(paste0(",",DV$name,","),IV$targetDeploys)) {
         hmm(paste0("Warning: ", IV$name," requires matched DV (",substr(IV$targetDeploys,2,nchar(IV$targetDeploys)),")"))
+      }
+      if (DV$deploy=="Within") {
+        hmm(paste0("Warning: ", DV$name," is a within-participants IV and cannot be used as a DV"))
+      }
       }
       effect<-updatePrediction()
 

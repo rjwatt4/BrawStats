@@ -1,6 +1,11 @@
 # doBootstrap and extraApply should really go together
-switches<-list(do_explore=TRUE,do_files=TRUE,startBlank=FALSE,doLikelihood=TRUE,doBootstrap=FALSE,longHandLikelihood=TRUE,importOrdinals=TRUE)
+switches<-list(do_explore=TRUE,do_files=TRUE,doLikelihood=TRUE,
+               startBlank=FALSE,doBootstrap=FALSE,
+               longHandLikelihood=TRUE,importOrdinals=TRUE,
+               rigidWithin=TRUE)
 debug<-FALSE
+
+fontScale=1
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
@@ -52,9 +57,9 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   infer_sigC="#22FF00",infer_nsigC="#FF2222",
                   infer_err="#333333",infer_nerr="#00CCFF")
 
-localStyle="font-size:8pt;font-weight:bold;text-align: right;"
-localPlainStyle="font-size:8pt;font-weight:normal;text-align: right;"
-helpStyle=paste("font-size:7pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
+localStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: right;")
+localPlainStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:normal;text-align: right;")
+helpStyle=paste("font-size:",format(7*fontScale) ,"pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
 helpChar=HTML("<span style=\"color:#005E86;\"><b>?</b></span>")
 
 IV<-list(name="IV",type="Interval",mu=0,sd=1,ncats=2,cases="C1,C2",proportions="1,1")
@@ -86,7 +91,9 @@ is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
   # switches$doBootstrap<-TRUE
   quickHypos<-"y"
+  clipBoard<-"true"
 } else {
   quickHypos<-"n"
+  clipBoard<-"false"
 }
 

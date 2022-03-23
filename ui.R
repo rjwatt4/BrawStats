@@ -106,29 +106,29 @@ shinyUI(fluidPage(
     # tags$style("#DataTabset { display:none; }"), 
     # 
     tags$head(
-        tags$style("label{font-size: 8pt;}"),
+        tags$style(paste0("label{font-size: ",format(8*fontScale) ,"pt;}")),
         # tags$style(HTML( # textInput
         #     ".form-control {font-size: 8pt; height:20px; padding:0px 0px; margin-top:-20px; margin-bottom:-5px; min-height:10px;}"
         # )),
         tags$style(HTML( # textInput
-            ".form-control {font-size: 8pt; height:20px; padding:0px 0px;}"
+            paste0(".form-control {font-size: ",format(8*fontScale) ,"pt; height:20px; padding:0px 0px;}")
         )),
         tags$style(HTML( # selectInput
-            ".selectize-input {font-size: 8pt; height:20px; padding:0px 0px; margin-right:0px; margin-top:-20px;margin-bottom:-5px; min-height:10px;}",
-            ".selectize-dropdown { font-size: 8pt;}"
+            paste0(".selectize-input {font-size: ",format(8*fontScale) ,"pt; height:20px; padding:0px 0px; margin-right:0px; margin-top:-20px;margin-bottom:-5px; min-height:10px;}"),
+            paste0(".selectize-dropdown { font-size: ",format(8*fontScale) ,"pt;}")
         )),
         tags$style(HTML( # helpText
-            ".help-block {height:20px; padding:0px 0px; margin-top:20px; margin-bottom:-3px; min-height:10px;}"
+            paste0(".help-block {font-size: ",format(8*fontScale) ,"pt; height:20px; padding:0px 0px; margin-top:25px; margin-bottom:-5px; min-height:10px;}")
             )),
         tags$style(HTML( # slider bar
             ".irs {margin:0px; margin-bottom:-15px; padding:0px;padding-bottom:-15px; height:30px;}",
             ".irs-with-grid {height:50px;}",
             ".irs-bar {height:6.5px; top:15.5px;}",
             ".irs-bar-edge {border-color: transparent; background-color: transparent;}",
-            ".irs-grid-text {font-size:4pt;}",
-            ".irs-max {font-size: 5pt;}",
-            ".irs-min {font-size: 5pt;}",
-            ".irs-single {font-size: 5pt;}",
+            paste0(".irs-grid-text {font-size:",format(4*fontScale) ,"pt;}"),
+            paste0(".irs-max {font-size:",format(5*fontScale) ,"pt;}"),
+            paste0(".irs-min {font-size:",format(5*fontScale) ,"pt;}"),
+            paste0(".irs-single {font-size:",format(5*fontScale) ,"pt;}"),
             ".irs-slider {width: 10px; height: 10px; top:14px;padding:0px;}",
             ".irs-line {top: 15px;}",
             ".irs-grid {height: 21px; top: 23px}"
@@ -137,21 +137,21 @@ shinyUI(fluidPage(
             "#r .irs-bar {background-color: transparent; border-color: transparent; }"
         )),
         tags$style(HTML( # action button
-            ".col-sm-3 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}",
-            ".col-sm-2 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}",
-            ".col-sm-1 button {font-size:8pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}"
+           paste0(".col-sm-3 button {font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}"),
+           paste0( ".col-sm-2 button {font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}"),
+           paste0(".col-sm-1 button {font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}")
         )),
         tags$style(HTML( # tab panels
-            ".tabbable > .nav > li > a {font-weight: normal; font-size: 8pt; padding:2px; margin:1px; color:#222222; background-color:#dddddd}",
+            paste0(".tabbable > .nav > li > a {font-weight: normal; font-size: ",format(8*fontScale) ,"pt; padding:2px; margin:1px; color:#222222; background-color:#dddddd}"),
             ".tabbable > .nav > .active > a {font-weight: bold; color:black;  background-color:white; }",
-            ".nav-tabs {font-size: 8pt; padding:0px; margin-bottom:0px;} ",
+            paste0(".nav-tabs {font-size: ",format(8*fontScale) ,"pt; padding:0px; margin-bottom:0px;} "),
         )),
         tags$style(HTML( # well panels
                 ".well {padding:8px; margin:0px;margin-bottom:8px;margin-left:0px;margin-right:0px;} ",
         )),
-        tags$style(HTML(paste(".help-block b {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:12pt; font-weight:bold;}"))),
-        tags$style(HTML(paste(".help-block a {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:8pt; font-weight:normal;font-style: italic;}"))),
-        tags$style(HTML(".btn-file {padding:1px; margin: 0px; font-size:8pt; }"
+        tags$style(HTML(paste(".help-block b {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:",format(12*fontScale) ,"pt; font-weight:bold;}"))),
+        tags$style(HTML(paste(".help-block a {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:",format(8*fontScale) ,"pt; font-weight:normal;font-style: italic;}"))),
+        tags$style(HTML(paste(".btn-file {padding:1px; margin: 0px; font-size:",format(8*fontScale) ,"pt; }")
         )),
         tags$style(HTML(
             ".checkbox {line-height: 10px;margin:0px;padding:0px;}"
