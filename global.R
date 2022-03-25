@@ -5,6 +5,7 @@ switches<-list(do_explore=TRUE,do_files=TRUE,doLikelihood=TRUE,
                rigidWithin=TRUE)
 debug<-FALSE
 
+fontScale=0.85 # use with 400% zoom in Google Chrome
 fontScale=1
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")

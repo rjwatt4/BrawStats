@@ -18,18 +18,18 @@ wellPanel(
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "5%", style="border-top: 1px solid black;border-left: 1px solid black;", tags$div(style = localStyle, "import:")),
-                                      tags$td(width = "90%", style="border-top: 1px solid black;",
-                                              fileInput("wsInputFile",label=NULL,accept=c(".xlsx",".xls"))
+                                      tags$td(width = "90%", style="border-top: 1px solid black;margin-top:4px;padding-top:4px;",
+                                              fileInput("wsInputFile",label=NULL,accept=c(".xlsx",".xls"),buttonLabel="Choose: ")
                                       ),
-                                      tags$td(width = "5%", style="border-top: 1px solid black;border-right: 1px solid black;",
-                                              actionButton("wsInputFileLoad","Load"))
+                                      tags$td(width = "5%", style="border-top: 1px solid black;border-right: 1px solid black;")
                                     ),
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-left: 1px solid black;", tags$div(style = localStyle, "sheet:")),
                                       tags$td(width = "90%", style="border-bottom: 1px solid black;",
                                               selectInput("wsInputSheet",label=NULL,choices=c("sheet name"),selectize = FALSE)
                                       ),
-                                      tags$td(width = "5%",style="border-bottom: 1px solid black;border-right: 1px solid black;")
+                                      tags$td(width = "5%",style="border-bottom: 1px solid black;border-right: 1px solid black;",
+                                              actionButton("wsInputFileLoad","Load"))
                                     ),
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "export:")),
@@ -58,18 +58,18 @@ wellPanel(
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "5%", style="border-top: 1px solid black;border-left: 1px solid black;", tags$div(style = localStyle, "import:")),
-                                      tags$td(width = "90%", style="border-top: 1px solid black;",
-                                              fileInput("dataInputFile",label=NULL,accept=c(".xlsx",".xls"))
+                                      tags$td(width = "90%", style="border-top: 1px solid black;;height:20px;margin:0px;padding:0px;margin-top:4px;padding-top:4px;",
+                                              fileInput("dataInputFile",label=NULL,accept=c(".xlsx",".xls"),buttonLabel="Choose: ")
                                       ),
-                                      tags$td(width = "5%", style="border-top: 1px solid black;border-right: 1px solid black;",
-                                              actionButton("dataInputFileLoad","Load"))
-                                    ),
+                                      tags$td(width = "5%", style="border-top: 1px solid black;border-right: 1px solid black;")
+                                      ),
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-left: 1px solid black;", tags$div(style = localStyle, "sheet:")),
                                       tags$td(width = "90%", style="border-bottom: 1px solid black;",
                                               selectInput("dataInputSheet",label=NULL,choices=c("sheet name"),selectize = FALSE)
                                       ),
-                                      tags$td(width = "5%", style="border-bottom: 1px solid black;border-right: 1px solid black;")
+                                      tags$td(width = "5%",style="border-bottom: 1px solid black;border-right: 1px solid black;", 
+                                              actionButton("dataInputFileLoad","Load"))
                                     ),
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "export:")),

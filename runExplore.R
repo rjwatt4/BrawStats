@@ -225,6 +225,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "IVcats"={
               IV$type<-"Categorical"
               IV$ncats<-vals[i]
+              IV$cases<-format(1:IV$ncats)
             },
             "DVprop"={
               DV$type<-"Categorical"
