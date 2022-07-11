@@ -83,7 +83,7 @@ if (switches$doKeys) {
     }
     
     # control-alt-m - switch to offine version
-    if (is_local && input$keypress==77 && controlKeyOn && altKeyOn){
+    if (input$keypress==77 && controlKeyOn && altKeyOn){
       switches$doReplications<<-TRUE
       switches$doWorlds<<-TRUE
       insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
