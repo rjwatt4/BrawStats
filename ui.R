@@ -9,7 +9,7 @@
 
 list.of.packages<-c("shiny","shinyWidgets","shinyjs","shinyBS",
                     "ggplot2","tidyr","tools",
-                    "mnormt","mle4","MuMIn",
+                    "mnormt","lme4","MuMIn",
                     "readxl","writexl","car","stringr","clipr","SuppDists","e1071","pracma"
                     )
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
