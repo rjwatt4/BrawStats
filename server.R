@@ -82,6 +82,15 @@ if (switches$doKeys) {
       removeTab("FileTab","Batch",session)
     }
     
+    # control-alt-m - switch to offine version
+    if (is_local && input$keypress==77 && controlKeyOn && altKeyOn){
+      switches$doReplications<<-TRUE
+      switches$doWorlds<<-TRUE
+      insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
+      insertTab("Hypothesis",worldTabReserve,"Effects","after",select=FALSE,session)
+      insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
+    }
+    
     # control-V
     if (is_local && input$keypress==86 && controlKeyOn){
       mergeVariables<<-FALSE

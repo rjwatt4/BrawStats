@@ -1,6 +1,6 @@
 switches<-list(do_explore=TRUE,do_files=TRUE,doLikelihood=TRUE,
                doWorlds=FALSE,doReplications=FALSE,
-               doKeys=FALSE,doClipboard=FALSE,doBatchFiles=FALSE,
+               doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,
                startBlank=FALSE,doBootstrap=FALSE,
                longHandLikelihood=TRUE,importOrdinals=TRUE,
                rigidWithin=TRUE)
@@ -94,9 +94,8 @@ is_local <- Sys.getenv('SHINY_PORT') == ""
 
 
 if (is_local) {
-  switches$doKeys<-TRUE
   switches$doClipboard<-TRUE
-  switches$doWorlds<-TRUE
-  switches$doReplications<-TRUE
+  switches$doWorlds<-FALSE
+  switches$doReplications<-FALSE
   switches$doBatchFiles<-TRUE
 } 

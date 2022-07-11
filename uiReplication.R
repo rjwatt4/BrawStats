@@ -1,6 +1,5 @@
 
-if (switches$doReplications){
-  replicationTab<-tabPanel("Replicate",
+  replicationTabReserve<-tabPanel("Replicate",
          style = paste("background: ",subpanelcolours$designC), 
          wellPanel(
            style = paste("background: ",subpanelcolours$designC,";"),
@@ -24,6 +23,10 @@ if (switches$doReplications){
            )
          )
 )
-} else {
-  replicationTab<-c()
-}
+  
+  if (switches$doReplications){
+    replicationTab<-replicationTabReserve
+  } else {
+    replicationTab<-c()
+  }
+  

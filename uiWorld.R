@@ -1,6 +1,5 @@
 # world tab
-if (switches$doWorlds){
-worldTab<-tabPanel("World",value="World",
+worldTabReserve<-tabPanel("World",value="World",
          style = paste("background: ",subpanelcolours$hypothesisC),
          wellPanel(
            style = paste("background: ",subpanelcolours$hypothesisC,";"),
@@ -39,6 +38,8 @@ worldTab<-tabPanel("World",value="World",
            width="100%"
          )
 )
+if (switches$doWorlds){
+  worldTab<-worldTabReserve
 } else {
   worldTab<-c()
 }

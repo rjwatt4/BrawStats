@@ -32,4 +32,10 @@ HypothesisDiagram <-
                 )
     )
   )
+
+worldDiagramReserve<-tabPanel("World",
+         style = paste("background: ",maincolours$graphC), 
+         plotOutput("WorldPlot",height=panelHeight,width="100%")
+)
+
 }
