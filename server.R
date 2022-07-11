@@ -36,6 +36,7 @@ source("reportLikelihood.R")
 
 source("runExplore.R")
 source("runLikelihood.R")
+source("runBatchFiles.R")
 
 source("wsRead.R")
 source("typeCombinations.R")
@@ -59,22 +60,27 @@ shinyServer(function(input, output, session) {
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
 
-  if (!switches$doLikelihood) {
-    shinyjs::hideElement(id= "MainLikelihood")
-    hideTab("Graphs", "Possible", session)
-    hideTab("Reports", "Possible", session)
-  }
 ####################################
 #KEYBOARD: capture keyboard events
 
-  # observeEvent(input$local, {print(input$local)})
-
+if (switches$doKeys) {
   keyrespond<-observeEvent(input$pressedKey,{
      # print(input$keypress)
-    
+
     if (input$keypress==16) shiftKeyOn<<-TRUE
     if (input$keypress==17) controlKeyOn<<-TRUE
     if (input$keypress==18) altKeyOn<<-TRUE
+
+    
+    # control-alt-l - switch to online version
+    if (is_local && input$keypress==76 && controlKeyOn && altKeyOn){
+      switches$doReplications<<-FALSE
+      switches$doWorlds<<-FALSE
+      removeTab("Design","Replicate",session)
+      removeTab("Hypothesis","World",session)
+      removeTab("HypothesisDiagram","World",session)
+      removeTab("FileTab","Batch",session)
+    }
     
     # control-V
     if (is_local && input$keypress==86 && controlKeyOn){
@@ -87,34 +93,49 @@ shinyServer(function(input, output, session) {
       colnames(raw_data)<-header
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
         getNewVariables(raw_data)
-    } 
-    
+    }
+
     # control-c
     if (is_local && input$keypress==67 && controlKeyOn){
-      data<-exportData()      
+      data<-exportData()
       write_clip(data,allow_non_interactive = TRUE)
     }
     
-    if (quickHypos) {
-      # control-alt-n set sample size to big (1000)
-      if (input$keypress==78 && controlKeyOn && altKeyOn){
-        updateNumericInput(session,"sN",value=1000)    
-      }
-      
-      # control-alt-d do debug
+    # control-alt-n set sample size to big (1000)
+    if (input$keypress==78 && controlKeyOn && altKeyOn){
+      updateNumericInput(session,"sN",value=1000)
+    }
+    
+    # control-alt-r set effect size to 0.3
+    if (input$keypress==82 && controlKeyOn && altKeyOn){
+      updateNumericInput(session,"rIV",value=0.3)
+    }
+    
+    # control-alt-3 set IV2
+    if (input$keypress==51 && controlKeyOn && altKeyOn){
+      updateSelectInput(session,"IV2choice",selected="IV2")
+    }
+    
+    # control-alt-w set sample usage to within
+    if (input$keypress==87 && controlKeyOn && altKeyOn){
+      updateSelectInput(session,"sIV1Use",selected="Within")
+      updateSelectInput(session,"sIV2Use",selected="Within")
+    }
+    
+    # control-alt-d do debug
     if (input$keypress==68 && controlKeyOn && altKeyOn){
       toggleModal(session, modalId = "testedOutput", toggle = "open")
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
-      
+
       effect<-updatePrediction()
       design<-updateDesign()
       evidence<-updateEvidence()
       expected<-updateExpected()
-      
+
       validSample<<-TRUE
-      
+
       if (is.null(IV2)) {
         nc=7
         effect$rIV=0.3
@@ -125,41 +146,41 @@ shinyServer(function(input, output, session) {
         effect$rIVIV2DV=0.5
       }
       design$sN<-1000
-      
+
       expected$nSims<-100
       expected$Expected_type<-"EffectSize"
       expected$append<-FALSE
-      
+
       if (is.null(IV2)) {
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
-      } 
+      }
       doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
       op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult)
-      
+
       if (!is.null(IV2)) {
         effect$rIVIV2=0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
-        
+
         effect$rIVIV2=-0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
         op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
       }
-      
+
       output$plotPopUp<-renderPlot(reportPlot(op,nc,length(op)/nc,2))
       return()
     }
-      
-    } # end of quick hypos
+
   })
-  
+
   keyrespondUp<-observeEvent(input$releasedKey,{
     if (input$keypress==18) altKeyOn<<-FALSE
     if (input$keypress==17) controlKeyOn<<-FALSE
     if (input$keypress==16) shiftKeyOn<<-FALSE
   })
 
-  
+}
+
   
 ####################################
 # other housekeeping
@@ -172,6 +193,29 @@ shinyServer(function(input, output, session) {
     useSignificanceCols<<-input$sig_ns
   }
   )
+  
+  observeEvent(input$llr1,{
+    llr$e1<<-input$llr1
+  }
+  )
+  observeEvent(input$llr2,{
+    llr$e2<<-input$llr2
+  }
+  )
+
+  observeEvent(input$inferD,{
+    if (input$inferD=="separate"){
+      updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
+                                                          "Power" = "Power",
+                                                          "NHST errors" = "NHSTErrors",
+                                                          "CI limits" = "CILimits",
+                                                          "ln(lr)" = "ln(lr)"))
+    } else {
+      updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
+                                                          "Power" = "Power",
+                                                          "ln(lr)" = "ln(lr)"))
+    }
+  })  
   
   observeEvent(input$Explore_VtypeH, {
       if (input$Explore_VtypeH=="levels") {
@@ -516,6 +560,7 @@ shinyServer(function(input, output, session) {
   # all of this code only gets used if the modalDialog mechanism is set up in ui.R
   # if we are using the older tabs mechanism, then this code never gets called
   source("uiVariable.R")
+  
   modalVar<-c()
   editVar<-reactiveValues(data=0)
   oldName<-""
@@ -885,6 +930,9 @@ inspectHistory<-c()
                     cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
                   }
                   IV$cases<-cs
+                  if (is.character(IV$proportions)) {
+                    IV$proportions<-as.numeric(unlist(strsplit(IV$proportions,",")))
+                  }
                 }
       if (debug) print("     updateIV - exit")
       return(IV)
@@ -913,6 +961,9 @@ inspectHistory<-c()
           cs<-c(cs,paste("C",(length(cs)+1):IV$ncats,sep=""))
         }
         IV2$cases<-cs
+        if (is.character(IV2$proportions)) {
+          IV2$proportions<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+        }
         #             IV$proportions<-MV$prop
       }
       if (debug) print("     updateIV2 - exit")
@@ -939,6 +990,9 @@ inspectHistory<-c()
           cs<-c(cs,paste("C",(length(cs)+1):DV$ncats,sep=""))
         }
         DV$cases<-cs
+        if (is.character(DV$proportions)) {
+          DV$proportions<-as.numeric(unlist(strsplit(DV$proportions,",")))
+        }
         #             IV$proportions<-MV$prop
       }
       if (debug) print("     updateDV - exit")
@@ -994,7 +1048,8 @@ inspectHistory<-c()
     updatePrediction<-function(){
       if (debug) print("     updatePrediction")
       prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr)
+                       Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
+                       populationPDF=input$World_distrP,populationPDFk=input$World_distr_kP,populationRZ=input$World_RZ,populationNullp=input$World_Nullp)
       if (debug) print("     updatePrediction - exit")
       prediction
     }
@@ -1004,6 +1059,7 @@ inspectHistory<-c()
       design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
                    sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering,
+                   sReplicationOn=input$sReplicationOn,sReplPower=input$sReplPower,sReplSigOnly=input$sReplSigOnly,
                    sN_Strata=input$sN_Strata, sR_Strata=input$sR_Strata,
                    sNClu_Cluster=input$sNClu_Cluster, sRClu_Cluster=input$sRClu_Cluster,
                    sNClu_Convenience=input$sNClu_Convenience, sRClu_Convenience=input$sRClu_Convenience, sNCont_Convenience=input$sNCont_Convenience, sRCont_Convenience=input$sRCont_Convenience, sRSpread_Convenience=input$sRSpread_Convenience,
@@ -1019,7 +1075,8 @@ inspectHistory<-c()
       evidence<-list(rInteractionOn=input$rInteractionOn,
                      showType=input$Effect_type,
                      ssqType=input$ssqType,
-                     evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch)
+                     evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch,
+                     dataType=input$dataType,analysisType=input$analysisType)
       if (debug) print("     updateEvidence - exit")
       evidence
     }
@@ -1071,6 +1128,41 @@ inspectHistory<-c()
     }
     )
 
+# world diagram
+    output$WorldPlot<-renderPlot({
+      doIt<-editVar$data
+      effect<-updatePrediction()
+      
+      PlotNULL<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.1,0,0,"cm"))+
+        scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+      
+      if (debug) print("WorldPlot")
+      x<-seq(-0.99,0.99,length.out=101)
+      if (effect$populationRZ=="z") {r<-atanh(x)} else {r<-x}
+      switch (effect$populationPDF,
+              "Single"={
+                y<-r*0
+                use=which.min(abs(x-effect$rIV))
+                y[use]=1},
+              "Uniform"={y<-r*0+1},
+              "Exp"={y<-exp(-abs(r/effect$populationPDFk))},
+              "Gauss"={y<-exp(-abs(r/effect$populationPDFk)^2)},
+      )
+      if (effect$populationRZ=="z") {y<-y/(1-x^2)}
+      y<-y/max(y)
+      
+      x<-c(-1,x,1)
+      y<-c(0,y,0)
+      pts=data.frame(x=x,y=y)
+      g1<-ggplot(pts,aes(x=x,y=y))
+      g1<-g1+geom_polygon(data=pts,aes(x=x,y=y),fill="yellow")+scale_y_continuous(limits = c(0,1.5),labels=NULL,breaks=NULL)
+      g1<-g1+plotTheme+theme(plot.margin=popplotMargins)+labs(x=bquote(r[population]),y="Density")
+      if (debug) print("WorldPlot - exit")
+      g<-PlotNULL+annotation_custom(grob=ggplotGrob(g1), xmin=0,  xmax=10,  ymin=2.5, ymax=7.5)
+        g
+    }
+    )
+    
 # population diagram
     output$PopulationPlot <- renderPlot({
       doIt<-editVar$data
@@ -1095,7 +1187,7 @@ inspectHistory<-c()
                 effect3$rIV<-effect3$rIVIV2
                 
                   gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                   axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                   axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                   g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                     scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                     
@@ -1131,7 +1223,7 @@ inspectHistory<-c()
                     effect2$rIV<-effect2$rIV2
                     
                     gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                     axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                     axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                     g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                       scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                       
@@ -1146,7 +1238,7 @@ inspectHistory<-c()
                       effect2$rIV<-effect2$rIV2
                       
                       gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                       axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                         
@@ -1211,8 +1303,13 @@ inspectHistory<-c()
       
       sample<-makeSample(IV,IV2,DV,effect,design)
       if (is.null(sample)) return(NULL)
-      analyseSample(IV,IV2,DV,design,evidence,sample)
-      
+      result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      if (!isempty(input$sReplicationOn) && !is.na(input$sReplicationOn) && input$sReplicationOn) {
+        design$sN<-rw2n(result$rIV,input$sReplPower)
+        sample<-makeSample(IV,IV2,DV,effect,design)
+        result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      }
+      result
     }
 
     # eventReactive wrapper
@@ -1273,7 +1370,7 @@ inspectHistory<-c()
           result3<-list(IVs=result$IVs, DVs=result$IV2s, rIV=result$rIVIV2, ivplot=result$ivplot,dvplot=result$iv2plot)
           
           gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                           axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                           axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
           ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
             scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
             
@@ -1320,7 +1417,7 @@ inspectHistory<-c()
                     result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, ivplot=result$iv2plot,dvplot=result$dvplot)
                     
                     gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                     axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                     axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                     g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                       scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                       
@@ -1347,14 +1444,14 @@ inspectHistory<-c()
                         result2$DVs$vals<-result$dv[!use]
                         
                         gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                         axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                         axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                         g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                           scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                         g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect1,design,result1)+gridTheme+ggtitle(paste0(IV2$name,">",format(median(result$iv2),digits=3)))),xmin=0.5,xmax=4.5,ymin=0,ymax=5)
                         g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect2,design,result2)+gridTheme+ggtitle(paste0(IV2$name,"<",format(median(result$iv2),digits=3)))),xmin=5.5,xmax=9.5,ymin=0,ymax=5)
                           } else {
                             gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                             axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                             axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                             g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                               scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                             switch (IV2$ncats,
@@ -1397,7 +1494,7 @@ inspectHistory<-c()
                       result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, iv=result$iv, dv=result$dv, ivplot=result$iv2plot,dvplot=result$dvplot)
                       
                       gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                       axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                       g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect,design,result)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)
@@ -1433,23 +1530,46 @@ inspectHistory<-c()
         
         result$showType<-evidence$showType
         
-        switch (input$Infer_type,
-                "Power"= {
-                  g1<-drawInference(IV,IV2,DV,effect,design,result,"w")
-                  g2<-drawInference(IV,IV2,DV,effect,design,result,"nw")
-                },
-                "EffectSize"={
-                  g1<-drawInference(IV,IV2,DV,effect,design,result,"r")
-                  g2<-drawInference(IV,IV2,DV,effect,design,result,"p")
-                }
-        )
         gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                         axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
+                         axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
         
         g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
           scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
-        g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=10)
-        g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=10)
+        
+        switch (input$inferD,
+                "separate"={
+                  switch (input$Infer_type,
+                          "EffectSize"={
+                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"r")
+                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
+                          },
+                          "Power"= {
+                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"w")
+                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"nw")
+                          },
+                          "ln(lr)"={
+                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"ln(lr)")
+                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
+                          }
+                  )
+                  g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
+                  g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
+                },
+                "2D"={
+                  switch (input$Infer_type,
+                          "EffectSize"={
+                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"r","p")
+                          },
+                          "Power"= {
+                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","w")
+                          },
+                          "ln(lr)"={
+                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","ln(lr)")
+                          }
+                  )
+                  g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
+                }
+        )
         return(g)
     })
     
@@ -1522,7 +1642,7 @@ inspectHistory<-c()
         
         result$showType<-evidence$showType
         
-        reportInference(IV,IV2,DV,effect,result)        
+        reportInference(IV,IV2,DV,effect,evidence,result)        
     })
     
 ##################################################################################    
@@ -1634,32 +1754,56 @@ inspectHistory<-c()
         # if (debug) {print("ExpectedPlot1 - timer set ")}
         invalidateLater(1)
       } 
-      switch (input$Expected_type,
-              "EffectSize"={
-                g1<-r_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-                g2<-p_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+      
+      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
+                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
+      
+      g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))
+      g<-g+scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+      
+      switch (input$inferD,
+              "separate"={
+                switch (input$Expected_type,
+                        "EffectSize"={
+                          g1<-r_plot(expectedResult$result,r=effect$rIV)
+                          g2<-p_plot(expectedResult$result,r=effect$rIV)
+                        },
+                        "Power"=     {
+                          g1<-w_plot(expectedResult$result,r=effect$rIV)
+                          g2<-nw_plot(expectedResult$result,r=effect$rIV)
+                        },
+                        "NHSTErrors"={
+                          g2<-e2_plot(expectedResult$result,r=effect$rIV)
+                          g1<-e1_plot(expectedResult$nullresult,r=0)
+                        },
+                        "CILimits"=  {
+                          g1<-ci1_plot(expectedResult$result,r=effect$rIV)
+                          g2<-ci2_plot(expectedResult$result,r=effect$rIV)
+                        },
+                        "ln(lr)"={
+                          g1<-llr_plot(expectedResult$result,r=effect$rIV)
+                          g2<-p_plot(expectedResult$result,r=effect$rIV)
+                        }
+                )
+                g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
+                g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
               },
-              "Power"=     {
-                g1<-w_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-                g2<-nw_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-              },
-              "NHSTErrors"={
-                g2<-e2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-                g1<-e1_plot(expectedResult$nullresult,r=0,n=design$sN)
-              },
-              "CILimits"=  {
-                g1<-ci1_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-                g2<-ci2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
+              "2D"={
+                switch (input$Expected_type,
+                        "EffectSize"={
+                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"r","p")
+                        },
+                        "Power"= {
+                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","w")
+                        },
+                        "ln(lr)"={
+                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","ln(lr)")
+                        }
+                )
+                g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
               }
       )
 
-      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                       axis.title=element_text(size=7,face="bold"),axis.text.x=element_text(size=6),axis.text.y=element_text(size=6))
-      
-      g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
-        scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
-      g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=10)
-      g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5.5,xmax=9.5,ymin=0,ymax=10)
       if (debug) {print("ExpectedPlot1 - plots done ")}
       return(g)
     })
@@ -1789,7 +1933,7 @@ inspectHistory<-c()
               "Hypothesis"={
                 l<-list(Explore_type=input$Explore_typeH,
                         Explore_show=input$Explore_showH, 
-                        Explore_extraShow=input$Explore_extraShowH, 
+                        Explore_typeShow=input$Explore_typeShowH, 
                         Explore_whichShow=input$Explore_whichShowH, 
                         Explore_length=as.numeric(input$Explore_lengthH),
                         Append=input$exploreAppendH)  
@@ -1797,7 +1941,7 @@ inspectHistory<-c()
               "Design"={
                 l<-list(Explore_type=input$Explore_typeD,
                         Explore_show=input$Explore_showD, 
-                        Explore_extraShow=input$Explore_extraShowD, 
+                        Explore_typeShow=input$Explore_typeShowD, 
                         Explore_whichShow=input$Explore_whichShowD, 
                         Explore_length=as.numeric(input$Explore_lengthD),
                         Append=input$exploreAppendD)  
@@ -1805,7 +1949,7 @@ inspectHistory<-c()
               "Anomalies"={
                 l<-list(Explore_type=input$Explore_typeA,
                         Explore_show=input$Explore_showA, 
-                        Explore_extraShow=input$Explore_extraShowA, 
+                        Explore_typeShow=input$Explore_typeShowA, 
                         Explore_whichShow=input$Explore_whichShowA, 
                         Explore_length=as.numeric(input$Explore_lengthA),
                         Append=input$exploreAppendA)  
@@ -1842,7 +1986,7 @@ inspectHistory<-c()
       ex<-exploreSimulate(IV,IV2,DV,effect,design,evidence,explore)
       ex$null<-exploreNullAnalysis()
       ex$Explore_show<-explore$Explore_show
-      ex$Explore_extraShow<-explore$Explore_extraShow
+      ex$Explore_typeShow<-explore$Explore_typeShow
       
       ex      
     })
@@ -1948,7 +2092,7 @@ inspectHistory<-c()
       switch (input$Likelihood,
               "Populations"={
                 list(type=input$Likelihood,
-                     populationDist=paste0(input$Population_distrP,'_',input$Population_RZ), populationDistK=input$Population_distr_kP,
+                     populationDist=paste0(input$likelihood_distrP,'_',input$likelihood_RZ), populationDistK=input$likelihood_distr_kP,
                      likelihoodNullp=input$likelihoodNullp,
                      sampleES=input$likelihoodSampRho,populationES=effect$rIV,sampleN=input$sN,
                      showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendP,
@@ -1957,7 +2101,7 @@ inspectHistory<-c()
               },
               "Samples"={
                 list(type=input$Likelihood,
-                     populationDist=input$Population_distrP, populationDistK=input$Population_distr_kP,
+                     populationDist=input$likelihood_distrP, populationDistK=input$likelihood_distr_kP,
                      likelihoodNullp=input$likelihoodNullp,
                      sampleES=input$likelihoodSampRhoS,populationES=input$likelihoodPopRho,sampleN=input$sN,
                      showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendS,
@@ -1973,7 +2117,7 @@ inspectHistory<-c()
                                         input$likelihoodPopRho,
                                         input$likelihoodSampRho,
                                         input$newSample,input$expectedRun,
-                                        input$Population_distrP,input$Population_distr_kP,input$Population_distrS,input$Population_distr_kS),{
+                                        input$likelihood_distrP,input$likelihood_distr_kP,input$Population_distrS,input$Population_distr_kS),{
 
         IV<-updateIV()
         DV<-updateDV()
@@ -2221,6 +2365,17 @@ inspectHistory<-c()
       editVar$data<<-editVar$data+1
     })
     
+    batchfiles<-observeEvent(input$batchFileRun,{
+      IV<-updateIV()
+      IV2<-updateIV2()
+      DV<-updateDV()
+      
+      effect<-updatePrediction()
+      design<-updateDesign()
+      evidence<-updateEvidence()
+      runBatchFiles(IV,IV2,DV,effect,design,evidence,input)
+      
+    })
     # end of everything        
 })
 

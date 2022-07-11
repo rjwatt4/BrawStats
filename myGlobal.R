@@ -13,7 +13,7 @@ popplotMargins<-margin(0.15,0.8,0,0.25,"cm");
 plotTheme=theme(panel.background = element_rect(fill="#666666", colour="black"),
                 panel.grid.major = element_line(linetype="blank"),panel.grid.minor = element_line(linetype="blank"),
                 plot.background = element_rect(fill=maincolours$graphC, colour=maincolours$graphC),
-                axis.title=element_text(size=16,face="bold")
+                axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12)
 )
 
 plotBlankTheme=theme(panel.background = element_rect(fill=maincolours$graphC, colour=maincolours$graphC),
@@ -27,12 +27,6 @@ mergeVariables<-FALSE
 showInteractionOnly<-TRUE
 hideIV2Tab<-FALSE
 
-is_local <- Sys.getenv('SHINY_PORT') == ""
-if (is_local) {
-  quickHypos<-TRUE
-} else {
-  quickHypos<-FALSE
-}
 shiftKeyOn<-FALSE
 controlKeyOn<-FALSE
 altKeyOn<-FALSE
@@ -50,6 +44,7 @@ wPlotScale="log10"
 pPlotScale="log10"
 
 alpha<-0.05
+alphaLLR<-3
 anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",
@@ -161,7 +156,9 @@ getCases<-function(var) {
   }
 }
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE)
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,
+             populationPDF="Single",populationPDFk=0.2,populationRZ="r",populationNullp=0
+)
 
 design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 

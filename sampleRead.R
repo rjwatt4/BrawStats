@@ -135,6 +135,10 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
         varnlevs<-max(data)
         ordProportions<-hist(data,(0:varnlevs)+0.5,plot=FALSE)$density
         ordProportions<-paste(format(ordProportions,digits=2),collapse=",")
+        varmu<-mean(data,na.rm=TRUE)
+        varskew<-skewness(data,na.rm=TRUE)
+        varkurt<-kurtosis(data,na.rm=TRUE)+3
+        varsd<-sd(data,na.rm=TRUE)
       } else {
         vartype<-"Interval"
         varmu<-mean(data,na.rm=TRUE)

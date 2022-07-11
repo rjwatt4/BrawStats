@@ -404,7 +404,7 @@ drawPopulation<-function(IV,DV,effect,alpha=1){
             g<-drawParParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
           "Ordinal Interval"={
-            g<-drawOrdParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
+            g<-drawOrdParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$nlevs+1), ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
           },
           "Categorical Interval"={
             g<-drawCatParPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
@@ -413,7 +413,7 @@ drawPopulation<-function(IV,DV,effect,alpha=1){
             g<-drawParOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
           },
           "Ordinal Ordinal"={
-            g<-drawOrdOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
+            g<-drawOrdOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$nlevs+1), ylim = c(0,DV$nlevs+1))
           },
           "Categorical Ordinal"={
             g<-drawCatOrdPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$nlevs+1))
@@ -422,7 +422,7 @@ drawPopulation<-function(IV,DV,effect,alpha=1){
             g<-drawParCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
           },
           "Ordinal Categorical"={
-            g<-drawOrdCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$ncats+1)-1)
+            g<-drawOrdCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$nlevs+1), ylim = c(0,DV$ncats+1)-1)
           },
           "Categorical Categorical"={
             g<-drawCatCatPopulation(IV,DV,rho,heteroscedasticity,alpha)+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(0,DV$ncats+1)-1)

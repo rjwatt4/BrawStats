@@ -17,13 +17,13 @@ hypothesisFullChoices=list("Variables"=list("IV type" = "IVType",
 hypothesisChoices3Plain=list("Variables"=list("IV" = "IV",
                                          "IV2" = "IV2",
                                          "DV" = "DV",
-                                         "IV/DV Types" = "Types")
+                                         "IV/DV Types" = "IVDVType")
 )
 
 hypothesisChoices3=list("Variables"=list("IV" = "IV",
                                          "IV2" = "IV2",
                                          "DV" = "DV",
-                                         "IV/DV Types" = "Types"),
+                                         "IV/DV Types" = "IVDVType"),
                         "Effects"=list("Effect Size1" = "EffectSize1",
                                        "Effect Size2" = "EffectSize2",
                                        "Interaction" = "Interaction",
@@ -32,14 +32,24 @@ hypothesisChoices3=list("Variables"=list("IV" = "IV",
 
 hypothesisChoices2Plain=list("Variables"=list("IV" = "IV",
                                          "DV" = "DV",
-                                         "IV/DV Types" = "Types")
+                                         "IV/DV Types" = "IVDVType")
 )
 
+if (switches$doWorlds) {
+  hypothesisChoices2=list("Variables"=list("IV" = "IV",
+                                           "DV" = "DV",
+                                           "IV/DV Types" = "IVDVType"),
+                          "Effects"=list("Effect Size" = "EffectSize1"),
+                          "Worlds"=list("k"="k","pnull"="pnull")
+  )
+  
+} else {
 hypothesisChoices2=list("Variables"=list("IV" = "IV",
                                          "DV" = "DV",
-                                         "IV/DV Types" = "Types"),
+                                         "IV/DV Types" = "IVDVType"),
                         "Effects"=list("Effect Size" = "EffectSize1")
 )
+}
 
 variableChoices=list("& type"="Type",
                      "& skew"="skew",
@@ -49,6 +59,7 @@ variableChoices=list("& type"="Type",
                      "& proptn"="prop"
 )
 
+if (switches$doReplications) {
 designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                    "Sampling Method" = "Method",
                                    "Sample Usage" = "Usage"),
@@ -56,9 +67,21 @@ designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                     "Outliers" = "Outliers",
                                     "Heteroscedasticity" = "Heteroscedasticity",
                                     "IV Range" = "IVRange",
-                                    "DV Range" = "DVRange")
+                                    "DV Range" = "DVRange"),
+                   "Replication"=list("SigOnly"="SigOnly",
+                                      "Power"="Power")
 )
-
+} else {
+  designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
+                                     "Sampling Method" = "Method",
+                                     "Sample Usage" = "Usage"),
+                     "Anomalies"=list("Dependence" = "Dependence",
+                                      "Outliers" = "Outliers",
+                                      "Heteroscedasticity" = "Heteroscedasticity",
+                                      "IV Range" = "IVRange",
+                                      "DV Range" = "DVRange")
+  )
+}
 anomChoices=list("Anomalies"=list("Dependence" = "Dependence",
                                   "Outliers" = "Outliers",
                                   "Heteroscedasticity" = "Heteroscedasticity"),
@@ -72,9 +95,11 @@ effectChoices=list("IV1-DV"="MainEffectIV",
 
 showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
               "Infer" = list("p-value" = "p",
+                             "p(sig)" = "p(sig)",
                              "Power" = "w",
                              "NHST errors" = "NHSTErrors",
-                             "p(sig)" = "p(sig)"
+                             "ln(lr)" = "ln(lr)",
+                             "p(str)" = "p(str)"
               )
 )
 extraShowChoices=c("direct"="direct",
@@ -85,6 +110,7 @@ extraShowChoices=c("direct"="direct",
 whichShowChoices=c("Main 1" = "Main 1",
                    "Main 2" = "Main 2",
                    "Interaction" = "Interaction",
+                   "Mains" = "Mains",
                    "All" = "All")
 
 exploreLengthChoices=c("10" = "10",
@@ -140,7 +166,7 @@ ExploreTab <-
                                                 )),
                                                 tags$td(width = "25%", 
                                                         conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                         selectInput("Explore_extraShowH", label=NULL,
+                                                                         selectInput("Explore_typeShowH", label=NULL,
                                                                     extraShowChoices, selected="direct",selectize = FALSE)
                                                 ))
                                               )),
@@ -190,7 +216,7 @@ ExploreTab <-
                                                 )),
                                                 tags$td(width = "25%", 
                                                         conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                         selectInput("Explore_extraShowD", label=NULL,
+                                                                         selectInput("Explore_typeShowD", label=NULL,
                                                                     extraShowChoices, selected="direct",selectize = FALSE)
                                                 ))
                                               )),
@@ -236,7 +262,7 @@ ExploreTab <-
                         #                         )),
                         #                         tags$td(width = "25%", 
                         #                                 conditionalPanel(condition="input.IV2choice != 'none'",
-                        #                                                  selectInput("Explore_extraShowA", label=NULL,
+                        #                                                  selectInput("Explore_typeShowA", label=NULL,
                         #                                             extraShowChoices, selected="direct",selectize = FALSE)
                         #                         ))
                         #                       )),

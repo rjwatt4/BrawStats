@@ -1,3 +1,5 @@
+source("uiReplication.R")
+
 DesignTab <-
   wellPanel(
     style = paste("background: ",panelcolours$designC), 
@@ -14,33 +16,33 @@ DesignTab <-
                            style = paste("background: ",subpanelcolours$designC,";"),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Sample Size:")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Sample Size:")),
+                                        tags$td(width = "60%", 
                                                 numericInput("sN",label=NULL,value=design$sN)
                                         )
                                       ),
                                       tags$tr(id="DesignMethod",
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Method:")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Method:")),
+                                        tags$td(width = "60%", 
                                                 selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball"),
                                                             selected=design$sMethod,
                                                             selectize=FALSE)
                                         )
                                       ),
                                       tags$tr(
-                                        tags$td(width = "30%", tags$div(style = localStyle, "Usage (IV):")),
-                                        tags$td(width = "70%", 
+                                        tags$td(width = "40%", tags$div(style = localStyle, "Usage (IV):")),
+                                        tags$td(width = "60%", 
                                                 selectInput("sIV1Use",label=NULL,c("Between","Within"),
                                                             selected=design$sIV1Use,
                                                             selectize=FALSE)
                                         )
                                       ),
                                       tags$tr(id="IV2Design",
-                                              tags$td(width = "30%", 
+                                              tags$td(width = "40%", 
                                                       conditionalPanel(condition="input.IV2choice != 'none'",
                                                                        tags$div(style = localStyle, "Usage (IV2):"))
                                                       ),
-                                              tags$td(width = "70%", 
+                                              tags$td(width = "60%", 
                                                       conditionalPanel(condition="input.IV2choice != 'none'",
                                                                        selectInput("sIV2Use",label=NULL,c("Between","Within"),
                                                                   selected=design$sIV2Use,
@@ -97,6 +99,10 @@ DesignTab <-
                          )
                 )
                 )
+                
+                # replication tab
+                ,replicationTab
+                
                 # options tab
                 ,tabPanel("#",id="DesignOptions",
                           style = paste("background: ",subpanelcolours$designC),

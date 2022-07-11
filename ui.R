@@ -25,6 +25,8 @@ library(tools)       # system
 
 # library(gridExtra)   # not sure any longer
 library(mnormt)      # pmnorm for logistic
+library(lme4)        # lmer (mixed models)
+library(MuMIn)       # r-squared for mixed models
 library(readxl)      # excel
 library(writexl)     # x excel
 library(car)         # Anova type 3 correct
@@ -170,19 +172,19 @@ shinyUI(fluidPage(
                      style = paste("background: ",maincolours$panelC), 
                      verticalLayout(
                          # Help panel                
-                         HelpTab
+                         HelpTab,
                          # Hypothesis panel                
-                         ,HypothesisTab
+                         HypothesisTab,
                          # Design panel
-                         ,DesignTab
+                         DesignTab,
                          # Evidence panel
-                         ,EvidenceTab
+                         EvidenceTab,
                          # Explore panel
-                         ,ExploreTab
+                         ExploreTab,
                          # Likelihood panel
-                         ,LikelihoodTab
+                         LikelihoodTab,
                          # Files panel
-                         ,FilesTab
+                         FilesTab
                      ),
                      width = 3
                  ),

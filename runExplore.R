@@ -3,6 +3,7 @@ min_n=10
 max_n=250
 min_prop=0.2
 effectSizeRange=0.8
+maxESrange<-0.95
 absRange<-FALSE
 quants=0.25
 n_logscale=FALSE
@@ -21,10 +22,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
   if (absRange) {vals<-seq(0,1,length.out=npoints)}
   else          {vals<-seq(-1,1,length.out=npoints)}
   switch (explore$Explore_type,
-          "IVType"={vals<-c("Interval","Cat2","Cat3")},
+          "IVType"={vals<-c("Interval","Ord7","Ord4","Cat2","Cat3")},
           "DVType"={vals<-c("Interval","Ord7","Ord4","Cat2")},
           "IVIV2Type"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
-          "IVDVType"={vals<-c("IntInt","Cat2Int","Cat3Int","IntCat","Cat2Cat","Cat3Cat")},
+          "IVDVType"={vals<-c("IntInt","Ord7Int","Cat2Int","Cat3Int","IntOrd","Ord7Ord","Cat2Ord","Cat3Ord","IntCat","Ord7Cat","Cat2Cat","Cat3Cat")},
           "IVcats"={vals<-2:7},
           "IVlevels"={vals<-2:10},
           "IVprop"={vals<-seq(min_prop,1,length.out=npoints)},
@@ -36,10 +37,33 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
           "DVskew"={vals<-vals},
           "DVkurtosis"={vals<-seq(0,log10(kurtRange),length.out=npoints)},
           "EffectSize"={vals<-vals*effectSizeRange},
-          "EffectSize1"={vals<-vals*effectSizeRange},
-          "EffectSize2"={vals<-vals*effectSizeRange},
-          "Covariation"={vals<-vals*effectSizeRange},
-          "Interaction"={vals<-vals*effectSizeRange},
+          "EffectSize1"={
+            # fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+
+            b<-2*effect$rIV2*effect$rIVIV2
+            c<-effect$rIVIV2DV^2-maxESrange
+            r1<- (-b-sqrt(b^2-4*c))/2
+            r2<-(-b+sqrt(b^2-4*c))/2
+            vals<-seq(r1,r2,length.out=npoints)
+            },
+          "EffectSize2"={
+            b<-2*effect$rIV*effect$rIVIV2
+            c<-effect$rIVIV2DV^2-maxESrange
+            r1<- (-b-sqrt(b^2-4*c))/2
+            r2<-(-b+sqrt(b^2-4*c))/2
+            vals<-seq(r1,r2,length.out=npoints)
+          },
+          "Covariation"={
+            # fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
+            maxCov<-abs((maxESrange-effect$rIV^2-effect$rIV2^2-effect$rIVIV2DV^2)/(2*effect$rIV*effect$rIV2))
+            maxCov<-min(maxCov,maxESrange)
+            vals<-seq(-maxCov,maxCov,length.out=npoints)
+            },
+          "Interaction"={
+            vals<-vals*effectSizeRange
+            },
+          
+          "k"={vals<-10^seq(-1,0,length.out=npoints)},
+          "pnull"={vals<-seq(0,1,length.out=npoints)},
           
           "SampleSize"={
             if (n_logscale){
@@ -54,7 +78,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
           "Outliers"={vals<-seq(0,anomaliesRange,length.out=npoints)},
           "Heteroscedasticity"={vals<-seq(0,1,length.out=npoints)},
           "IVRange"={vals<-seq(3,0.5,length.out=npoints)},
-          "DVRange"={vals<-seq(3,0.5,length.out=npoints)}
+          "DVRange"={vals<-seq(3,0.5,length.out=npoints)},
+          
+          "SigOnly"={vals<-c("Yes","No")},
+          "Power"={vals<-seq(0.1,0.9,length.out=npoints)}
   )
 
   if (explore$Append){
@@ -94,11 +121,21 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
                         IV$type<-"Categorical"
                         IV$ncats<-2
                         IV$cases<-c("C1","C2")
+                        IV$proportions<-c(1,1)
                       },
                       "Cat3"={
                         IV$type<-"Categorical"
                         IV$ncats<-3
                         IV$cases<-c("C1","C2","C3")
+                        IV$proportions<-c(1,1,1)
+                      },
+                      "Ord7"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-7
+                      },
+                      "Ord4"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-4
                       },
                       "Interval"={IV$type<-"Interval"}
               )
@@ -109,6 +146,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
                         DV$type<-"Categorical"
                         DV$ncats<-2
                         DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
                       },
                       # "Cat3"={
                       #   DV$type<-"Categorical"
@@ -132,39 +170,105 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
                         IV$type<-"Interval"
                         DV$type<-"Interval"
                       },
+                      "Ord7Int"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-7
+                        DV$type<-"Interval"
+                      },
+                      "Ord4Int"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-4
+                        DV$type<-"Interval"
+                      },
                       "Cat2Int"={
                         IV$type<-"Categorical"
                         IV$ncats<-2
                         IV$cases<-c("C1","C2")
+                        IV$proportions<-c(1,1)
                         DV$type<-"Interval"
                       },
                       "Cat3Int"={
                         IV$type<-"Categorical"
                         IV$ncats<-3
                         IV$cases<-c("C1","C2","C3")
+                        IV$proportions<-c(1,1,1)
                         DV$type<-"Interval"
+                      },
+                      "IntOrd"={
+                        IV$type<-"Interval"
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
+                      },
+                      "Ord7Ord"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-7
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
+                      },
+                      "Ord4Ord"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-4
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
+                      },
+                      "Cat2Ord"={
+                        IV$type<-"Categorical"
+                        IV$ncats<-2
+                        IV$cases<-c("C1","C2")
+                        IV$proportions<-c(1,1)
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
+                      },
+                      "Cat3Ord"={
+                        IV$type<-"Categorical"
+                        IV$ncats<-3
+                        IV$cases<-c("C1","C2","C3")
+                        IV$proportions<-c(1,1,1)
+                        DV$type<-"Ordinal"
+                        DV$nlevs<-7
                       },
                       "IntCat"={
                         IV$type<-"Interval"
                         DV$type<-"Categorical"
                         DV$ncats<-2
                         DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
+                      },
+                      "Ord7Cat"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-7
+                        DV$type<-"Categorical"
+                        DV$ncats<-2
+                        DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
+                      },
+                      "Ord4Cat"={
+                        IV$type<-"Ordinal"
+                        IV$nlevs<-4
+                        DV$type<-"Categorical"
+                        DV$ncats<-2
+                        DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
                       },
                       "Cat2Cat"={
                         IV$type<-"Categorical"
                         IV$ncats<-2
                         IV$cases<-c("C1","C2")
+                        IV$proportions<-c(1,1)
                         DV$type<-"Categorical"
                         DV$ncats<-2
                         DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
                       },
                       "Cat3Cat"={
                         IV$type<-"Categorical"
                         IV$ncats<-3
                         IV$cases<-c("C1","C2","C3")
+                        IV$proportions<-c(1,1,1)
                         DV$type<-"Categorical"
                         DV$ncats<-2
                         DV$cases<-c("E1","E2")
+                        DV$proportions<-c(1,1)
                       }
               )
             },
@@ -212,7 +316,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             },
             "IVprop"={
               IV$type<-"Categorical"
-              IV$proportions<-paste(c(vals[i],1),collapse=",")
+              IV$proportions<-c(vals[i],1)
             },
             "IVskew"={
               IV$type<-"Interval"
@@ -229,7 +333,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             },
             "DVprop"={
               DV$type<-"Categorical"
-              DV$proportions<-paste(c(vals[i],1),collapse=",")
+              DV$proportions<-c(vals[i],1)
             },
             "DVlevels"={
               DV$type<-"Ordinal"
@@ -254,6 +358,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "EffectSize2"={effect$rIV2<-vals[i]},
             "Covariation"={effect$rIVIV2<-vals[i]},
             "Interaction"={effect$rIVIV2DV<-vals[i]},
+            
+            "k"={effect$populationPDFk<-vals[i]},
+            "pnull"={effect$populationNullp<-vals[i]},
+            
             "Heteroscedasticity"={effect$Heteroscedasticity<-vals[i]},
             "SampleSize"={design$sN<-round(vals[i])},
             "Method"={design$sMethod<-vals[i]},
@@ -267,7 +375,14 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             "DVRange"={
               design$sRangeOn<-TRUE
               design$sDVRange<-vals[i]*c(-1,1)
-              }
+              },
+            
+            "SigOnly"={
+              design$sReplSigOnly<-(vals[i]=="Yes")
+            },
+            "Power"={
+            design$sReplPower<-vals[i]
+            }
     )
 
     if (explore$doNull) {

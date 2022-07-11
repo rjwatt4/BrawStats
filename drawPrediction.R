@@ -427,8 +427,10 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
     )
     }
   } else {
+# more than 1 IV
     doLegendBars<<-FALSE
     roff=0.82
+    # deal with interaction
     switch (IV2$type,
             "Interval"= rho<-effect$rIV+c(-1,1)*effect$rIVIV2DV,
             "Ordinal"= rho<-effect$rIV+c(-1,1)*effect$rIVIV2DV,
@@ -438,23 +440,27 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
     
     for (i in 1:length(rho)) {
       offset=2+(i-1)/(length(rho)-1)
+      DV1<-DV
+      DV1$mu<-DV1$mu+(i-mean(1:length(rho)))/(length(rho)-1)*2*effect$rIV2*DV$sd*qnorm(0.75)
+      
       switch (hypothesisType,
               "Interval Interval"={
-                g<-drawParParPrediction(g,IV,DV,rho[i],n,offset)
+                g<-drawParParPrediction(g,IV,DV1,rho[i],n,offset)
               },
               "Categorical Interval"={
-                g<-drawCatParPrediction(g,IV,DV,rho[i],n,offset)
+                g<-drawCatParPrediction(g,IV,DV1,rho[i],n,offset)
               },
               "Interval Categorical"={
-                g<-drawParCatPrediction(g,IV,DV,rho[i],n,offset)
+                g<-drawParCatPrediction(g,IV,DV1,rho[i],n,offset)
               },
               "Categorical Categorical"={
-                g<-drawCatCatPrediction(g,IV,DV,rho[i],n,offset)
+                g<-drawCatCatPrediction(g,IV,DV1,rho[i],n,offset)
               }
       )
     }
   }
-  if (offset<=2){
+  
+  # if (offset<=2){
     switch (hypothesisType,
             "Interval Interval"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
@@ -496,14 +502,14 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
             }
     )
-  } else {
-      if (DV$type=="Categorical") {
-        g<-g+coord_cartesian(ylim = c(-0.1,1.1))
-        g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
-      } else {
-        
-      }
-    }
+  # } else {
+  #     if (DV$type=="Categorical") {
+  #       g<-g+coord_cartesian(ylim = c(-0.1,1.1))
+  #       g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
+  #     } else {
+  #       
+  #     }
+  #   }
   g<-g+labs(x=IV$name,y=DV$name)+plotTheme+theme(plot.margin=popplotMargins)
   
 }

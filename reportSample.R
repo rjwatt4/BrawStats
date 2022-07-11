@@ -131,7 +131,7 @@ reportSample<-function(IV,IV2,DV,design,result){
   outputText<-c(outputText,"  ","","","","","","")
   outputText<-c(outputText,
                 "\bDesign","","","","","","",
-                "Sample Size: ",design$sN,"","","","","",
+                "Sample Size: ",result$nval,"","","","","",
                 "Method: ",design$sMethod,"","","","","",
                 "Usage: ",design$sIV1Use,"","","","",""
   )

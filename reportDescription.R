@@ -4,11 +4,14 @@ makeFormula<-function(IV,IV2,DV,result,an_vars){
   when_string = "="
   times_string = HTML("&times;")
   times_string = "x"
-  a<-result$uModel
-  use<-!grepl("participant",names(a$coefficients))
-  coeffs<-a$coefficients[use]
-  use<-!grepl("participant",an_vars)
-  an_vars<-an_vars[use]
+  a<-result$model
+  if (class(a)[1]=="lmerMod")
+  { coeffs<-colMeans(coef(a)$participant)
+    use<-!grepl("participant",an_vars)
+    an_vars<-an_vars[use]
+  } else {
+    coeffs<-a$coefficients
+  }
 
   if (1==2){
   if (DV$type=="Interval") {
@@ -115,7 +118,7 @@ reportDescription<-function(IV,IV2,DV,result){
           }
   )
   
-  a<-result$model
+  a<-result$normModel
   
   an_vars<-variable.names(a)
   an_vars<-sub("iv1$",IV$name,an_vars)
@@ -161,18 +164,26 @@ reportDescription<-function(IV,IV2,DV,result){
               outputText<-c(outputText,"","","","")
               # outputText<-c(outputText,"","Mean","SD","")
               mn<-c()
+              cases<-levels(result$iv)
               for (i in 1:IV$ncats){
-                use<-(result$iv==IV$cases[i])
+                use<-(result$iv==cases[i])
                 v<-result$dv[use]
-                mn[i]<-mean(v)
-                s<-sd(v)
+                mn[i]<-mean(v,na.rm=TRUE)
+                s<-sd(v,na.rm=TRUE)
                 # outputText<-c(outputText,IV$cases[i],format(mn[i],digits=report_precision),format(s,digits=report_precision),"")
               }
-              rsd<-sd(result$uModel$residuals,na.rm=TRUE)
+              if (class(result$model)[1]=="lmerMod") {
+                fitted<-fitted(result$model)
+                residuals<-residuals(result$model)
+              } else {
+                fitted<-result$model$fitted
+                residuals<-result$model$residuals
+              }
+              rsd<-sd(residuals,na.rm=TRUE)
               if (IV$ncats==2){
                 outputText<-c(outputText,"Difference(means):",format(diff(mn),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
               } else {
-                outputText<-c(outputText,"sd(means):",format(sd(result$uModel$fitted),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
+                outputText<-c(outputText,"sd(means):",format(sd(fitted),digits=report_precision),"sd(residuals):",format(rsd,digits=report_precision))
               }
             }
             if (IV$type=="Categorical" && DV$type=="Categorical"){

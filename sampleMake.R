@@ -167,9 +167,62 @@ makeSampleVar<-function(design,n,MV){
 }
 
 makeSample<-function(IV,IV2,DV,effect,design){
+  
+  # check effect sizes before going any further
+  fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
+  while (fullES>=1) {
+    effect$rIV<-effect$rIV*0.9
+    effect$rIV2<-effect$rIV2*0.9
+    effect$rIVIV2<-effect$rIVIV2*0.9
+    effect$rIVIV2DV<-effect$rIVIV2DV*0.9
+    fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
+  }
+  
+  total1<-effect$rIV+effect$rIV2*effect$rIVIV2
+  while (total1>=1) {
+    effect$rIV<-effect$rIV*0.9
+    effect$rIV2<-effect$rIV2*0.9
+    effect$rIVIV2<-effect$rIVIV2*0.9
+    total1<-effect$rIV+effect$rIV2*effect$rIVIV2
+  }
+  total2<-effect$rIV2+effect$rIV*effect$rIVIV2
+  while (total2>=1) {
+    effect$rIV<-effect$rIV*0.9
+    effect$rIV2<-effect$rIV2*0.9
+    effect$rIVIV2<-effect$rIVIV2*0.9
+    total1<-effect$rIV2+effect$rIV*effect$rIVIV2
+  }
 
   n<-design$sN
   rho<-effect$rIV
+  
+  if (!is.na(effect$populationRZ) && !isempty(effect$populationRZ)){
+    switch (effect$populationRZ,
+            "r"={
+              switch (effect$populationPDF,
+                      "Single"={rho<-effect$rIV},
+                      "Uniform"={rho<-runif(1,min=-1,max=1)},
+                      "Exp"={rho<-rexp(1,rate=1/effect$populationPDFk)*sign((runif(1)*2-1))},
+                      "Gauss"={rho<-rnorm(1,mean=0,sd=effect$populationPDFk)*sign((runif(1)*2-1))}
+              )
+            },
+            "z"={
+              switch (effect$populationPDF,
+                      "Single"={rho<-effect$rIV},
+                      "Uniform"={rho<-runif(1,min=-10,max=10)},
+                      "Exp"={rho<-rexp(1,rate=1/effect$populationPDFk)*sign((runif(1)*2-1))},
+                      "Gauss"={rho<-rnorm(1,mean=0,sd=effect$populationPDFk)*sign((runif(1)*2-1))}
+              )
+              rho<-tanh(rho)
+            }
+    )
+    if (effect$populationNullp>0) {
+      if (runif(1)<=effect$populationNullp)
+      {rho<-0}
+    }
+    rho<-max(min(rho,0.99),-0.99)
+  }
+  
   if (n==0){
     iv<-array(0,0)  
     dv<-iv
@@ -272,7 +325,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
           breaks<-qnorm(cumsum(proportions)/sum(proportions))
           vals=ivr*0
           for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
-          iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
+          iv<-factor(vals,levels=1:IV$ncats,labels=strsplit(IV$cases,",")[[1]])
         } else {
           if (!is.numeric(iv) && IV$type!="Categorical") {
             iv<-as.numeric(iv)
@@ -288,7 +341,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
           breaks<-qnorm(cumsum(proportions)/sum(proportions))
           vals=iv2r*0
           for (i in 1:IV2$ncats) {vals=vals+(iv2r>breaks[i])}
-          iv12<-factor(vals,levels=1:IV2$ncats,labels=IV2$cases)
+          iv12<-factor(vals,levels=1:IV2$ncats,labels=strsplit(IV2$cases,",")[[1]])
         } else {
           if (!is.numeric(iv2) && IV2$type!="Categorical") {
             iv2<-as.numeric(iv2)
@@ -304,7 +357,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
           breaks<-qnorm(cumsum(proportions)/sum(proportions))
           vals=dvr*0
           for (i in 1:DV$ncats) {vals=vals+(dvr>breaks[i])}
-          dv<-factor(vals,levels=1:DV$ncats,labels=DV$cases)
+          dv<-factor(vals,levels=1:DV$ncats,labels=strsplit(DV$cases,","[[1]]))
         } else {
           if (!is.numeric(dv) && DV$type!="Categorical") {
             iv<-as.numeric(dv)
@@ -315,7 +368,6 @@ makeSample<-function(IV,IV2,DV,effect,design){
       lastSample<<-list(participant=id, iv=iv, iv2=iv2, dv=dv)
       
     } else {
-      
       # deal with opportunity sampling    
       #  by setting up some anomalies
       if (design$sMethod=="Opportunity"){
@@ -341,7 +393,8 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Categorical"={
                if (IV$source=="Discrete") {
                  ng<-IV$ncats
-                 pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+                 pp<-IV$proportions
+                 # pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
                  if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
                  proportions<-c(0,pp)
                  breaks<-qnorm(cumsum(proportions)/sum(proportions))
@@ -367,7 +420,8 @@ makeSample<-function(IV,IV2,DV,effect,design){
                "Categorical"={
                  if (IV2$source=="Discrete") {
                    ng<-IV2$ncats
-                   pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+                   pp<-IV2$proportions
+                   # pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
                    if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
                    proportions<-c(0,pp)
                    breaks<-qnorm(cumsum(proportions)/sum(proportions))
@@ -411,7 +465,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       }
       
       # do within design
-      if (design$sIV1Use=="Within") {
+      if (IV$type=="Categorical" && design$sIV1Use=="Within") {
         b<-drawCatPositions(IV$ncats)
         b<-b/(sd(b)*sqrt((IV$ncats-1)/IV$ncats))
         rsd<-residual
@@ -431,7 +485,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
         n<-n*IV$ncats
       } 
       
-      if (!is.null(IV2) && design$sIV2Use=="Within") {
+      if (!is.null(IV2) && IV2$type=="Categorical" && design$sIV2Use=="Within") {
         b<-drawCatPositions(IV2$ncats)
         b<-b/(sd(b)*sqrt((IV2$ncats-1)/IV2$ncats))
         rsd<-residual
@@ -501,17 +555,20 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Categorical"={
                if (IV$source=="Continuous") {
                  ng<-IV$ncats
-                 pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
+                 pp<-IV$proportions
+                 # pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
                  if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
                  proportions<-c(0,pp)
                  breaks<-qnorm(cumsum(proportions)/sum(proportions))
                  vals=ivr*0
                  for (i in 1:IV$ncats) {vals=vals+(ivr>breaks[i])}
                  iv<-factor(vals,levels=1:IV$ncats,labels=IV$cases)
+                 # iv<-factor(vals,levels=1:IV$ncats,labels=strsplit(IV$cases,",")[[1]])
                } else {
                  ivr<-ivr*std((1:IV$ncats),1)+(IV$ncats+1)/2
                  iv<-factor(ivr,levels=1:IV$ncats,labels=IV$cases)
-                 }
+                 # iv<-factor(ivr,levels=1:IV$ncats,labels=strsplit(IV$cases,",")[[1]])
+               }
              }
       )
 
@@ -531,21 +588,24 @@ makeSample<-function(IV,IV2,DV,effect,design){
                if (!IV2$discrete) {
                  vals=vals+runif(length(vals),min=-0.5,max=0.5)
                }
-               iv<-vals
+               iv2<-vals
              },
              "Categorical"={
                if (IV$source=="Continuous") {
                  ng<-IV2$ncats
-               pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
-               if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
+                 pp<-IV2$proportions
+                 # pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
+                 if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
                proportions<-c(0,pp)
                breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=iv2r*0
                for (i in 1:IV2$ncats) {vals=vals+(iv2r>breaks[i])}
                iv2<-factor(vals,levels=1:IV2$ncats,labels=IV2$cases)
+               # iv2<-factor(vals,levels=1:IV2$ncats,labels=strsplit(IV2$cases,",")[[1]])
                } else {
                  iv2r<-iv2r*std((1:IV2$ncats),1)+(IV2$ncats+1)/2
                  iv2<-factor(iv2r,levels=1:IV2$ncats,labels=IV2$cases)
+                 # iv2<-factor(iv2r,levels=1:IV2$ncats,labels=strsplit(IV2$cases,",")[[1]])
                }
              }
       )
@@ -571,7 +631,8 @@ makeSample<-function(IV,IV2,DV,effect,design){
                dv<-vals
              },
              "Categorical"={
-               pp<-as.numeric(unlist(strsplit(DV$proportions,",")))
+               pp<-DV$proportions
+               # pp<-as.numeric(unlist(strsplit(DV$proportions,",")))
                ng<-DV$ncats
                if (length(pp)<ng) {pp<-c(pp,rep(pp[length(pp)],ng-length(pp)))}
                proportions<-c(0,pp)
@@ -579,6 +640,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                vals=dvr*0
                for (i in 1:ng) {vals=vals+(dvr>breaks[i])}
                dv<-factor(vals,levels=1:ng,labels=DV$cases)
+               # dv<-factor(vals,levels=1:ng,labels=strsplit(DV$cases,",")[[1]])
              }
       )
       lastSample<<-list(participant=id, iv=iv, iv2=iv2, dv=dv)
@@ -659,8 +721,9 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Categorical"={x2plot<-match(iv2,levels(iv2))}
       )
       if (IV2$type=="Categorical"){
+        xp2<-x2plot
         for (i in 1:IV2$ncats) {
-          use1=(x2plot==i)
+          use1=(xp2==i)
           if (sum(use1)>1) {
           if (DV$type=="Interval"){
             mn1=mean(dv[use1])
@@ -702,6 +765,6 @@ makeSample<-function(IV,IV2,DV,effect,design){
     }
   } 
   
-  sample<-list(participant=id, iv=iv,iv2=iv2, dv=dv,ivplot=xplot,iv2plot=x2plot,dvplot=yplot,sampleRho=sampleRho,samplePval=samplePval,IVs=IVs,IV2s=IV2s, DVs=DVs)
+  sample<-list(participant=id, iv=iv,iv2=iv2, dv=dv,ivplot=xplot,iv2plot=x2plot,dvplot=yplot,sampleRho=sampleRho,samplePval=samplePval,effectRho=rho,IVs=IVs,IV2s=IV2s, DVs=DVs)
   sample
 }

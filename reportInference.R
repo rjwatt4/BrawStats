@@ -1,16 +1,29 @@
-reportInference<-function(IV,IV2,DV,effect,result){
+reportInference<-function(IV,IV2,DV,effect,evidence,result){
 
-  nc<-length(result$anova)+1
+  switch (evidence$analysisType,
+          "Anova"= {
+            switch (evidence$dataType,
+                    "Norm"={anova<-result$normAnova},
+                    "Raw"={anova<-result$rawAnova}
+            )
+          },
+          "Model"= {
+            switch (evidence$dataType,
+                    "Norm"={anova<-result$normModel},
+                    "Raw"={anova<-result$rawModel}
+            )
+            anova<-data.frame(summary(anova)$coefficients)
+          }
+  )
+  nc<-length(anova)+1
+  if (nc<5) nc<-5
   
   an_name<-result$an_name
     outputText<-rep("",nc*2)
     outputText[1]<-paste("\b",an_name,sep="")
     
     if (is.null(IV2)){
-      outputText<-c(outputText,"\btest-statistic","\b(df) ","\bvalue   ","\bp",rep("",nc-4))
-      IVs<-result$iv
-      DVs<-result$dv
-      an<-result$anova
+      outputText<-c(outputText,"\btest-statistic","\b(df) ","\bvalue   ","\bp","\bllr",rep("",nc-5))
       pval<-result$pIV
       if (pval>=0.0001) {
         pvalText<-paste("p = ",format(pval,digits=report_precision),sep="")
@@ -22,15 +35,18 @@ reportInference<-function(IV,IV2,DV,effect,result){
       df<-result$df
       tval<-result$test_val
       
-      outputText<-c(outputText,t_name,df,format(tval,digits=report_precision),pvalText,rep("",nc-4))
+      n<-result$nval
+      s<-r2llr(result$rIV,n)
+      sText<-paste("S = ",format(s,digits=report_precision),sep="")
+      outputText<-c(outputText,t_name,df,format(tval,digits=report_precision),pvalText,sText,rep("",nc-5))
     }
     
     outputText<-c(outputText,rep(" ",nc))
     
-    outputText<-c(outputText,"\bANOVA",sub("^","\b",colnames(result$anova)))
+    outputText<-c(outputText,paste0("\b",evidence$analysisType),sub("^","\b",colnames(anova)))
     total_done<-FALSE
-    for (i in 1:nrow(result$anova)){
-      vn<-rownames(result$anova)[i]
+    for (i in 1:nrow(anova)){
+      vn<-rownames(anova)[i]
       if (vn!="(Intercept)") {
         if (vn=="NULL") vn<-"Total"
         if (vn=="iv1"){vn<-paste("",result$IVs$name,sep="")}
@@ -43,18 +59,19 @@ reportInference<-function(IV,IV2,DV,effect,result){
           }
         
         outputText<-c(outputText,vn)
-        for (j in 1:ncol(result$anova)){
-          if (is.na(result$anova[i,j])){
+        for (j in 1:ncol(anova)){
+          if (is.na(anova[i,j])){
             outputText<-c(outputText,"")
           } else {
-            outputText<-c(outputText,format(result$anova[i,j],digits=report_precision))
+            outputText<-c(outputText,format(anova[i,j],digits=report_precision))
           }
         }
+        if (ncol(anova)+1<nc) {outputText<-c(outputText,rep("",nc-(ncol(anova)+1)))}
       }
     }
-    if (!total_done) {
-    ssq<-sum(result$anova[,1])
-    df<-sum(result$anova[,2])
+    if (!total_done && evidence$analysisType=="Anova") {
+    ssq<-sum(anova[,1])#-result$anova[1,1]
+    df<-sum(anova[,2])#-result$anova[1,2]
     # outputText<-c(outputText,rep(" ",nc))
     outputText<-c(outputText,"\bTotal",format(ssq,digits=report_precision),format(df,digits=report_precision),rep("",nc-3))
     }

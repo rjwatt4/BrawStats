@@ -8,6 +8,8 @@ PlikelihoodLengthChoices=c("1000" = "1000",
                           "5000" = "5000",
                           "10000" = "10000"
 )
+
+if (switches$doLikelihood) {
 LikelihoodTab <-
 
   wellPanel(ID="MainLikelihood",
@@ -27,19 +29,21 @@ LikelihoodTab <-
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
                          tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
-                                      tags$td(width = "48%", tags$div(style = localStyle, "Source Population:")),
+                                      tags$td(width = "45%", tags$div(style = localStyle, "Source Population:")),
                                       tags$td(width = "30%", numericInput("likelihoodPopRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
-                                      tags$td(width = "22%")
+                                      tags$td(width = "15%"),
+                                      tags$td(width = "10%"),
                                     ),
                                     tags$tr(
-                                      tags$td(width = "48%", tags$div(style = localStyle, "Target Sample:")),
+                                      tags$td(width = "45%", tags$div(style = localStyle, "Target Sample:")),
                                       tags$td(width = "30%", numericInput("likelihoodSampRhoS", label=NULL,min=-1,max=1, step=0.1,value=0)),
-                                      tags$td(width = "22%")
+                                      tags$td(width = "15%"),
+                                      tags$td(width = "10%"),
                                     ),
                          ),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
-                                      tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
+                                      tags$td(width = "25%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "20%", 
                                               selectInput("likelihood_lengthS", label=NULL,
                                                           SlikelihoodLengthChoices,selectize=FALSE)
@@ -57,50 +61,50 @@ LikelihoodTab <-
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
                          tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
-                                      tags$td(width = "40%", tags$div(style = localStyle, "Population PDF:")),
+                                      tags$td(width = "45%", tags$div(style = localStyle, "Population PDF:")),
                                       tags$td(width = "30%", 
-                                              selectInput("Population_distrP", label=NULL,
+                                              selectInput("likelihood_distrP", label=NULL,
                                                           c("Uniform" = "Uniform",
                                                             "Gauss"="Gauss",
                                                             "Exp" = "Exp"),selectize=FALSE)
                                       ),
                                       tags$td(width = "15%", 
-                                              selectInput("Population_RZ", label=NULL,
+                                              selectInput("likelihood_RZ", label=NULL,
                                                           c("r" = "r",
                                                             "z" = "z"),selectize=FALSE)
                                       ),
-                                      tags$td(width = "15%", 
-                                              conditionalPanel(condition="input.Population_distrP!=='Uniform'",
-                                                               numericInput("Population_distr_kP",label=NULL,
+                                      tags$td(width = "10%", 
+                                              conditionalPanel(condition="input.likelihood_distrP!=='Uniform'",
+                                                               numericInput("likelihood_distr_kP",label=NULL,
                                                                             min = 0,
                                                                             max = 1,
                                                                             step = 0.05,
                                                                             value = 0.2)
                                               )
                                       )
-                                    )
+                                    ),
                                     ),
                                     conditionalPanel(condition="input.includeNulls",
                                                      tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                                                 tags$tr(
-                                                       tags$td(width = "40%", tags$div(style = localStyle, "p(null):")),
+                                                       tags$td(width = "45%", tags$div(style = localStyle, "p(null):")),
                                                        tags$td(width = "30%", numericInput("likelihoodNullp", label=NULL,min=0,max=1, step=0.025,value=0)),
                                                        tags$td(width = "15%"),
-                                                       tags$td(width = "15%")
-                                                     )
+                                                       tags$td(width = "10%")
+                                                     ),
                                                      )
                                     ),
-                                    tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
-                                               tags$tr(
-                                      tags$td(width = "40%", tags$div(style = localStyle, "Target Sample:")),
+                         tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
+                                    tags$tr(
+                                      tags$td(width = "45%", tags$div(style = localStyle, "Target Sample:")),
                                       tags$td(width = "30%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
                                       tags$td(width = "15%"),
-                                      tags$td(width = "15%")
+                                      tags$td(width = "10%"),
                                     )
                                     ),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
-                                      tags$td(width = "20%", tags$div(style = localStyle, "Runs:")),
+                                      tags$td(width = "25%", tags$div(style = localStyle, "Runs:")),
                                       tags$td(width = "20%", 
                                               selectInput("likelihood_lengthP", label=NULL,
                                                           PlikelihoodLengthChoices,selectize=FALSE)
@@ -109,7 +113,8 @@ LikelihoodTab <-
                                       tags$td(width = "10%", checkboxInput("likelihoodAppendP", label=NULL)),
                                       tags$td(width = "10%", actionButton("likelihoodRunP", "Run")),
                                     )
-                         )
+                         ),
+                         width="100%"
                        )
               ),
               tabPanel("#",
@@ -195,3 +200,7 @@ LikelihoodTab <-
               )
   )
 )
+} else
+{
+  LikelihoodTab <- c()
+}

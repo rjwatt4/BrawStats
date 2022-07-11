@@ -46,7 +46,8 @@ reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
           "EffectSize"={outputText1<-c("   ","r","p")},
           "Power"={outputText1<-c("   ","w","nw")},
           "NHSTErrors"={outputText1<-c("   ","I","II")},
-          "CILimits" ={outputText1<-c("   ","lower","upper")}
+          "CILimits" ={outputText1<-c("   ","lower","upper")},
+          "ln(lr)"={outputText1<-c("   ","S","p")}
   )
   outputText<-c(outputText,rep(outputText1,nc/3))
   
@@ -78,6 +79,10 @@ reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
               "CILimits"={
                 a<-r2ci(r,result$nval[1],-1)
                 b<-r2ci(r,result$nval[1],+1)
+              },
+              "ln(lr)"={
+                a<-r2llr(r,result$nval)
+                b<-p
               }
       )
       ot1<-c(ot1,

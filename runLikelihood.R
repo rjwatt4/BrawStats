@@ -175,9 +175,12 @@ likelihoodRun <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE)
                       pops<-tanh(pops)
                     },
                     "Exp_r"={
-                      pops<-rexp(nsims*sample_increase,rate=1/likelihood$populationDistK)
+                      pops<-rexp(nsims*1.5*sample_increase,rate=1/likelihood$populationDistK)
                       pops<-pops[pops<1]
-                      pops<-pops*sign(rnorm(nsims))
+                      if (length(pops)>nsims) {
+                      pops<-pops[1:nsims]
+                      }
+                      pops<-pops*sign(rnorm(length(pops)))
                     },
                     "Gauss_z"={
                       pops<-rnorm(nsims*sample_increase,sd=likelihood$populationDistK)

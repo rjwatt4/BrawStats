@@ -221,10 +221,11 @@ expected_plot<-function(g,pts,result,IV,DV,expType){
   g
 }
 
-r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+r_plot<-function(result,IV,IV2=NULL,DV,r=0){
   rActual<-r
   rActual[is.na(r)]<-0
-
+  n<-result$nval
+  
     ylim<-c(-1, 1)
     ysc=1
 
@@ -238,7 +239,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
     } else {
         xoff=c(0,2,4)
         }
-        switch (result$showType,
+    switch (result$showType,
             "direct"={
               rs<-result$r$direct
               ps<-result$p$direct
@@ -367,8 +368,161 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
   
 }
 
-p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
+llr_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  rActual<-r
+  rActual[is.na(r)]<-0
+  n<-result$nval
+  
+  ylim<-c(-0.1, 10)
+  ysc=1
+  
+  if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
+    xoff=0
+    rs<-result$rIV
+    ps<-result$pIV
+  } else {
+    if (is.na(result$rIVIV2DV[1])){
+      xoff=c(0,2)
+    } else {
+      xoff=c(0,2,4)
+    }
+    switch (result$showType,
+            "direct"={
+              rs<-result$r$direct
+              ps<-result$p$direct
+            },
+            "unique"={
+              rs<-result$r$unique
+              ps<-result$p$unique
+            },
+            "total"={
+              rs<-result$r$total
+              ps<-result$p$total
+            },
+            "all"={
+              rs<-c()
+              ps<-c()
+              ysc=1/3
+              xoff=c(0,0,0,2,2,2,4,4,4)
+              for (jk in 1:ncol(result$r$direct)) {
+                rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
+                ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
+              }
+            },
+            "coefficients"={
+              rs<-result$r$coefficients
+              ps<-result$p$direct
+            }
+    )
+  }
+  
+  # convert to log likelihood
+  rs<-r2llr(rs,n)
+  rActual<-r2llr(rActual,n)
 
+  
+  for (i in 1:length(xoff)){
+    single<-TRUE
+    if (is.matrix(rs)) {
+      if (nrow(rs)>points_threshold) {single<-FALSE}
+    }
+    if (single) {
+      if (is.matrix(rs) && nrow(rs)>1){
+        rvals<-rs[,i]
+        pvals<-ps[,i]
+        xr<-makeFiddle(rvals,2/40)
+        # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
+      }
+      else {
+        rvals<-rs[i]
+        pvals<-ps[i]
+        xr=0
+      }
+      
+      if (result$showType=="all") {
+        pts=data.frame(x=xoff[i]+xr,y=(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
+      } else {
+        pts=data.frame(x=xoff[i]+xr,y=rvals)
+      }
+      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}     
+      
+      if (length(rvals)==1){
+        z_se<-1/sqrt(result$nval-3)
+        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
+        r_ci<-tanh(z_ci)
+        pts1se<-data.frame(x=c(0,0)+xoff[i],y=r_ci)
+        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
+      }
+      
+      dotSize=min(10,20/sqrt(length(rvals)))
+      dotSize=6
+      if (useSignificanceCols){
+        c1=plotcolours$infer_sigC
+        c2=plotcolours$infer_nsigC
+      } else {
+        c1=plotcolours$descriptionC
+        c2=plotcolours$descriptionC
+      }
+      use<-(pvals>=alpha)
+      pts1=pts[use,]
+      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotSize*sqrt(ysc))
+      pts2=pts[!use,]
+      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotSize*sqrt(ysc))
+    }
+    else
+    {
+      rvals<-rs[,i]
+      pvals<-ps[,i]
+      rvals_sig<-rvals
+      rvals_sig[pvals>=alpha]<-NA
+      rvals_nsig<-rvals
+      rvals_nsig[pvals<alpha]=NA
+      if (result$showType=="all") {
+        y1<-((rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
+        y2<-((rvals_nsig+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
+        pts<-data.frame(x=rvals*0+xoff[i],y1=y1,y2=y2)
+      } else {
+        pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=rvals_nsig)
+      }
+      
+      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
+      g<-expected_plot(g,pts,result,IV,DV,"r")
+      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label=paste("actual =",format(rActual[i],digits=graph_precision)))
+      g<-g+
+        geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
+    }
+    if (length(xoff)>1)
+      if (rem(i,3)==1)
+        switch (xoff[i]/2+1,
+                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
+                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
+                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
+        )
+  }
+  
+  if (result$showType=="all") {
+    for (i in 1:3) {
+      g<-g+geom_hline(yintercept=(-1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
+      g<-g+geom_hline(yintercept=(0.0+1)*ysc*0.9+(i-1)*ysc*2-1, linetype="dotted", color="black", size=0.5)
+      g<-g+geom_hline(yintercept=(1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
+    }
+    g<-g+coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))+
+      scale_y_continuous(breaks=(c(-1,0,1,-1,0,1,-1,0,1)+1)*ysc*0.9+(c(1,1,1,2,2,2,3,3,3)-1)*ysc*2-1,labels=c(-1,0,1,-1,0,1,-1,0,1))
+  } else {
+    g<-g+geom_hline(yintercept=0.0, linetype="dotted", color="black", size=0.5)+
+      coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
+  }
+  g<-g+theme(legend.position = "none")+plotTheme
+  g<-g+ylab("S")+scale_x_continuous(breaks=NULL)
+  g+theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())
+  
+}
+
+p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){
+  n<-result$nval
+  
   switch (ptype,
          "p"={
             pt_sigcol<-plotcolours$infer_sigC
@@ -533,12 +687,12 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
       geom_hline(yintercept=log10(0.01), linetype="dotted", color="#44FF22", size=0.5)+
       geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
       scale_y_continuous(breaks=c(-4,-3,-2,-1,0),labels=c(0.0001,0.001,0.01,0.1,1))+ 
-      ylab(bquote(log[10](p(H[0]))))
+      ylab(bquote(log[10](p)))
   } else
   {
     g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
       scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))+ 
-      ylab(bquote(p(H[0])))
+      ylab(bquote(p))
   }
   g<-g+scale_x_continuous(breaks=NULL)
   g+theme(axis.title.x=element_blank(),
@@ -548,7 +702,9 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0,ptype="p"){
 }
 
 
-w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+w_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  n<-result$nval
+  
   wActual<-rn2w(r,n)
   if (wPlotScale=="log10"){
     ylim<-c(log10(min_p), 0)
@@ -692,7 +848,9 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
 
 
 
-nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+nw_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  n<-result$nval
+  
   nwActual<-rw2n(r,0.8)
   ylim<-c(log10(1), log10(10000))
   
@@ -809,7 +967,8 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
 }
 
 
-w1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+w1_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  n<-result$nval
   wActual<-rn2w(r,n)
   if (wPlotScale=="log10") {
     ylim<-c(log10(alpha), 0)
@@ -902,7 +1061,8 @@ w1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
   
 }
 
-nw1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+nw1_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  n<-result$nval
   nwActual<-rw2n(r,0.8)
   ylim<-c(log10(1), log10(10000))
   
@@ -964,32 +1124,33 @@ nw1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
 }
 
 
-e2_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
-  p_plot(result,IV,IV2,DV,r,n,ptype="e2")
+e2_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  p_plot(result,IV,IV2,DV,r,ptype="e2")
 }
 
-e1_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
-  p_plot(result,IV,IV2,DV,r,n,ptype="e1")
+e1_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  p_plot(result,IV,IV2,DV,r,ptype="e1")
 }
 
-ci1_plot<-function(result,IV=NULL,IV2=NULL,DV=NULL,r=0,n=0){
+ci1_plot<-function(result,IV=NULL,IV2=NULL,DV=NULL,r=0){
   result$rIV<-r2ci(result$rIV,result$nval[1],-1)
   if (!is.null(IV2) | !all(is.na(result$rIVIV2DV))) {
     result$r$direct<-r2ci(result$r$direct,result$nval[1],-1)
     result$r$unique<-r2ci(result$r$unique,result$nval[1],-1)
     result$r$total<-r2ci(result$r$total,result$nval[1],-1)
   }
-  r_plot(result,IV,IV2,DV,r,n)
+  
+  r_plot(result,IV,IV2,DV,r)
 }
 
-ci2_plot<-function(result,IV,IV2=NULL,DV,r=0,n=0){
+ci2_plot<-function(result,IV,IV2=NULL,DV,r=0){
   result$rIV<-r2ci(result$rIV,result$nval[1],+1)
   if (!is.null(IV2) | !all(is.na(result$rIVIV2DV))) {
     result$r$direct<-r2ci(result$r$direct,result$nval[1],+1)
     result$r$unique<-r2ci(result$r$unique,result$nval[1],+1)
     result$r$total<-r2ci(result$r$total,result$nval[1],+1)
   }
-  r_plot(result,IV,IV2,DV,r,n)
+  r_plot(result,IV,IV2,DV,r)
 }
 
 

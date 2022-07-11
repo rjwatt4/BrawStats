@@ -262,6 +262,7 @@ drawParInterDescription<-function(IV,IV2,DV,effect,design,result,g=NULL){
     
     result1$IVs$vals<-Ivals[use]
     result1$DVs$vals<-Dvals[use]
+    result1$DVs$mu<-mean(result$dv[use],na.rm=TRUE)
     g<-drawPoints(g,result1$IVs,result1$DVs,result1,i+1,(i-1)/(2-1)*0.25)
     g<-drawPrediction(result1$IVs,NULL,result1$DVs,result1,design,i+1,g)
   }
@@ -301,6 +302,7 @@ drawDescription<-function(IV,IV2,DV,effect,design,result) {
   } else{
     switch (IV2$type,
             "Interval"=g<-drawParInterDescription(IV,IV2,DV,effect,design,result,g),
+            "Ordinal"=g<-drawParInterDescription(IV,IV2,DV,effect,design,result,g),
             "Categorical"=g<-drawCatInterDescription(IV,IV2,DV,effect,design,result,g)
     )
   }

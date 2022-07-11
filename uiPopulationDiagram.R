@@ -4,8 +4,14 @@ PopulationDiagram <-
     style = paste("background: ",maincolours$panelC), 
     tabsetPanel(type="tabs",
                 id="Theory",
-                tabPanel("Population",plotOutput("PopulationPlot",height="5.0cm",width="100%")),
-                tabPanel("Prediction",plotOutput("PredictionPlot",height="5.0cm",width="100%"))
+                tabPanel("Population",
+                         style = paste("background: ",maincolours$graphC), 
+                         plotOutput("PopulationPlot",height="5.0cm",width="100%")
+                         ),
+                tabPanel("Prediction",
+                         style = paste("background: ",maincolours$graphC), 
+                         plotOutput("PredictionPlot",height="5.0cm",width="100%")
+                         )
     )
   )
     

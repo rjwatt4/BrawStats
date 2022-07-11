@@ -15,23 +15,23 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     rVals<-exploreResult$rIVs
     pVals<-exploreResult$pIVs
   } else {
-    if (explore$Explore_extraShow=="all") {explore$Explore_extraShow<-"direct"}
+    if (explore$Explore_typeShow=="all") {explore$Explore_typeShow<-"direct"}
     if (explore$Explore_whichShow=="All") {explore$Explore_whichShow<-"Main 1"}
     switch (explore$Explore_whichShow,
             "Main 1"={
-              rVals<-exploreResult$r1[[explore$Explore_extraShow]]
-              pVals<-exploreResult$p1[[explore$Explore_extraShow]]
-              extra_y_label<-paste("Main Effect 1:",explore$Explore_extraShow)
+              rVals<-exploreResult$r1[[explore$Explore_typeShow]]
+              pVals<-exploreResult$p1[[explore$Explore_typeShow]]
+              extra_y_label<-paste("Main Effect 1:",explore$Explore_typeShow)
             },
             "Main 2"={
-              rVals<-exploreResult$r2[[explore$Explore_extraShow]]
-              pVals<-exploreResult$p2[[explore$Explore_extraShow]]
-              extra_y_label<-paste("Main Effect 2:",explore$Explore_extraShow)
+              rVals<-exploreResult$r2[[explore$Explore_typeShow]]
+              pVals<-exploreResult$p2[[explore$Explore_typeShow]]
+              extra_y_label<-paste("Main Effect 2:",explore$Explore_typeShow)
             },
             "Interaction"={
-              rVals<-exploreResult$r3[[explore$Explore_extraShow]]
-              pVals<-exploreResult$p3[[explore$Explore_extraShow]]
-              extra_y_label<-paste("Interaction:",explore$Explore_extraShow)
+              rVals<-exploreResult$r3[[explore$Explore_typeShow]]
+              pVals<-exploreResult$p3[[explore$Explore_typeShow]]
+              extra_y_label<-paste("Interaction:",explore$Explore_typeShow)
             }
     )
   }
@@ -70,10 +70,27 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             y75<-1-y75
             y50<-1-y50
             y25<-1-y25
-          }
+          },
+          "ln(lr)"={
+            ns<-exploreResult$nvals
+            showVals<-r2llr(rVals,ns)
+          },
+          "p(str)"={
+            y75<-c()
+            y50<-c()
+            y25<-c()
+            ns<-exploreResult$nvals
+            showVals<-r2llr(rVals,ns)
+            for (i in 1:length(exploreResult$vals)){
+              p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
+              y50[i]<-p
+              y75[i]<-p+sqrt(p*(1-p)/length(showVals[,i]))
+              y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
+            }
+          },
   )
 
-  if (is.element(explore$Explore_show,c("EffectSize","p","w"))) {
+  if (is.element(explore$Explore_show,c("EffectSize","p","w","ln(lr)"))) {
     y75<-c()
     y50<-c()
     y25<-c()

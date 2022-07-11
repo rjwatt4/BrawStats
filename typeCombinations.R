@@ -8,10 +8,15 @@ getTypecombination<-function(HypType) {
             IV2$name<-"none"
     },
     "ii"={ #print(1)
-            IV$type<-"Interval"
-            DV$type<-"Interval"
-            IV2$name<-"none"
-          },
+      IV$type<-"Interval"
+      DV$type<-"Interval"
+      IV2$name<-"none"
+    },
+    "oi"={ #print(1)
+      IV$type<-"Ordinal"
+      DV$type<-"Interval"
+      IV2$name<-"none"
+    },
     "c2i"={ #print(2)
       IV$type<-"Categorical"
       IV$ncats<-2
@@ -29,10 +34,15 @@ getTypecombination<-function(HypType) {
       IV2$name<-"none"
     },
     "io"={ #print(3)
-            IV$type<-"Interval"
-            DV$type<-"Ordinal"
-            IV2$name<-"none"
-          },
+      IV$type<-"Interval"
+      DV$type<-"Ordinal"
+      IV2$name<-"none"
+    },
+    "oo"={ #print(3)
+      IV$type<-"Ordinal"
+      DV$type<-"Ordinal"
+      IV2$name<-"none"
+    },
     "c2o"={ #print(4)
       IV$type<-"Categorical"
       IV$ncats<-2
@@ -50,18 +60,31 @@ getTypecombination<-function(HypType) {
       IV2$name<-"none"
     },
     "ic"={ #print(5)
-            IV$type<-"Interval"
-            DV$type<-"Categorical"
-            IV2$name<-"none"
-          },
-    "cc"={ #print(6)
-            IV$type<-"Categorical"
-            IV$ncats<-3
-            IV$cases<-"C1,C2,C3"
-            IV$proportions<-"1,1,1"
-            DV$type<-"Categorical"
-            IV2$name<-"none"
-          },
+      IV$type<-"Interval"
+      DV$type<-"Categorical"
+      IV2$name<-"none"
+    },
+    "oc"={ #print(5)
+      IV$type<-"Ordinal"
+      DV$type<-"Categorical"
+      IV2$name<-"none"
+    },
+    "c2c"={ #print(6)
+      IV$type<-"Categorical"
+      IV$ncats<-2
+      IV$cases<-"C1,C2"
+      IV$proportions<-"1,1"
+      DV$type<-"Categorical"
+      IV2$name<-"none"
+    },
+    "c3c"={ #print(6)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      DV$type<-"Categorical"
+      IV2$name<-"none"
+    },
     
        "iii"={ #print(11)
               IV$type<-"Interval"
@@ -142,3 +165,4 @@ getTypecombination<-function(HypType) {
     )
     result<-list(IV=IV, IV2=IV2, DV=DV)
 }
+

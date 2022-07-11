@@ -1,12 +1,13 @@
-# doBootstrap and extraApply should really go together
 switches<-list(do_explore=TRUE,do_files=TRUE,doLikelihood=TRUE,
+               doWorlds=FALSE,doReplications=FALSE,
+               doKeys=FALSE,doClipboard=FALSE,doBatchFiles=FALSE,
                startBlank=FALSE,doBootstrap=FALSE,
                longHandLikelihood=TRUE,importOrdinals=TRUE,
                rigidWithin=TRUE)
 debug<-FALSE
 
 fontScale=0.85 # use with 400% zoom in Google Chrome
-fontScale=1
+fontScale=1.05
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
@@ -27,7 +28,7 @@ subBright=1
 darkSat=0.5
 darkBright=0.85
 
-fileBright=0.9
+fileBright=0.8
 likeBright=0.8
 exploreSat=0.8
 
@@ -73,13 +74,14 @@ design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between",
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
              sN_Strata=5, sR_Strata=2,
-             sNClu_Cluster=5,     sRClu_Cluster=0.7,
+             sNClu_Cluster=7,     sRClu_Cluster=0.25,
              sNClu_Convenience=1, sRClu_Convenience=0.7, sNCont_Convenience=5, sRCont_Convenience=0.7, sRSpread_Convenience=0.5,
              sNClu_Snowball=2,   sRClu_Snowball=0.7,   sNCont_Snowball=2,    sRCont_Snowball=0.7,    sRSpread_Snowball=0.1
 )    
 
 evidence<-list(rInteractionOn=TRUE,showType="direct")
 
+llr<-list(e2=0,e1=c())
 
 fullRange<-3
 allScatter<-"all"
@@ -89,12 +91,12 @@ warnOrd<-FALSE
 warn3Ord<-FALSE
 
 is_local <- Sys.getenv('SHINY_PORT') == ""
-if (is_local) {
-  # switches$doBootstrap<-TRUE
-  quickHypos<-"y"
-  clipBoard<-"true"
-} else {
-  quickHypos<-"n"
-  clipBoard<-"false"
-}
 
+
+if (is_local) {
+  switches$doKeys<-TRUE
+  switches$doClipboard<-TRUE
+  switches$doWorlds<-TRUE
+  switches$doReplications<-TRUE
+  switches$doBatchFiles<-TRUE
+} 

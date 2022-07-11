@@ -72,7 +72,7 @@ wellPanel(id="HelpTabset",
                                                 tags$div(style = helpStyle,
                                                          tags$br(HTML("<b>"),"Evidence:",HTML("</b>")),
                                                          tags$br(HTML('&emsp;'), '1. Single: simulate a sample and analyse it'),
-                                                         tags$br(HTML('&emsp;'), '2. Multiple: run multiple samples to see variability'),
+                                                         tags$br(HTML('&emsp;'), '2. Multiple: run many samples at once'),
                                                 )
                                         )
                            )
