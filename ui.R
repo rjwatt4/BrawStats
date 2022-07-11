@@ -9,7 +9,8 @@
 
 list.of.packages<-c("shiny","shinyWidgets","shinyjs","shinyBS",
                     "ggplot2","tidyr","tools",
-                    "mnormt","readxl","writexl","car","stringr","clipr","SuppDists","e1071","pracma"
+                    "mnormt","mle4","MuMln",
+                    "readxl","writexl","car","stringr","clipr","SuppDists","e1071","pracma"
                     )
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -26,7 +27,7 @@ library(tools)       # system
 # library(gridExtra)   # not sure any longer
 library(mnormt)      # pmnorm for logistic
 library(lme4)        # lmer (mixed models)
-library(MuMIn)       # r-squared for mixed models
+library(MuMln)       # r-squared for mixed models
 library(readxl)      # excel
 library(writexl)     # x excel
 library(car)         # Anova type 3 correct
