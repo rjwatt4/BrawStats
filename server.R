@@ -213,16 +213,19 @@ if (switches$doKeys) {
   )
 
   observeEvent(input$inferD,{
+    presently<-input$Expected_type
     if (input$inferD=="separate"){
       updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
                                                           "Power" = "Power",
                                                           "NHST errors" = "NHSTErrors",
                                                           "CI limits" = "CILimits",
-                                                          "ln(lr)" = "ln(lr)"))
+                                                          "log(lr)" = "log(lr)"),
+                        selected=presently)
     } else {
       updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
                                                           "Power" = "Power",
-                                                          "ln(lr)" = "ln(lr)"))
+                                                          "log(lr)" = "log(lr)"),
+                        selected=presently)
     }
   })  
   
@@ -1083,7 +1086,7 @@ inspectHistory<-c()
       if (debug) print("     updateEvidence")
       evidence<-list(rInteractionOn=input$rInteractionOn,
                      showType=input$Effect_type,
-                     ssqType=input$ssqType,
+                     ssqType=input$ssqType,llr=llr,
                      evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch,
                      dataType=input$dataType,analysisType=input$analysisType)
       if (debug) print("     updateEvidence - exit")
@@ -1520,6 +1523,8 @@ inspectHistory<-c()
     output$InferentialPlot <- renderPlot({
       if (debug) print("InferentialPlot")
       doIt<-editVar$data
+      llrConsts<-c(input$llr1,input$llr2)
+      
       # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
@@ -1556,8 +1561,8 @@ inspectHistory<-c()
                             g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"w")
                             g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"nw")
                           },
-                          "ln(lr)"={
-                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"ln(lr)")
+                          "log(lr)"={
+                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lr)")
                             g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
                           }
                   )
@@ -1572,8 +1577,8 @@ inspectHistory<-c()
                           "Power"= {
                             g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","w")
                           },
-                          "ln(lr)"={
-                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","ln(lr)")
+                          "log(lr)"={
+                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","log(lr)")
                           }
                   )
                   g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
@@ -1632,6 +1637,8 @@ inspectHistory<-c()
     output$InferentialReport <- renderPlot({
       if (debug) print("InferentialReport")
       doIt<-editVar$data
+      llrConsts<-c(input$llr1,input$llr2)
+      
       # doIt<-input$MVok
       IV<-updateIV()
         IV2<-updateIV2()
@@ -1732,6 +1739,8 @@ inspectHistory<-c()
     # show expected result    
     output$ExpectedPlot <- renderPlot({
       doIt<-input$expectedRun
+      llrConsts<-c(input$llr1,input$llr2)
+      
       if (debug) {print("ExpectedPlot1 - start")}
       if (expectedResult$running) {
         IV<-updateIV()
@@ -1789,7 +1798,7 @@ inspectHistory<-c()
                           g1<-ci1_plot(expectedResult$result,r=effect$rIV)
                           g2<-ci2_plot(expectedResult$result,r=effect$rIV)
                         },
-                        "ln(lr)"={
+                        "log(lr)"={
                           g1<-llr_plot(expectedResult$result,r=effect$rIV)
                           g2<-p_plot(expectedResult$result,r=effect$rIV)
                         }
@@ -1805,8 +1814,8 @@ inspectHistory<-c()
                         "Power"= {
                           g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","w")
                         },
-                        "ln(lr)"={
-                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","ln(lr)")
+                        "log(lr)"={
+                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","log(lr)")
                         }
                 )
                 g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
@@ -1843,6 +1852,8 @@ inspectHistory<-c()
     # expected report
     output$ExpectedReport <- renderPlot({
       doIt<-input$expectedRun
+      llrConsts<-c(input$llr1,input$llr2)
+      
       if (debug) {print("ExpectedReport - start")}
       if (expectedResult$count<expectedResult$nsims) {
         # if (debug) {print("ExpectedPlot2 - timer set ")}

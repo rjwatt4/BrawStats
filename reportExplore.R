@@ -71,7 +71,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             y50<-1-y50
             y25<-1-y25
           },
-          "ln(lr)"={
+          "log(lr)"={
             ns<-exploreResult$nvals
             showVals<-r2llr(rVals,ns)
           },
@@ -90,7 +90,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
           },
   )
 
-  if (is.element(explore$Explore_show,c("EffectSize","p","w","ln(lr)"))) {
+  if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)"))) {
     y75<-c()
     y50<-c()
     y25<-c()

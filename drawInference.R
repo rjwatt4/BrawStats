@@ -14,7 +14,7 @@ drawInference<-function(IV,IV2,DV,effect,design,evidence,result,disp){
           "e2"={g<-e2_plot(result,IV,IV2,DV,r)},
           "ci1"={g<-ci1_plot(result,IV,IV2,DV,r)},
           "ci2"={g<-ci2_plot(result,IV,IV2,DV,r)},
-          "ln(lr)"={g<-llr_plot(result,IV,IV2,DV,r)}
+          "log(lr)"={g<-llr_plot(result,IV,IV2,DV,r)}
   )
   
   g+ggtitle(result$an_name)
@@ -46,7 +46,7 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
             if (wPlotScale=="log10"){ xsc<-1}
             xlim<-c(0,1)
           },
-          "ln(lr)"={
+          "log(lr)"={
             d1<-atanh(result$rIV)
             d1<-r2llr(d1,result$nval)
             xlim<-c(-0.1, 10)
@@ -72,9 +72,13 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
             if (wPlotScale=="log10"){ ysc<-1}
             ylim<-c(0,1)
           },
-          "ln(lr)"={
+          "log(lr)"={
             d2<-r2llr(result$rIV,result$nval)
-            ylim<-c(-0.1, 10)
+            if (any(d2<0)) {
+              ylim<-c(-10, 10)
+            } else {
+              ylim<-c(-0.1, 10)
+            }
             disp2<-bquote(log[e](lr))
           }
   )
@@ -93,7 +97,8 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
   
   g<-ggplot(pts,aes(x=x, y=y))
   
-  dotsize=max(3.5,sqrt(500/length(d1)))
+  dotSize=min(8,max(3.5,sqrt(400/length(d1))))
+  dotSize<-6
   
   if (useSignificanceCols){
     c1=plotcolours$infer_sigC
@@ -104,9 +109,9 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
   }
   use<-(pvals>=alpha)
   pts1=pts[use,]
-  g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotsize)
+  g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotSize)
   pts2=pts[!use,]
-  g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotsize)
+  g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotSize)
   
   g<-g+theme(legend.position = "none")+plotTheme
   if (xsc==0) {

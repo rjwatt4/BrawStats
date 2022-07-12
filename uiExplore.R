@@ -98,7 +98,7 @@ showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
                              "p(sig)" = "p(sig)",
                              "Power" = "w",
                              "NHST errors" = "NHSTErrors",
-                             "ln(lr)" = "ln(lr)",
+                             "log(lr)" = "log(lr)",
                              "p(str)" = "p(str)"
               )
 )

@@ -53,7 +53,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             g<-g+scale_y_continuous(limits=ylim,sec.axis=sec_axis(~ 1-.,name="Type II"))
             g<-g+theme(axis.title.y.left = element_text(color="darkgreen"),axis.title.y.right = element_text(color="darkred"))
           },
-          "ln(lr)"={
+          "log(lr)"={
             ylim<-c(-0.1,10)
             ylabel<-bquote(log[e](lr))
             g<-g+scale_y_continuous(limits=ylim)
@@ -246,7 +246,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               colFill<-col
               lines<-c(0.05)
             },
-            "ln(lr)"={
+            "log(lr)"={
               ns<-exploreResult$nvals
               showVals<-r2llr(rVals,ns)
 
@@ -299,7 +299,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
     )
   
-    if (is.element(explore$Explore_show,c("EffectSize","p","w","ln(lr)"))) {
+    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)"))) {
       quants<-explore$Explore_quants/2
       y75<-c()
       y62<-c()
