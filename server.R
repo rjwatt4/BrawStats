@@ -84,11 +84,15 @@ if (switches$doKeys) {
     
     # control-alt-m - switch to offine version
     if (input$keypress==77 && controlKeyOn && altKeyOn){
-      switches$doReplications<<-TRUE
-      switches$doWorlds<<-TRUE
-      insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
-      insertTab("Hypothesis",worldTabReserve,"Effects","after",select=FALSE,session)
-      insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
+      if (!switches$doReplications) {
+        insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
+        switches$doReplications<<-TRUE
+      }
+      if (!switches$doWorlds) {
+        insertTab("Hypothesis",worldTabReserve,"Effects","after",select=FALSE,session)
+        insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
+        switches$doWorlds<<-TRUE
+      }
     }
     
     # control-V
