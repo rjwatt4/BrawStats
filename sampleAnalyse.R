@@ -193,7 +193,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     if (appendData) {
     main_res<-earlierResult
   } else {
-    main_res<-list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=design$showType)
+    main_res<-list(rpIV=c(),rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=design$showType)
   }
   
   for (i in 1:n_sims){
@@ -232,6 +232,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
       res$rIV<-0
       res$pIV<-1
       res$nval<-0}
+    main_res$rpIV<-rbind(main_res$rpIV,res$rpIV)
     main_res$rIV<-rbind(main_res$rIV,res$rIV)
     main_res$pIV<-rbind(main_res$pIV,res$pIV)
     main_res$nval<-rbind(main_res$nval,res$nval)
@@ -427,7 +428,8 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
 
 
   switch (no_ivs,
-          { result$rIV<-model2directeffect(lmNorm)
+          { result$rpIV<-result$effectRho
+            result$rIV<-model2directeffect(lmNorm)
             result$pIV<-r2p(result$rIV,n)
             rCI<-r2ci(result$rIV,n)
             # overall model effect-size

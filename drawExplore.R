@@ -492,7 +492,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     if (is.character(exploreResult$result$vals[1]))
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
   }
-  if ((vals[2]-vals[1])!=(vals[3]-vals[2])) {
+  if ((explore$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
     g<-g+scale_x_log10()
   }
   

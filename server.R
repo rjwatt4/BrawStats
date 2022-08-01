@@ -100,6 +100,7 @@ shinyServer(function(input, output, session) {
                         selected=presently)
     } else {
       updateSelectInput(session,"EvidenceExpected_type",choices=c("Basic" = "EffectSize",
+                                                                  "PopSamp" = "PopSamp",
                                                           "Power" = "Power",
                                                           "log(lr)" = "log(lr)"),
                         selected=presently)
@@ -1858,6 +1859,9 @@ inspectHistory<-c()
                         "EffectSize"={
                           g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"r","p")
                         },
+                        "PopSamp"={
+                          draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"rp","r")
+                          },
                         "Power"= {
                           g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","w")
                         },
@@ -2054,9 +2058,11 @@ inspectHistory<-c()
      } else {
        ns<-exploreResult$nsims-exploreResult$count
      }
+     if (ns>0) {
      showNotification(paste0("Explore ",explore$Explore_family," : starting"),id="counting",duration=Inf,closeButton=FALSE,type="message")
      exploreResult$result<<-doExploreAnalysis(IV,IV2,DV,effect,design,evidence,explore,exploreResult$result,ns,doingNull=FALSE)
      exploreResult$count<<-nrow(exploreResult$result$rIVs)
+     }
      if (exploreResult$count<exploreResult$nsims) {
        stopRunning<-FALSE
      }
