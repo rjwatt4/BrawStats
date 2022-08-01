@@ -172,7 +172,7 @@ model2directeffect<-function(mF){
 
 
 
-multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE, earlierResult=c(), showProgress=TRUE){
+multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE, earlierResult=c(), showProgress=TRUE,progressPrefix=""){
   rho<-effect$rIV
   rho2<-effect$rIV2
   
@@ -198,7 +198,7 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
   
   for (i in 1:n_sims){
     if (showProgress && (n_sims<=50 || (n_sims>50 && i==round(i/25)*25))) {
-      showNotification(paste(format(i),"/",format(n_sims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
+      showNotification(paste(progressPrefix,format(i),"/",format(n_sims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
     } 
     effect$rIV<-rho[i]
     if (!is.null(IV2)) {effect$rIV2<-rho2[i]}

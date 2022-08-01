@@ -36,7 +36,7 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
               }
           },
           "Populations"={
-            outputText[1]<-paste(outputText[1]," (no sims = ",format(length(likelihoodResult$pSims)),")",sep="")
+            outputText[1]<-paste(outputText[1]," (no sims=",format(length(likelihoodResult$pSims)),"; no targets=",format(sum(likelihoodResult$pSimDens$counts)),")",sep="")
             outputText<-c(outputText,paste("Sample ","effect-size=", format(mean(likelihood$sampleES),digits=report_precision),sep=""),"","")
             outputText<-c(outputText,rep("",nc))
             outputText<-c(outputText," ","Theory","Simulation")
@@ -47,7 +47,7 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
                           paste("[", format(likelihoodResult$rpSim_ci[1],digits=report_precision), ",", format(likelihoodResult$rpSim_ci[2],digits=report_precision), "]")
             )
             outputText<-c(outputText,rep("",nc))
-            outputText<-c(outputText,"Likelihood(population=sample):",paste0("max * ",format(likelihoodResult$expected_r_at_peak_dens,digits=report_precision)),"")
+            outputText<-c(outputText,"Likelihood(population=sample):",paste0("max * ",format(likelihoodResult$dens_at_sample,digits=report_precision)),"")
             if (length(likelihoodResult$pSims)==0){
               outputText[seq(12,21,3)]<-" "
               }

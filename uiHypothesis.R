@@ -1,4 +1,5 @@
 source("uiWorld.R")
+source("uiEffectPart.R")
 source("uiQuickHyp.R")
 
 HypothesisTab <-
@@ -64,7 +65,7 @@ HypothesisTab <-
                                                                            selectize=FALSE
                                         )),
                                         tags$td(width = "25%", actionButton("editDV","Edit DV")),
-                                        tags$td(width = "25%", actionButton("hypothesisApply1","Apply")),
+                                        tags$td(width = "25%", actionButton("EvidenceHypothesisApply1","Apply")),
                                         tags$td(width = "5%", tags$div(style = localStyle, " ")),
                                         tags$td(width = "10%", actionButton("inspectDV","i")),
                                       ),
@@ -76,74 +77,11 @@ HypothesisTab <-
                 # prediction tab
                 tabPanel("Effects",id="Effects",
                          style = paste("background: ",subpanelcolours$hypothesisC), 
-                         wellPanel(
-                           style = paste("background: ",subpanelcolours$hypothesisC,";"),
-                           tags$table(width = "100%",class="myTable",
-                                      tags$tr(
-                                        tags$td(width = "35%", tags$div(style = localStyle, "IV",HTML("&rarr;"),"DV :")),
-                                        tags$td(width = "20%", numericInput("rIV", label = NULL,
-                                                                            min = -1,
-                                                                            max = 1,
-                                                                            step = 0.05,
-                                                                            value = effect$rIV
-                                        )),
-                                        tags$td(width = "45%", tags$div(style = localStyle, " "))
-                                        
-                                      ),
-                                      tags$tr(id="IV2E2",
-                                        tags$td(width = "35%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 tags$div(style = localStyle, "IV2",HTML("&rarr;"),"DV :")
-                                                )),
-                                        tags$td(width = "20%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 numericInput("rIV2", label = NULL,
-                                                                            min = -1,
-                                                                            max = 1,
-                                                                            step = 0.05,
-                                                                            value = effect$rIV2
-                                        ))),
-                                        tags$td(width = "45%", 
-                                                tags$div(style = localStyle, " ")
-                                                )
-                                        
-                                      ),
-                                      tags$tr(id="IV2E3",
-                                        tags$td(width = "35%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 tags$div(style = localStyle, "IV",HTML("&rarr;"),"IV2 :")
-                                                )),
-                                        tags$td(width = "20%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 numericInput("rIVIV2", label = NULL,
-                                                                            min = -1,
-                                                                            max = 1,
-                                                                            step = 0.05,
-                                                                            value = effect$rIVIV2
-                                        ))),
-                                        tags$td(width = "45%", tags$div(style = localStyle, " "))
-                                        
-                                      ),
-                                      tags$tr(id="IV2E4",
-                                        tags$td(width = "35%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 tags$div(style = localStyle, "IV*IV2",HTML("&rarr;"),"DV :")
-                                                )),
-                                        tags$td(width = "20%", 
-                                                conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                 numericInput("rIVIV2DV", label = NULL,
-                                                                            min = -1,
-                                                                            max = 1,
-                                                                            step = 0.05,
-                                                                            value = effect$rIVIV2DV
-                                        ))),
-                                        tags$td(width = "45%", tags$div(style = localStyle, " "))
-                                      ),
-                           ),
-                           width="100%"
-                         )
+                         effectPanel(""),
                 ),
-                worldTab,
+                
+                # world tab
+                worldPanel(),
                 
                 # options tab
                 tabPanel("#",
@@ -153,35 +91,34 @@ HypothesisTab <-
                            conditionalPanel(condition="input.Using=='Data'",
                                             tags$table(width = "100%",class="myTable",
                                                        tags$tr(
-                                                         tags$td(width = "45%", tags$div(style = localStyle, "Allow Resampling:")),
+                                                         tags$td(width = "45%", tags$div(style = localPlainStyle, "Allow Resampling:")),
                                                          tags$td(width = "30%", 
                                                                  checkboxInput("AllowResampling",label=NULL,value=switches$doBootstrap),
                                                          ),
-                                                         tags$td(width = "25%", tags$div(style = localStyle, " ")                                        )
-                                                       ))),
+                                                         tags$td(width = "25%")                                        )
+                                                       )
+                                            ),
                            conditionalPanel(condition="input.Using!='Data'",
-                           tags$table(width = "100%",class="myTable",
-                                      tags$tr(
-                                        tags$td(width = "45%", tags$div(style = localStyle, "Heteroscedasticity:")),
-                                        tags$td(width = "30%", 
-                                                numericInput("Heteroscedasticity",label=NULL,value=effect$Heteroscedasticity,min=-2, max=2, step=0.1),
-                                                ),
-                                        tags$td(width = "25%", tags$div(style = localStyle, " ")                                        )
-                                      ),
-                                      tags$tr(
-                                        tags$td(width = "45%", tags$div(style = localStyle, "Residuals:")),
-                                        tags$td(width = "30%", 
-                                                selectInput("ResidDistr",label=NULL,
-                                                            choices=list("normal"="normal","Cauchy"="Cauchy","uniform"="uniform"),selected=effect$ResidDistr,selectize=FALSE),
-                                                ),
-                                        tags$td(width = "25%", tags$div(style = localStyle, " ")                                        )
-                                      ),
-                                      # conditionalPanel(condition="false",selectInput("local",label=NULL,choices=c("y","n"),selected=quickHypos)),
-                           )
+                                            tags$table(width = "100%",class="myTable",
+                                                       tags$tr(
+                                                         tags$td(width = "45%", tags$div(style = localPlainStyle, "Heteroscedasticity:")),
+                                                         tags$td(width = "30%", 
+                                                                 numericInput("Heteroscedasticity",label=NULL,value=effect$Heteroscedasticity,min=-2, max=2, step=0.1),
+                                                         ),
+                                                         tags$td(width = "25%")
+                                                       ),
+                                                       tags$tr(
+                                                         tags$td(width = "45%", tags$div(style = localPlainStyle, "Residuals:")),
+                                                         tags$td(width = "30%", 
+                                                                 selectInput("ResidDistr",label=NULL,
+                                                                             choices=list("normal"="normal","Cauchy"="Cauchy","uniform"="uniform"),selected=effect$ResidDistr,selectize=FALSE),
+                                                         ),
+                                                         tags$td(width = "25%")
+                                                       )
+                                            )
                            ),
                            quickHypotheses
                          )
-                         
                 ),
                 # help tab
                 tabPanel(helpChar,value="?",

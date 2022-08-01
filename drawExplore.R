@@ -7,7 +7,7 @@ all_cols<-c()
 drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   rho<-effect$rIV
   
-  vals<-exploreResult$vals
+  vals<-exploreResult$result$vals
   if (is.character(vals[1])){
     vals<-((1:length(vals))-1)/(length(vals)-1)
     doLine=FALSE
@@ -120,23 +120,23 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
 
     extra_y_label<-""
     if (is.null(IV2)){
-      rVals<-exploreResult$rIVs
-      pVals<-exploreResult$pIVs
+      rVals<-exploreResult$result$rIVs
+      pVals<-exploreResult$result$pIVs
     } else {
       switch (explore$Explore_whichShow,
               "Main 1"={
-                rVals<-exploreResult$r1[[explore$Explore_typeShow]]
-                pVals<-exploreResult$p1[[explore$Explore_typeShow]]
+                rVals<-exploreResult$result$r1[[explore$Explore_typeShow]]
+                pVals<-exploreResult$result$p1[[explore$Explore_typeShow]]
                 extra_y_label<-paste("Main Effect 1:",explore$Explore_typeShow)
               },
               "Main 2"={
-                rVals<-exploreResult$r2[[explore$Explore_typeShow]]
-                pVals<-exploreResult$p2[[explore$Explore_typeShow]]
+                rVals<-exploreResult$result$r2[[explore$Explore_typeShow]]
+                pVals<-exploreResult$result$p2[[explore$Explore_typeShow]]
                 extra_y_label<-paste("Main Effect 2:",explore$Explore_typeShow)
               },
               "Interaction"={
-                rVals<-exploreResult$r3[[explore$Explore_typeShow]]
-                pVals<-exploreResult$p3[[explore$Explore_typeShow]]
+                rVals<-exploreResult$result$r3[[explore$Explore_typeShow]]
+                pVals<-exploreResult$result$p3[[explore$Explore_typeShow]]
                 extra_y_label<-paste("Interaction:",explore$Explore_typeShow)
               }
       )
@@ -182,7 +182,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               }
             },
             "w"={
-              showVals<-rn2w(rVals,exploreResult$nvals)
+              showVals<-rn2w(rVals,exploreResult$result$nvals)
               lines<-c(0.05,0.8)
               if (wPlotScale=="log10"){
                 showVals<-log10(showVals)
@@ -202,7 +202,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y75<-c()
               y62<-c()
               y38<-c()
-              for (i in 1:length(exploreResult$vals)){
+              for (i in 1:length(exploreResult$result$vals)){
                 p<-mean(pVals[,i]<alpha,na.rm=TRUE)
                 p_se<-sqrt(p*(1-p)/length(pVals[,i]))
                 y50[i]<-p
@@ -224,7 +224,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y50<-c()
               y25<-c()
               y75<-c()
-              for (i in 1:length(exploreResult$vals)){
+              for (i in 1:length(exploreResult$result$vals)){
                 p<-mean(pVals[,i]<alpha,na.rm=TRUE)
                 y50[i]<-p
                 y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
@@ -234,8 +234,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y50e<-c()
               y25e<-c()
               y75e<-c()
-              peVals<-exploreResult$null$pIVs
-              for (i in 1:length(exploreResult$vals)){
+              peVals<-exploreResult$nullresult$pIVs
+              for (i in 1:length(exploreResult$result$vals)){
                 p<-mean(peVals[,i]<alpha,na.rm=TRUE)
                 y50e[i]<-p
                 y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
@@ -247,7 +247,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               lines<-c(0.05)
             },
             "log(lr)"={
-              ns<-exploreResult$nvals
+              ns<-exploreResult$result$nvals
               showVals<-r2llr(rVals,ns)
 
               if (is.null(IV2)){
@@ -277,9 +277,9 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y75<-c()
               y62<-c()
               y38<-c()
-              ns<-exploreResult$nvals
+              ns<-exploreResult$result$nvals
               showVals<-r2llr(rVals,ns)
-              for (i in 1:length(exploreResult$vals)){
+              for (i in 1:length(exploreResult$result$vals)){
                 p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
                 p_se<-sqrt(p*(1-p)/length(pVals[,i]))
                 y50[i]<-p
@@ -306,7 +306,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       y50<-c()
       y38<-c()
       y25<-c()
-      for (i in 1:length(exploreResult$vals)) {
+      for (i in 1:length(exploreResult$result$vals)) {
         y75[i]<-quantile(showVals[,i],0.50+quants,na.rm=TRUE)
         y62[i]<-quantile(showVals[,i],0.50+quants/2,na.rm=TRUE)
         y50[i]<-quantile(showVals[,i],0.50,na.rm=TRUE)
@@ -401,7 +401,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     
     if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="SampleSize"){
       w<-y50
-      n<-exploreResult$vals
+      n<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
       r_est<-optimize(minrw,c(0,0.9),w=w,n=n)
       r_est<-r_est$minimum
@@ -427,7 +427,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     }
     if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="EffectSize"){
       w<-y50
-      r<-exploreResult$vals
+      r<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
       n_est<-optimize(minrw,c(0,100),w=w,r=r)
       n_est<-n_est$minimum
@@ -461,7 +461,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               {explore$Explore_whichShow<-"Main 2"},
               {explore$Explore_whichShow<-"Interaction"}
               )
-      if (is.character(exploreResult$vals[1])) {
+      if (is.character(exploreResult$result$vals[1])) {
         vals_offset<-(ni2-1)*valsGap+0.5
       } else {
         vals_offset<-(ni2-1)*valsGap*2 
@@ -469,7 +469,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       td<-data.frame(x=vals_offset,y=ylim[2]-diff(ylim)/6,label=explore$Explore_whichShow)
       g<-g+geom_label(data=td,aes(x=x, y=y, label=label,hjust=0.5))
     }
-    if (is.character(exploreResult$vals[1])) {
+    if (is.character(exploreResult$result$vals[1])) {
       g<-g+geom_vline(aes(xintercept=valsGap*c(1,ni_max2-1)-0.5*(valsGap-1)))
     } else {
       g<-g+geom_vline(aes(xintercept=valsGap*c(1,ni_max2)))
@@ -481,20 +481,22 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       tk<-(0:4)/4
       jk<-valsGap
     }
-    if (is.character(exploreResult$vals[1])) {
+    if (is.character(exploreResult$result$vals[1])) {
       tk<-seq(0,1,length.out=length(vals))
-      g<-g+scale_x_continuous(breaks=c(vals,vals+jk,vals+jk*2),labels=c(exploreResult$vals,exploreResult$vals,exploreResult$vals),limits=c(0,1+jk*2)+c(-1,1)*0.25) +
+      g<-g+scale_x_continuous(breaks=c(vals,vals+jk,vals+jk*2),labels=c(exploreResult$result$vals,exploreResult$result$vals,exploreResult$result$vals),limits=c(0,1+jk*2)+c(-1,1)*0.25) +
         theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
     } else {
     g<-g+scale_x_continuous(breaks=c(tk,tk+jk,tk+jk*2),labels=c(tk,tk,tk),limits=c(tk[1],1+jk*2)+c(-1,1)*0.25)
     }
   } else {
-    if (is.character(exploreResult$vals[1]))
+    if (is.character(exploreResult$result$vals[1]))
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
   }
+  if ((vals[2]-vals[1])!=(vals[3]-vals[2])) {
+    g<-g+scale_x_log10()
+  }
   
-  
-  if (explore$full_ylim){
+  if (explore$ExploreFull_ylim){
   g<-g+coord_cartesian(ylim = ylim*1.05)
   }
     g<-g+ylab(ylabel)

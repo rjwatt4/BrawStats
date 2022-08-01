@@ -98,7 +98,8 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
   g<-ggplot(pts,aes(x=x, y=y))
   
   dotSize=min(8,max(3.5,sqrt(400/length(d1))))
-  dotSize<-6
+  dotSize<-dotSize<-(plotTheme$axis.title$size)/3
+
   
   if (useSignificanceCols){
     c1=plotcolours$infer_sigC

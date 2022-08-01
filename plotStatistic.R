@@ -303,7 +303,8 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0){
       }
 
       dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
+
       if (useSignificanceCols){
         c1=plotcolours$infer_sigC
         c2=plotcolours$infer_nsigC
@@ -455,7 +456,7 @@ llr_plot<-function(result,IV,IV2=NULL,DV,r=0){
       }
       
       dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
       if (useSignificanceCols){
         c1=plotcolours$infer_sigC
         c2=plotcolours$infer_nsigC
@@ -618,7 +619,7 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
       pt_col<-pt_nsigcol
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -784,7 +785,7 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
       pt_col<-plotcolours$infer_nsigC
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -918,7 +919,7 @@ nw_plot<-function(result,IV,IV2=NULL,DV,r=0){
       } 
       
       dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
       pt_col<-plotcolours$infer_nsigC
       use<-(pvals>=alpha)
       pts1=pts[use,]
@@ -994,7 +995,7 @@ w1_plot<-function(result,IV,IV2=NULL,DV,r=0){
     } else { pts=data.frame(x=0+xoff[i],y=wvals)
     }
     dotSize=min(10,20/sqrt(length(wvals)))
-    dotSize=6
+    dotSize<-(plotTheme$axis.title$size)/3
     pt_col<-plotcolours$infer_nsigC
     if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
     
@@ -1080,7 +1081,7 @@ nw1_plot<-function(result,IV,IV2=NULL,DV,r=0){
     if (length(nwvals)==1) {
       pts=data.frame(x=0+xoff[i],y=log10(nwvals))
       dotSize=min(10,20/sqrt(length(nwvals)))
-      dotSize=6
+      dotSize<-(plotTheme$axis.title$size)/3
       pt_col<-plotcolours$infer_nsigC
       if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
       

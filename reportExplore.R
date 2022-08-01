@@ -35,7 +35,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
     )
   }
-  
+
   switch (explore$Explore_show,
           "EffectSize"={
             showVals<-rVals

@@ -18,9 +18,9 @@ drawPoints<-function(g,IV,DV,result,colindex=1,off=0){
   
   hypothesisType=paste(IV$type,DV$type,sep=" ")
   
-  dotSize<-3.5
+  dotSize<-(plotTheme$axis.title$size)/3
   if (length(x)>100) {
-    dotSize<-max(3.5*sqrt(100/length(x)),2)
+    dotSize<-max(dotSize*sqrt(100/length(x)),2)
   }
   switch (hypothesisType,
           "Interval Interval"={

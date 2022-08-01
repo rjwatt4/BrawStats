@@ -1,41 +1,67 @@
 
-panelWidth="14.5cm"
-halfWidth="7cm"
-halfWidth="7cm"
-panelHeight="8.1cm"
-
+expandLabel<-HTML("&#9974")
 
 MainGraphs <-
   
   wellPanel(
-    style=paste("min-width:", panelWidth, ";"),
+    style=paste("min-width:", graphWidth, ";"),
     style = paste("background: ",maincolours$panelC), 
     tabsetPanel(type="tabs",
                 id="Graphs",
                 tabPanel("Sample",class="Graphs",
-                         plotOutput("SamplePlot",height=panelHeight,width=panelWidth),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "97%",plotOutput("SamplePlot",height=graphHeight,width="100%")),
+                                      tags$td(width = "3%",valign="top",actionButton("LGEvidenceStart",label=expandLabel)),
+                                    )
+                         ),
                          style =paste("background:", maincolours$graphC, ";")
                 ),
                 tabPanel("Describe",class="Graphs",
-                         plotOutput("DescriptivePlot",height=panelHeight,width=panelWidth),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "97%",plotOutput("DescriptivePlot",height=graphHeight,width="100%")),
+                                      tags$td(width = "3%",valign="top",actionButton("LGEvidenceStart1",label=expandLabel)),
+                                    )
+                         ),
                          style =paste("background:", maincolours$graphC, ";")
                 ),
                 tabPanel("Infer",
-                         plotOutput("InferentialPlot",height=panelHeight,width=panelWidth),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "97%",plotOutput("InferentialPlot",height=graphHeight,width="100%")),
+                                      tags$td(width = "3%",valign="top",actionButton("LGEvidenceStart2",label=expandLabel)),
+                                    )
+                         ),
                          style =paste("background:", maincolours$graphC, ";"),
                 ),
                 tabPanel("Expect",value="Expect", 
-                         plotOutput("ExpectedPlot",height=panelHeight,width=panelWidth),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "97%",plotOutput("ExpectedPlot",height=graphHeight,width="100%")),
+                                              tags$td(width = "3%",valign="top",actionButton("LGEvidenceStart3",label=expandLabel)),
+                                    )
+                         ),
                          style =paste("background:", maincolours$graphC, ";")
                 )
                 ,tabPanel("Explore",value="Explore",
-                         plotOutput("ExplorePlot",height=panelHeight,width=panelWidth),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "97%",plotOutput("ExplorePlot",height=graphHeight,width="100%")),
+                                       tags$td(width = "3%",valign="top",actionButton("LGExploreStart",label=expandLabel)),
+                                     )
+                          ),
                          style =paste("background:", maincolours$graphC, ";")
                 )
                 ,tabPanel("Possible",value="Possible",
-                         plotOutput("LikelihoodPlot",height=panelHeight,width=panelWidth),
+                          tags$table(width = "100%",class="myTable",
+                                     tags$tr(
+                                       tags$td(width = "97%",plotOutput("LikelihoodPlot",height=graphHeight,width="100%")),
+                                       tags$td(width = "3%",valign="top",actionButton("LGPossibleStart",label=expandLabel)),
+                                     )
+                          ),
                          style =paste("background:", maincolours$graphC, ";")
                 )
     ),
-    width="16cm"
+    width=fullPanelWidth
   )

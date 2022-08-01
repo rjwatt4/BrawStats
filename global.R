@@ -1,13 +1,25 @@
-switches<-list(do_explore=TRUE,do_files=TRUE,doLikelihood=TRUE,
+switches<-list(doLikelihood=TRUE,
                doWorlds=FALSE,doReplications=FALSE,
-               doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,
-               startBlank=FALSE,doBootstrap=FALSE,
-               longHandLikelihood=TRUE,importOrdinals=TRUE,
+               doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
+               startBlank=FALSE,doBootstrap=TRUE,
+               importOrdinals=TRUE,
                rigidWithin=TRUE)
 debug<-FALSE
 
 fontScale=0.85 # use with 400% zoom in Google Chrome
 fontScale=1.05
+
+fullPanelWidth="16cm"
+graphWidth="14.5cm"
+graphHeight="8.1cm"
+reportHeight="5cm"
+LGGraphHeight="15cm"
+LGPanelHeight="15.3cm"
+LGModalHeight="16.4cm"
+LGModalWidth="32cm"
+diagramPanelWidth="6.9cm"
+diagramUpperPanelHeight=graphHeight
+diagramLowerPanelHeight=reportHeight
 
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
@@ -59,6 +71,7 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   infer_sigC="#22FF00",infer_nsigC="#FF2222",
                   infer_err="#333333",infer_nerr="#00CCFF")
 
+labelStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: left;")
 localStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: right;")
 localPlainStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:normal;text-align: right;")
 helpStyle=paste("font-size:",format(7*fontScale) ,"pt;line-height:75%;margin:0px;margin-top:-6px;padding:0px;", "color:", maincolours$panelC, ";",sep="")
@@ -90,12 +103,18 @@ warn3Cat2<-FALSE
 warnOrd<-FALSE
 warn3Ord<-FALSE
 
+showPossible<-"Samples"
 is_local <- Sys.getenv('SHINY_PORT') == ""
 
+screen<-c(1220,520)
+screen<-c(100,100)
+graphAspect<-0.67
 
 if (is_local) {
   switches$doClipboard<-TRUE
-  switches$doWorlds<-FALSE
-  switches$doReplications<-FALSE
+}
+if (is_local && Sys.getenv("USERNAME")=="rjwatt42") {
   switches$doBatchFiles<-TRUE
+  switches$doWorlds<-TRUE
+  switches$doReplications<-TRUE
 } 

@@ -6,9 +6,8 @@ effectSizeRange=0.8
 maxESrange<-0.95
 absRange<-FALSE
 quants=0.25
-n_logscale=FALSE
 
-exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
+exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResult,nsim,doingNull=FALSE){
   
   npoints<-explore$Explore_npoints
   quants<-explore$Explore_quants
@@ -17,7 +16,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
   anomaliesRange<-explore$Explore_anomRange
   kurtRange<-10^5
   
-  showNotification(paste(format(0),format(npoints),sep="/"),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+  # showNotification(paste(format(0),format(npoints),sep="/"),id="counting",duration=Inf,closeButton = FALSE,type = "message")
   
   if (absRange) {vals<-seq(0,1,length.out=npoints)}
   else          {vals<-seq(-1,1,length.out=npoints)}
@@ -66,7 +65,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
           "pnull"={vals<-seq(0,1,length.out=npoints)},
           
           "SampleSize"={
-            if (n_logscale){
+            if (explore$Explore_xlog){
               vals<-round(10^seq(log10(min_n),log10(max_n),length.out=npoints))
             }else{
               vals<-round(seq(min_n,max_n,length.out=npoints))
@@ -84,35 +83,24 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
           "Power"={vals<-seq(0.1,0.9,length.out=npoints)}
   )
 
-  if (explore$Append){
-    if (explore$doNull) {
-      exploreResult<-exploreResultHold$null
-    } else {
-      exploreResult<-exploreResultHold
-    }
-  } else { 
-    exploreResult<-c(explore,list(rIVs=c(),pIVs=c(),nvals=c(),psig=c(),
-                                  r1=list(direct=c(),unique=c(),total=c()),
-                                  r2=list(direct=c(),unique=c(),total=c()),
-                                  r3=list(direct=c(),unique=c(),total=c())
-    )
-    )
-  }
-  
-  if (explore$Explore_length>20) {n_sims<-10} else {n_sims<-explore$Explore_length}
 
-  for (ni in seq(n_sims,explore$Explore_length,n_sims)){
-    
+  if (explore$Explore_length>20) {n_sims<-10} else {n_sims<-explore$Explore_length}
+  n_sims<-nsim
+  for (ni in n_sims){
+    if (is.null(exploreResult$rIVs)) {nc<-0+ni}
+    else {nc<-nrow(exploreResult$rIVs)+ni}
+    # for (ni in seq(n_sims,explore$Explore_length,n_sims)){
+      
     main_res<-list(rval=c(),pval=c(),nval=c(),
                    r1=list(direct=c(),unique=c(),total=c()),
                    r2=list(direct=c(),unique=c(),total=c()),
                    r3=list(direct=c(),unique=c(),total=c()))
   
     for (i in 1:length(vals)){
-      if (explore$doNull) {
-        showNotification(paste("H0:  n=",format(ni), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+      if (doingNull) {
+        showNotification(paste("Explore/Null:  n=",format(nc),"/",format(exploreResult$nsims), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
       } else {
-    showNotification(paste("n=",format(ni), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+        showNotification(paste("Explore:  n=",format(nc),"/",format(exploreResult$nsims), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
       }
     switch (explore$Explore_type,
             "IVType"={
@@ -385,11 +373,11 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
             }
     )
 
-    if (explore$doNull) {
-      effect$rIV<-0
-      effect$rIV2<-0
-      effect$rIVIV2DV<-0
-    }
+    # if (explore$doNull) {
+    #   effect$rIV<-0
+    #   effect$rIV2<-0
+    #   effect$rIVIV2DV<-0
+    # }
 
       res<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE,showProgress=FALSE)
       
@@ -424,7 +412,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
     }
     # if (i>1) {removeNotification(id = "counting")}
   }
-    
+
     exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
     exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
     exploreResult$nvals<-rbind(exploreResult$nvals,main_res$nval)
@@ -464,10 +452,5 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore){
     exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
   }
   exploreResult$vals<-vals
-  if (explore$doNull) {
-    exploreResultHold$null<<-exploreResult
-  } else {
-    exploreResultHold<<-exploreResult
-  }
   exploreResult
 }

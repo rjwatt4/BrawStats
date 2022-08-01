@@ -178,7 +178,7 @@ ExploreTab <-
                                                                     exploreLengthChoices,selectize=FALSE)
                                                 ),
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                                                tags$td(width = "10%", checkboxInput("exploreAppendH", label=NULL)),
+                                                tags$td(width = "10%", checkboxInput("ExploreAppendH", label=NULL)),
                                                 tags$td(width = "20%", actionButton("exploreRunH", "Run"))
                                               )
                                    ))
@@ -194,14 +194,22 @@ ExploreTab <-
                                                         selectInput("Explore_typeD",label=NULL,
                                                                     designChoices,selectize=FALSE)
                                                 ),
-                                                tags$td(id="Explore_nRangeLabel",width = "25%", 
+                                                tags$td(id="Explore_nRangeLabel",width = "15%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
                                                                          tags$div(style = localStyle, "range:")
                                                         )),
-                                                tags$td(width = "25%", 
+                                                tags$td(width = "15%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
-                                                                         numericInput("Explore_nRange", label=NULL,value=250)
-                                                ))
+                                                                         numericInput("Explore_nRange", label=NULL,value=250,min=10,step=50)
+                                                )),
+                                                tags$td(width = "10%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
+                                                                         tags$div(style = localStyle, "log")
+                                                                         )),
+                                                tags$td(width = "10%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
+                                                                         checkboxInput("Explore_xlog",label="",value=FALSE)
+                                                                         )),
                                               ),
                                               tags$tr(
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
@@ -209,16 +217,18 @@ ExploreTab <-
                                                         selectInput("Explore_showD", label=NULL,
                                                                     showChoices,width="100%",selectize = FALSE)
                                                 ),
-                                                tags$td(width = "25%", 
+                                                tags$td(width = "15%", 
                                                         conditionalPanel(condition="input.IV2choice != 'none'",
                                                                          selectInput("Explore_whichShowD", label=NULL,
                                                                     whichShowChoices, selected="Main 1",selectize = FALSE)
                                                 )),
-                                                tags$td(width = "25%", 
+                                                tags$td(width = "15%", 
                                                         conditionalPanel(condition="input.IV2choice != 'none'",
                                                                          selectInput("Explore_typeShowD", label=NULL,
                                                                     extraShowChoices, selected="direct",selectize = FALSE)
-                                                ))
+                                                )),
+                                                tags$td(width = "10%", tags$div(style = localStyle, "")),
+                                                tags$td(width = "10%", tags$div(style = localStyle, "")),
                                               )),
                                    tags$table(width = "100%",class="myTable",
                                               tags$tr(
@@ -228,7 +238,7 @@ ExploreTab <-
                                                                     exploreLengthChoices,selectize=FALSE)
                                                 ),
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                                                tags$td(width = "10%", checkboxInput("exploreAppendD", label=NULL)),
+                                                tags$td(width = "10%", checkboxInput("ExploreAppendD", label=NULL)),
                                                 tags$td(width = "20%", actionButton("exploreRunD", "Run"))
                                               )
                                    ))
@@ -274,7 +284,7 @@ ExploreTab <-
                         #                                             exploreLengthChoices,width="100%",selectize=FALSE)
                         #                         ),
                         #                         tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                        #                         tags$td(width = "10%", checkboxInput("exploreAppendA", label=NULL)),
+                        #                         tags$td(width = "10%", checkboxInput("ExploreAppendA", label=NULL)),
                         #                         tags$td(width = "20%", actionButton("exploreRunA", "Run"))
                         #                       )
                         #            ))
@@ -289,29 +299,35 @@ ExploreTab <-
                                                 tags$td(width = "15%", 
                                                         numericInput("Explore_npoints", label=NULL,value=13)
                                                 ),
-                                                tags$td(width = "35%", id="Explore_esRangeLabel", tags$div(style = localPlainStyle, "r-range:")),
-                                                tags$td(width = "25%", 
-                                                        numericInput("Explore_esRange", label=NULL,value=0.8)
-                                                ),
-                                              ),
-                                              tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "quantiles:")),
-                                                tags$td(width = "15%", 
+                                                tags$td(width = "30%", tags$div(style = localPlainStyle, "quantiles:")),
+                                                tags$td(width = "20%", 
                                                         numericInput("Explore_quants", label=NULL,value=0.95, step = 0.01,min=0.01,max=0.99)
                                                 ),
-                                                tags$td(width = "35%", id="Explore_nRangeLabel", tags$div(style = localPlainStyle, "n-range:")),
-                                                tags$td(width = "25%", 
-                                                        numericInput("Explore_nRange", label=NULL,value=250)
-                                                ),
+                                                tags$td(width="5%"),
+                                                tags$td(width="5%"),
                                               ),
                                               tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "full y-lim:")),
-                                                tags$td(width = "15%", checkboxInput("full_ylim", label=NULL,value=FALSE)),
-                                                tags$td(width = "35%", tags$div(style = localPlainStyle, "anom-range:")),
-                                                tags$td(width = "25%", 
+                                                tags$td(width = "25%", id="Explore_esRangeLabel", tags$div(style = localPlainStyle, "r-range:")),
+                                                tags$td(width = "15%", 
+                                                        numericInput("Explore_esRange", label=NULL,value=0.8)
+                                                ),
+                                                tags$td(width = "30%", tags$div(style = localPlainStyle, "anom-range:")),
+                                                tags$td(width = "20%", 
                                                         numericInput("Explore_anomRange", label=NULL,value=0.9)
-                                                )                                              )
-                                   ))
+                                                ),
+                                                tags$td(width="5%"),
+                                                tags$td(width="5%")
+                                                ),
+                                              tags$tr(
+                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "full y-lim:")),
+                                                tags$td(width = "15%", checkboxInput("ExploreFull_ylim", label=NULL,value=FALSE)),
+                                                tags$td(width = "30%"),
+                                                tags$td(width = "20%"),
+                                                tags$td(width="5%"),
+                                                tags$td(width="5%")
+                                              )
+                                   )
+                                   )
                         )
                         # help tab
                         ,tabPanel(helpChar,value="?",

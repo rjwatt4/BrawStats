@@ -111,10 +111,9 @@ DesignTab <-
                             conditionalPanel(condition="input.sMethod == 'Random'",
                                              tags$table(width = "100%",class="myTable",
                                                         tags$tr(
-                                                          tags$td(width = "30%", tags$div(style = paste(localStyle,"text-align: left"), "Random:")),
-                                                        ),
-                                                        tags$tr(
-                                                          tags$td(width = "100%", tags$div(style = localPlainStyle, "no options")),
+                                                          tags$td(width = "20%", tags$div(style = paste(localStyle,"text-align: left"), "Random:")),
+                                                          tags$td(width = "30%", tags$div(style = localPlainStyle, "no options")),
+                                                          tags$td(width = "50%")
                                                         ))),
                             conditionalPanel(condition="input.sMethod == 'Stratified'",
                                              tags$table(width = "100%",class="myTable",

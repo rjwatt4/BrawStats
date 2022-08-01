@@ -43,8 +43,11 @@ source("typeCombinations.R")
 
 source("drawInspect.R")
 
-simCycles=20
-simPeriod=1000
+graphicSource="Main"
+
+####################################
+####################################
+####################################
 
 shinyServer(function(input, output, session) {
 
@@ -53,147 +56,17 @@ shinyServer(function(input, output, session) {
   
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
-  shinyjs::hideElement(id= "hypothesisApply1")
-  shinyjs::hideElement(id= "hypothesisApply")
+  shinyjs::hideElement(id= "EvidenceHypothesisApply1")
+  shinyjs::hideElement(id= "EvidenceHypothesisApply")
+  shinyjs::hideElement(id= "LGEvidenceHypothesisApply")
   shinyjs::hideElement(id= "Using")
   updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
-
 ####################################
-#KEYBOARD: capture keyboard events
 
-if (switches$doKeys) {
-  keyrespond<-observeEvent(input$pressedKey,{
-     # print(input$keypress)
-
-    if (input$keypress==16) shiftKeyOn<<-TRUE
-    if (input$keypress==17) controlKeyOn<<-TRUE
-    if (input$keypress==18) altKeyOn<<-TRUE
-
-    
-    # control-alt-l - switch to online version
-    if (is_local && input$keypress==76 && controlKeyOn && altKeyOn){
-      switches$doReplications<<-FALSE
-      switches$doWorlds<<-FALSE
-      removeTab("Design","Replicate",session)
-      removeTab("Hypothesis","World",session)
-      removeTab("HypothesisDiagram","World",session)
-      removeTab("FileTab","Batch",session)
-    }
-    
-    # control-alt-m - switch to offine version
-    if (input$keypress==77 && controlKeyOn && altKeyOn){
-      if (!switches$doReplications) {
-        insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
-        switches$doReplications<<-TRUE
-      }
-      if (!switches$doWorlds) {
-        insertTab("Hypothesis",worldTabReserve,"Effects","after",select=FALSE,session)
-        insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
-        switches$doWorlds<<-TRUE
-      }
-    }
-    
-    # control-V
-    if (is_local && input$keypress==86 && controlKeyOn){
-      mergeVariables<<-FALSE
-      # get the raw data
-      raw_h1<-read_clip()
-      header<-strsplit(raw_h1[1],"\t")[[1]]
-      raw_data<-read_clip_tbl()
-      # read_clip_tbl doesn't like some characters like | and =
-      colnames(raw_data)<-header
-      if (nrow(raw_data)>0 && ncol(raw_data)>0)
-        getNewVariables(raw_data)
-    }
-
-    # control-c
-    if (is_local && input$keypress==67 && controlKeyOn){
-      data<-exportData()
-      write_clip(data,allow_non_interactive = TRUE)
-    }
-    
-    # control-alt-n set sample size to big (1000)
-    if (input$keypress==78 && controlKeyOn && altKeyOn){
-      updateNumericInput(session,"sN",value=1000)
-    }
-    
-    # control-alt-r set effect size to 0.3
-    if (input$keypress==82 && controlKeyOn && altKeyOn){
-      updateNumericInput(session,"rIV",value=0.3)
-    }
-    
-    # control-alt-3 set IV2
-    if (input$keypress==51 && controlKeyOn && altKeyOn){
-      updateSelectInput(session,"IV2choice",selected="IV2")
-    }
-    
-    # control-alt-w set sample usage to within
-    if (input$keypress==87 && controlKeyOn && altKeyOn){
-      updateSelectInput(session,"sIV1Use",selected="Within")
-      updateSelectInput(session,"sIV2Use",selected="Within")
-    }
-    
-    # control-alt-d do debug
-    if (input$keypress==68 && controlKeyOn && altKeyOn){
-      toggleModal(session, modalId = "testedOutput", toggle = "open")
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      expected<-updateExpected()
-
-      validSample<<-TRUE
-
-      if (is.null(IV2)) {
-        nc=7
-        effect$rIV=0.3
-      } else {
-        nc=12
-        effect$rIV=0.3
-        effect$rIV2=-0.3
-        effect$rIVIV2DV=0.5
-      }
-      design$sN<-1000
-
-      expected$nSims<-100
-      expected$Expected_type<-"EffectSize"
-      expected$append<-FALSE
-
-      if (is.null(IV2)) {
-        result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
-      }
-      doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-      op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult)
-
-      if (!is.null(IV2)) {
-        effect$rIVIV2=0.25
-        doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
-
-        effect$rIVIV2=-0.25
-        doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
-      }
-
-      output$plotPopUp<-renderPlot(reportPlot(op,nc,length(op)/nc,2))
-      return()
-    }
-
-  })
-
-  keyrespondUp<-observeEvent(input$releasedKey,{
-    if (input$keypress==18) altKeyOn<<-FALSE
-    if (input$keypress==17) controlKeyOn<<-FALSE
-    if (input$keypress==16) shiftKeyOn<<-FALSE
-  })
-
-}
-
+  source("serverKeys.R")
+  serverKeys(session,input)
   
 ####################################
 # other housekeeping
@@ -216,17 +89,17 @@ if (switches$doKeys) {
   }
   )
 
-  observeEvent(input$inferD,{
-    presently<-input$Expected_type
-    if (input$inferD=="separate"){
-      updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
+  observeEvent(input$EvidenceInfer_2D,{
+    presently<-input$EvidenceExpected_type
+    if (input$EvidenceInfer_2D=="separate"){
+      updateSelectInput(session,"EvidenceExpected_type",choices=c("Basic" = "EffectSize",
                                                           "Power" = "Power",
                                                           "NHST errors" = "NHSTErrors",
                                                           "CI limits" = "CILimits",
                                                           "log(lr)" = "log(lr)"),
                         selected=presently)
     } else {
-      updateSelectInput(session,"Expected_type",choices=c("Basic" = "EffectSize",
+      updateSelectInput(session,"EvidenceExpected_type",choices=c("Basic" = "EffectSize",
                                                           "Power" = "Power",
                                                           "log(lr)" = "log(lr)"),
                         selected=presently)
@@ -263,69 +136,10 @@ if (switches$doKeys) {
   })
   
 ####################################
-#  Help Tab
-  
-  observeEvent(input$Help,
-               { 
-                 if (fullShowHelp)
-                 switch(input$Help,
-                        "Help:"={
-                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
-                          updateTabsetPanel(session, "Design",selected = "Design")
-                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
-                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
-                          updateTabsetPanel(session, "FileTab", selected="Files")
-                        },
-                        "Step 1"={
-                          updateTabsetPanel(session, "Hypothesis",selected = "?")
-                          updateTabsetPanel(session, "Design",selected = "Design")
-                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
-                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
-                        },
-                        "Step 2"={
-                          updateTabsetPanel(session, "Design",selected = "?")
-                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
-                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
-                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
-                        },
-                        "Step 3"={
-                          updateTabsetPanel(session, "Evidence",selected = "?")
-                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
-                          updateTabsetPanel(session, "Design",selected = "Design")
-                          updateTabsetPanel(session, "ExploreTab",selected = "Explore")
-                        },
-                        "Step 4"={
-                          updateTabsetPanel(session, "ExploreTab",selected = "?")
-                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
-                          updateTabsetPanel(session, "Design",selected = "Design")
-                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
-                        },
-                        "Data"={
-                          print(input$Help)
-                          
-                          updateTabsetPanel(session, "FileTab", selected="?")
-                          updateTabsetPanel(session, "ExploreTab",selected = "ExploreTab")
-                          updateTabsetPanel(session, "Hypothesis",selected = "Hypothesis")
-                          updateTabsetPanel(session, "Design",selected = "Design")
-                          updateTabsetPanel(session, "Evidence",selected = "Evidence")
-                        }
-                 )
-                 })
-
-####################################
 # QUICK HYPOTHESES
   
+  
   observeEvent(input$Hypchoice,{
-    
-    if (grepl("rjwatt42",session$clientData$url_hostname))
-    {
-      switches$startBlank<<-TRUE
-      switches$doBootstrap<<-TRUE
-      variables[1,]$type<<-"empty"
-      variables[3,]$type<<-"empty"
-    } else {
-      switches$startBlank<<-FALSE
-    }
     
     result<-getTypecombination(input$Hypchoice)
     
@@ -336,7 +150,7 @@ if (switches$doKeys) {
     # 3 variable hypotheses look after themselves
     #
     if (!is.null(IV2)) {
-    editVar$data<<-editVar$data+1
+      editVar$data<<-editVar$data+1
     }    
   })
   
@@ -361,10 +175,11 @@ if (switches$doKeys) {
               updateNumericInput(session,"rIVIV2",value=-0.8)    
               updateNumericInput(session,"rIVIV2DV",value=0.0)    
             }
-            )
-
+    )
+    
   })
   
+
 ####################################
 # change between data and simulation
   
@@ -393,7 +208,8 @@ if (switches$doKeys) {
     
     updateNumericInput(session,"sN",value=length(unique(importedData[[1]])))
     if (switches$doBootstrap) {
-    shinyjs::showElement(id= "hypothesisApply")
+    shinyjs::showElement(id= "EvidenceHypothesisApply")
+      shinyjs::showElement(id= "LGEvidenceHypothesisApply")
     }
     updateTabsetPanel(session, "Hypothesis",selected = "Variables")
     updateTabsetPanel(session, "Evidence",selected = "Single")
@@ -413,13 +229,14 @@ if (switches$doKeys) {
     shinyjs::disable(id= "sRangeOn")
     
     if (!switches$doBootstrap) {
-      shinyjs::hideElement(id="hypothesisApply")
-      updateActionButton(session,"newSample", label="Analyze")
+      shinyjs::hideElement(id="EvidenceHypothesisApply")
+      shinyjs::hideElement(id= "LGEvidenceHypothesisApply")
+      updateActionButton(session,"EvidencenewSample", label="Analyze")
       hideTab("Hypothesis","Effects")
       hideTab("Evidence","Multiple")
       shinyjs::hideElement(id="uiExplore")
     } else {
-      updateActionButton(session,"newSample", label="Resample")
+      updateActionButton(session,"EvidencenewSample", label="Resample")
       if (input$IV2choice=="none") {
         updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2Plain)
       }
@@ -456,7 +273,8 @@ if (switches$doKeys) {
     setDVanyway()
     
     if (switches$doBootstrap) {
-      shinyjs::hideElement(id= "hypothesisApply")
+      shinyjs::hideElement(id= "EvidenceHypothesisApply")
+      shinyjs::hideElement(id= "LGEvidenceHypothesisApply")
     }
     updateTabsetPanel(session, "Hypothesis",selected = "Variables")
     updateNumericInput(session,"rIV",value=0)
@@ -474,7 +292,7 @@ if (switches$doKeys) {
     shinyjs::enable(id= "sOutliers")
     shinyjs::enable(id= "sRangeOn")
     
-      updateActionButton(session,"newSample", label="New Sample")
+      updateActionButton(session,"EvidencenewSample", label="New Sample")
       showTab("Hypothesis","Effects")
       showTab("Evidence","Multiple")
       shinyjs::showElement(id="uiExplore")
@@ -805,6 +623,11 @@ if (switches$doKeys) {
     }
     
   }
+
+#################################################################
+## inspect variables functions
+  
+  
   
 inspectData<-c()  
 inspectVar<-c()
@@ -873,7 +696,7 @@ inspectHistory<-c()
   observeEvent(input$inspectNewSample,{
     IV<-updateIV()
     DV<-updateDV()
-    effect<-updatePrediction()
+    effect<-updateEffect()
     design<-updateDesign()
     sample<-makeSample(IV,NULL,DV,effect,design)
     switch (inspectSource,
@@ -926,7 +749,198 @@ inspectHistory<-c()
   }
   )
 
+######################################################
+## large display output functions
 
+  designFields<-list(select=c("sMethod"),number=c("sN"),check=c())
+  hypothesisFields<-list(select=c("world_distr","world_distr_rz"),
+                         number=c("rIV","rIV2","rIVIV2","rIVIV2DV","world_distr_k","world_Nullp"),
+                         check=c())
+  worldFields<-list(select=c("world_distr","world_distr_rz"),
+                    number=c("world_distr_k","world_Nullp"),
+                    check=c())
+  evidenceFields<-list(select=c("EvidenceInfer_type","EvidenceExpected_type","EvidenceInfer_2D","EvidenceEffect_type","EvidenceExpected_length"),
+                       number=c(),
+                       check=c("EvidenceExpected_append"))
+  exploreFields<-list(select=c("Explore_typeH","Explore_VtypeH","Explore_showH","Explore_whichShowH","Explore_typeShowH","Explore_lengthH",
+                    "Explore_typeD","Explore_showD","Explore_whichShowD","Explore_typeShowD","Explore_lengthD"),
+                    number=c("Explore_nRange","Explore_npoints","Explore_esRange","Explore_quants","ExploreFull_ylim","Explore_anomRange"),
+                    check=c("ExploreAppendH","ExploreAppendD","Explore_xlog")
+                    )
+  possibleFields<-list(select=c(),
+                       number=c("likelihoodSampRho","likelihoodSimSlice","likelihoodPSampRho"),
+                       check=c("likelihood_cutaway","likelihoodTheory","longHandLikelihood","likelihoodCorrection","likelihoodUsePrior")
+                       )
+
+
+  saveFields <-function(fields,suffix="") {
+    if (length(fields$select)>0) {
+      for (i in 1:length(fields$select)) {
+        updateSelectInput(session,fields$select[i],selected=input[[paste0("LG",suffix,fields$select[i])]])
+      }
+    }
+    if (length(fields$number)>0) {
+      for (i in 1:length(fields$number)) {
+        updateNumericInput(session,fields$number[i],value=input[[paste0("LG",suffix,fields$number[i])]])
+      }
+    }
+    if (length(fields$check)>0) {
+      for (i in 1:length(fields$check)) {
+        updateCheckboxInput(session,fields$check[i],value=input[[paste0("LG",suffix,fields$check[i])]])
+      }
+    }
+  } 
+  
+  loadFields <-function(fields,suffix="") {
+    if (length(fields$select)>0) {
+      for (i in 1:length(fields$select)) {
+        updateSelectInput(session,paste0("LG",suffix,fields$select[i]),selected=input[[fields$select[i]]])
+      }
+    }
+    if (length(fields$number)>0) {
+      for (i in 1:length(fields$number)) {
+        updateNumericInput(session,paste0("LG",suffix,fields$number[i]),value=input[[fields$number[i]]])
+      }
+    }
+    if (length(fields$check)>0) {
+      for (i in 1:length(fields$check)) {
+        updateCheckboxInput(session,paste0("LG",suffix,fields$check[i]),value=input[[fields$check[i]]])
+      }
+    }
+  } 
+  
+  saveLGEvidence <- function (){
+    saveFields(designFields,"Evidence")
+    saveFields(hypothesisFields,"Evidence")
+    saveFields(evidenceFields)
+  }
+  
+  observeEvent(c(input$LGEvidenceStart,input$LGEvidenceStart1,input$LGEvidenceStart2,input$LGEvidenceStart3),{
+    req(input$changed)
+    # graphicSource<<-"None"
+    
+    loadFields(designFields,"Evidence")
+    loadFields(hypothesisFields,"Evidence")
+    loadFields(evidenceFields)
+    
+    toggleModal(session, "LGmodalEvidence", toggle = "open")
+    switch (input$Graphs,
+            "Sample"={
+              updateSelectInput(session,"LGEvidenceShow",selected="Single")
+              updateSelectInput(session,"LGEvidenceDisplayType",selected="Sample")
+            },
+            "Describe"={
+              updateSelectInput(session,"LGEvidenceShow",selected="Single")
+              updateSelectInput(session,"LGEvidenceDisplayType",selected="Describe")
+            },
+            "Infer"={
+              updateSelectInput(session,"LGEvidenceShow",selected="Single")
+              updateSelectInput(session,"LGEvidenceDisplayType",selected="Infer")
+            },
+            "Expect"={
+              updateSelectInput(session,"LGEvidenceShow",selected="Multiple")
+              },
+    )
+    validExpected<<-FALSE
+  }
+  )
+  observeEvent(input$LGEvidenceClose,{
+    saveLGEvidence()
+    toggleModal(session, "LGmodalEvidence", toggle = "close")
+  }
+  )
+  output$LGshowEvidenceOutput<-renderPlot( {
+    doIt<-c(input$LGEvidenceExpectedRun,input$LGEvidencenewSample)
+    saveLGEvidence()
+    plotTheme<<-mainTheme+LGplotTheme
+
+    switch (input$LGEvidenceShow,
+            "Single"={
+              switch (input$LGEvidenceDisplayType,
+                      "Sample"={g<-makeSampleGraph()},
+                      "Describe"={g<-makeDescriptiveGraph()},
+                      "Infer"={g<-makeInferentialGraph()}
+                      )},
+            "Multiple"={
+              g<-makeExpectedGraph()
+              }
+    )
+    plotTheme<<-mainTheme+SMplotTheme
+    g
+  },
+  height=function() {
+    session$clientData$output_LGshowEvidenceOutput_width*graphAspect
+    }
+  )
+  
+  
+  saveLGExplore <- function() {
+    saveFields(designFields,"Explore")
+    saveFields(hypothesisFields,"Explore")
+    saveFields(exploreFields)
+    updateTabsetPanel(session,"ExploreTab",input$LGExploreShow)
+  }
+  
+  observeEvent(input$LGExploreStart,{
+    req(input$changed)
+    
+    # graphicSource<<-"None"
+    toggleModal(session, "LGmodalExplore", toggle = "open")
+    
+    loadFields(designFields,"Explore")
+    loadFields(hypothesisFields,"Explore")
+    loadFields(exploreFields)
+    if (is.element(input$ExploreTab,c("Hypothesis","Design"))) {
+    updateSelectInput(session,"LGExploreShow",selected = input$ExploreTab)
+    }
+    # graphicSource<<-"Modal"
+  }
+  )
+  observeEvent(input$LGExploreClose,{
+    saveLGExplore()
+    toggleModal(session, "LGmodalExplore", toggle = "close")
+  }
+  )
+  output$LGExploreShowOutput<-renderPlot( {
+    doIt<-c(input$LGexploreRunH,input$LGexploreRunD)
+    saveLGExplore()
+
+    plotTheme<<-mainTheme+LGplotTheme
+    g<-makeExploreGraph()
+    plotTheme<<-mainTheme+SMplotTheme
+    g
+  })
+  
+  
+  saveLGPossible <- function () {
+    saveFields(designFields,"likelihood")
+    saveFields(worldFields,"likelihood")
+    saveFields(possibleFields)
+  }
+  
+  observeEvent(input$LGPossibleStart,{
+    req(input$changed)
+    graphicSource<<-"None"
+    toggleModal(session, "LGmodalPossible", toggle = "open")
+    loadFields(designFields,"likelihood")
+    loadFields(worldFields,"likelihood")
+    loadFields(possibleFields)
+    graphicSource<<-"Modal"
+  }
+  )
+  observeEvent(input$LGlikelihoodClose, {
+    saveLGPossible()
+    toggleModal(session, "LGmodalPossible", toggle = "close")
+  })
+
+  output$LGshowPossibleOutput<-renderPlot( {
+    saveLGPossible()
+    updateTabsetPanel(session,"Likelihood",input$LGshowPossible)
+
+    par(cex=1.8)
+    makeLikelihoodGraph()
+  })
+  
   
 ######################################################  
 ## update variables functions
@@ -1030,10 +1044,10 @@ inspectHistory<-c()
       likelihood_P_ResultHold<-c()
       likelihood_S_ResultHold<-c()
       
-      updateCheckboxInput(session,"expectedAppend",value=FALSE)
-      updateCheckboxInput(session,"exploreAppendH",value=FALSE)
-      updateCheckboxInput(session,"exploreAppendD",value=FALSE)
-      updateCheckboxInput(session,"exploreAppendA",value=FALSE)
+      updateCheckboxInput(session,"EvidenceExpected_append",value=FALSE)
+      updateCheckboxInput(session,"ExploreAppendH",value=FALSE)
+      updateCheckboxInput(session,"ExploreAppendD",value=FALSE)
+      updateCheckboxInput(session,"ExploreAppendA",value=FALSE)
       
       if (debug) print("     effectChanged - exit")
     },priority=100)
@@ -1061,13 +1075,28 @@ inspectHistory<-c()
     })
     
 # PREDICTION & DESIGN & EVIDENCE
-    updatePrediction<-function(){
-      if (debug) print("     updatePrediction")
-      prediction<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
+    updateEffect<-function(type=0){
+      if (debug) print("     updateEffect")
+      if (is.null(type)) {
+        effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,
+                     Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
+                     populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA
+        )
+      } else {
+      if (switches$doWorlds) {
+      effect<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
                        Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
-                       populationPDF=input$World_distrP,populationPDFk=input$World_distr_kP,populationRZ=input$World_RZ,populationNullp=input$World_Nullp)
-      if (debug) print("     updatePrediction - exit")
-      prediction
+                       populationPDF=input$world_distr,populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,populationNullp=input$world_Nullp
+                       )
+      } else {
+        effect<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
+                         Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
+                         populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA
+        )
+      }
+      }
+      if (debug) print("     updateEffect - exit")
+      effect
     }
     
     updateDesign<-function(){
@@ -1089,10 +1118,14 @@ inspectHistory<-c()
     updateEvidence<-function(){
       if (debug) print("     updateEvidence")
       evidence<-list(rInteractionOn=input$rInteractionOn,
-                     showType=input$Effect_type,
+                     showType=input$EvidenceEffect_type,
                      ssqType=input$ssqType,llr=llr,
                      evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch,
                      dataType=input$dataType,analysisType=input$analysisType)
+      # if (graphicSource=="Modal") {
+      #   print("Evidence Modal")
+      #   evidence$showType<-input$LGEvidenceEffect_type
+      # }
       if (debug) print("     updateEvidence - exit")
       evidence
     }
@@ -1113,7 +1146,7 @@ inspectHistory<-c()
         hmm(paste0("Warning: ", DV$name," is a within-participants IV and cannot be used as a DV"))
       }
       }
-      effect<-updatePrediction()
+      effect<-updateEffect()
 
       PlotNULL<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.1,0,0,"cm"))+
         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
@@ -1147,7 +1180,7 @@ inspectHistory<-c()
 # world diagram
     output$WorldPlot<-renderPlot({
       doIt<-editVar$data
-      effect<-updatePrediction()
+      effect<-updateEffect()
       
       PlotNULL<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.1,0,0,"cm"))+
         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
@@ -1189,7 +1222,7 @@ inspectHistory<-c()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-        effect<-updatePrediction()
+        effect<-updateEffect()
 
         switch (no_ivs,
                 {
@@ -1202,8 +1235,6 @@ inspectHistory<-c()
                 effect3<-effect1
                 effect3$rIV<-effect3$rIVIV2
                 
-                  gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                   axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                   g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                     scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                     
@@ -1227,7 +1258,7 @@ inspectHistory<-c()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
         design<-updateDesign()
-        effect<-updatePrediction()
+        effect<-updateEffect()
         evidence<-updateEvidence()
 
         switch (no_ivs,
@@ -1238,8 +1269,6 @@ inspectHistory<-c()
                     effect2<-effect
                     effect2$rIV<-effect2$rIV2
                     
-                    gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                     axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                     g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                       scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                       
@@ -1253,8 +1282,6 @@ inspectHistory<-c()
                       effect2<-effect
                       effect2$rIV<-effect2$rIV2
                       
-                      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                         
@@ -1280,8 +1307,8 @@ inspectHistory<-c()
     
     # UI changes
     # go to the sample tabs 
-    sampleUpdate<-observeEvent(c(input$Single,input$newSample,input$hypothesisApply),{
-      if (any(c(input$Single,input$newSample))>0) {
+    sampleUpdate<-observeEvent(c(input$Single,input$EvidencenewSample,input$EvidenceHypothesisApply),{
+      if (any(c(input$Single,input$EvidencenewSample))>0) {
         if (!is.element(input$Graphs,c("Sample","Describe","Infer","Possible")))
         {updateTabsetPanel(session, "Graphs",
                            selected = "Sample")
@@ -1292,10 +1319,10 @@ inspectHistory<-c()
     }
     )
     
-    whichAnalysisSample<-observeEvent(input$newSample,{
+    whichAnalysisSample<-observeEvent(input$EvidencenewSample,{
       applyingAnalysis<<-FALSE
     },priority=100)
-    whichAnalysisApply<-observeEvent(input$hypothesisApply,{
+    whichAnalysisApply<-observeEvent(input$EvidenceHypothesisApply,{
       applyingAnalysis<<-TRUE
     },priority=100)
     
@@ -1329,23 +1356,25 @@ inspectHistory<-c()
     }
 
     # eventReactive wrapper
-    sampleAnalysis<-eventReactive(c(input$hypothesisApply,input$newSample),{
-      if (any(input$hypothesisApply,input$newSample)>0){
+    sampleAnalysis<-eventReactive(c(input$EvidenceHypothesisApply,input$EvidencenewSample,input$LGEvidencenewSample),{
+      if (any(input$EvidenceHypothesisApply,input$EvidencenewSample,input$LGEvidencenewSample)>0){
         validSample<<-TRUE
         IV<-updateIV()
         IV2<-updateIV2()
         DV<-updateDV()
         
-        effect<-updatePrediction()
+        effect<-updateEffect()
         design<-updateDesign()
         evidence<-updateEvidence()
         
+        showNotification("Sample: starting",id="counting",duration=Inf,closeButton=FALSE,type="message")
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
         # set the result into likelihood: populations
         if (!is.na(result$rIV)) {
+          updateNumericInput(session,"likelihoodPSampRho",value=result$rIV)
           updateNumericInput(session,"likelihoodSampRho",value=result$rIV)
-          updateNumericInput(session,"likelihoodSampRhoS",value=result$rIV)
         }
+        removeNotification(id = "counting")
         result
       }
     })
@@ -1353,7 +1382,7 @@ inspectHistory<-c()
         
     # SINGLE graphs
     # single sample graph
-    output$SamplePlot <- renderPlot({
+      makeSampleGraph <- function () {
       if (debug) print("SamplePlot")
       doIt<-editVar$data
 
@@ -1362,7 +1391,7 @@ inspectHistory<-c()
       DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       evidence<-updateEvidence()
 
@@ -1385,8 +1414,6 @@ inspectHistory<-c()
           result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, ivplot=result$iv2plot,dvplot=result$dvplot)
           result3<-list(IVs=result$IVs, DVs=result$IV2s, rIV=result$rIVIV2, ivplot=result$ivplot,dvplot=result$iv2plot)
           
-          gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                           axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
           ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
             scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
             
@@ -1395,10 +1422,14 @@ inspectHistory<-c()
             annotation_custom(grob=ggplotGrob(drawSample(IV,IV2,effect3,result3)+gridTheme),xmin=3,xmax=7,ymin=5,ymax=10)
         }
         )
-    })
-    
+    }
+      output$SamplePlot <- renderPlot({
+        doIt<-editVar$data
+        makeSampleGraph()
+      })
+      
     # single descriptive graph
-    output$DescriptivePlot <- renderPlot({
+    makeDescriptiveGraph <- function(){
       if (debug) print("DescriptivePlot")
       doIt<-editVar$data
       # doIt<-input$MVok
@@ -1407,14 +1438,14 @@ inspectHistory<-c()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
 
-        effect<-updatePrediction()
+        effect<-updateEffect()
         design<-updateDesign()
         evidence<-updateEvidence()
         
         # make the sample
         result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {
-          validate("Sample is empty")
+          # validate("Sample is empty")
           return(ggplot()+plotBlankTheme)
           }
         if (is.na(result$rIV)) {
@@ -1432,8 +1463,6 @@ inspectHistory<-c()
                     
                     result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, ivplot=result$iv2plot,dvplot=result$dvplot)
                     
-                    gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                     axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                     g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                       scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+
                       
@@ -1459,15 +1488,11 @@ inspectHistory<-c()
                         result2$IVs$vals<-result$iv[!use]
                         result2$DVs$vals<-result$dv[!use]
                         
-                        gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                         axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                         g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                           scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                         g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect1,design,result1)+gridTheme+ggtitle(paste0(IV2$name,">",format(median(result$iv2),digits=3)))),xmin=0.5,xmax=4.5,ymin=0,ymax=5)
                         g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect2,design,result2)+gridTheme+ggtitle(paste0(IV2$name,"<",format(median(result$iv2),digits=3)))),xmin=5.5,xmax=9.5,ymin=0,ymax=5)
                           } else {
-                            gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                             axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                             g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                               scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                             switch (IV2$ncats,
@@ -1509,8 +1534,6 @@ inspectHistory<-c()
                       
                       result2<-list(IVs=result$IV2s, DVs=result$DVs, rIV=result$rIV2, iv=result$iv, dv=result$dv, ivplot=result$iv2plot,dvplot=result$dvplot)
                       
-                      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
                       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
                         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
                       g<-g+annotation_custom(grob=ggplotGrob(drawDescription(IV,NULL,DV,effect,design,result)+gridTheme),xmin=0.5,xmax=4.5,ymin=0,ymax=5)
@@ -1521,10 +1544,15 @@ inspectHistory<-c()
                 }
         )
         g
-    })
-    
+    }
+   output$DescriptivePlot <- renderPlot({
+      doIt<-editVar$data
+      makeDescriptiveGraph()
+      })
+      
     # single inferential graph
-    output$InferentialPlot <- renderPlot({
+   makeInferentialGraph <- function() {
+     doit<-c(input$EvidenceInfer_type,input$LGEvidenceInfer_type)
       if (debug) print("InferentialPlot")
       doIt<-editVar$data
       llrConsts<-c(input$llr1,input$llr2)
@@ -1535,7 +1563,7 @@ inspectHistory<-c()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-        effect<-updatePrediction()
+        effect<-updateEffect()
         design<-updateDesign()
         evidence<-updateEvidence()
         
@@ -1548,49 +1576,32 @@ inspectHistory<-c()
         
         result$showType<-evidence$showType
         
-        gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                         axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
-        
         g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
           scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
         
-        switch (input$inferD,
-                "separate"={
-                  switch (input$Infer_type,
-                          "EffectSize"={
-                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"r")
-                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
-                          },
-                          "Power"= {
-                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"w")
-                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"nw")
-                          },
-                          "log(lr)"={
-                            g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lr)")
-                            g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
-                          }
-                  )
-                  g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
-                  g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
+        switch (input$EvidenceInfer_type,
+                "EffectSize"={
+                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"r")
+                  g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
                 },
-                "2D"={
-                  switch (input$Infer_type,
-                          "EffectSize"={
-                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"r","p")
-                          },
-                          "Power"= {
-                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","w")
-                          },
-                          "log(lr)"={
-                            g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,result,"p","log(lr)")
-                          }
-                  )
-                  g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
+                "Power"= {
+                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"w")
+                  g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"nw")
+                },
+                "log(lr)"={
+                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lr)")
+                  g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
                 }
         )
+        g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
+        g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
         return(g)
-    })
-    
+    }
+      output$InferentialPlot <- renderPlot({
+        doIt<-editVar$data
+        makeInferentialGraph()
+      })
+      
 # SINGLE reports    
     # single sample report
     output$SampleReport <- renderPlot({
@@ -1603,7 +1614,7 @@ inspectHistory<-c()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-        effect<-updatePrediction()
+        effect<-updateEffect()
         design<-updateDesign()
         
         result<-sampleAnalysis()        
@@ -1622,7 +1633,7 @@ inspectHistory<-c()
       DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       evidence<-updateEvidence()
       
@@ -1649,7 +1660,7 @@ inspectHistory<-c()
         DV<-updateDV()
         if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
         
-        effect<-updatePrediction()
+        effect<-updateEffect()
         design<-updateDesign()
         evidence<-updateEvidence()
         
@@ -1672,6 +1683,9 @@ inspectHistory<-c()
     # calculations
     # outputs (2 graphs and report)
 # 
+    showProgress<-TRUE
+    
+    # function to clear 
     resetExpected<-function(){
     expectedResult<<-list(result=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
                           nullresult=list(rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=c()),
@@ -1680,112 +1694,141 @@ inspectHistory<-c()
                           nsims=0,
                           running=FALSE)
     }
-
+    # and do it at the start
+    resetExpected()
+    
     # here's where we start a run
-    observeEvent(input$expectedRun,{
-      if (!input$expectedAppend) {
-        resetExpected()
-      } 
-      expectedResult$nsims<<-expectedResult$count+as.numeric(input$Expected_length)
-      expectedResult$running<<-TRUE
+    observeEvent(c(input$EvidenceExpectedRun,input$LGEvidenceExpectedRun),{
+      if (!input$EvidenceExpected_append) {resetExpected()} 
+      expectedResult$nsims<<-expectedResult$count+as.numeric(input$EvidenceExpected_length)
     })
     
-  showProgress<-TRUE
-  resetExpected()
-  
 # UI changes
     # go to the expected tabs 
-    expectedUpdate<-observeEvent(input$expectedRun,{
-      if (input$expectedRun>0) {
-        if (!is.element(input$Graphs,c("Possible"))) {
-          updateTabsetPanel(session, "Graphs",selected = "Expect")
-          updateTabsetPanel(session, "Reports",selected = "Expect")
-        }
+  expectedUpdate<-observeEvent(input$EvidenceExpectedRun,{
+    if (input$EvidenceExpectedRun>0) {
+        updateTabsetPanel(session, "Graphs",selected = "Expect")
+        updateTabsetPanel(session, "Reports",selected = "Expect")
       validExpected<<-TRUE
-      }
     }
-    ,priority=100
-    )
-    
+  }
+  ,priority=100
+  )
+  expectedLGUpdate<-observeEvent(input$LGEvidenceExpectedRun,{
+    if (input$LGEvidenceExpectedRun>0) {
+      validExpected<<-TRUE
+    }
+  }
+  ,priority=100
+  )
+  
 # set expected variable from UI
     updateExpected<-function(){
-      list(type=input$Expected_type,nsims=as.numeric(input$Expected_length),append=input$expectedAppend)
+        list(
+          type=input$EvidenceExpected_type,
+          Infer_2D=input$EvidenceInfer_2D,
+          nsims=as.numeric(input$EvidenceExpected_length),
+          append=input$EvidenceExpected_append
+          )
     }    
     
     
 # make this a stand-alone function to be called from observEvent
-    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected,nsim=1) {
+    doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected,result,nsim=1) {
       if (debug) {print("     doExpectedAnalysis - start")}
-      
-      if (nsim==expectedResult$nsims) {showProgress<-FALSE} else {showProgress<-TRUE}
-      if (showProgress) {showNotification(paste0(format(expectedResult$count),"/",format(expectedResult$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")}
-      append<-TRUE
-      expectedResult$result<<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,nsim,append,expectedResult$result,showProgress=!showProgress)
-      expectedResult$count<<-length(expectedResult$result$rIV)
-      if (expected$type=="NHSTErrors"){
-        effectNull<-effect
-        effectNull$rIV<-0
-        effectNull$rIV2<-0
-        effectNull$rIVIV2DV<-0
-        expectedResult$nullresult<<-multipleAnalysis(IV,IV2,DV,effectNull,design,evidence,nsim,append,expectedResult$nullresult,showProgress=!showProgress)
-        expectedResult$nullcount<<-length(expectedResult$nullresult$rIV)
-      }
-      if (expectedResult$count>=expectedResult$nsims) {
-        expectedResult$running<<-FALSE
-        if (showProgress) {removeNotification(id = "counting")}
-      }
+
+        append<-TRUE
+        result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,nsim,append,result,showProgress=!showProgress)
+        
       if (debug) {print("     doExpectedAnalysis - end")}
-      expectedResult
-      
+      result
     }
-    
+
 # Expected outputs
     # show expected result    
-    output$ExpectedPlot <- renderPlot({
-      doIt<-input$expectedRun
-      llrConsts<-c(input$llr1,input$llr2)
+    makeExpectedGraph <- function() {
+      doit<-c(input$EvidenceExpected_type,input$EvidenceInfer_2D,input$EvidenceEffect_type,
+              input$LGEvidenceExpected_type,input$LGEvidenceInfer_2D,input$LGEvidenceEffect_type,
+              input$world_distr,input$world_distr_rz,input$world_distr_k,input$world_Nullp,
+              input$LGEvidenceworld_distr,input$LGEvidenceworld_distr_rz,input$LGEvidenceworld_distr_k,input$LGEvidenceworld_Nullp,
+              input$EvidenceExpectedRun,input$LGEvidenceExpectedRun)
       
+      if (!validExpected) {return(ggplot()+plotBlankTheme)}
+      
+      llrConsts<-c(input$llr1,input$llr2)
+
+      IV<-updateIV()
+      IV2<-updateIV2()
+      DV<-updateDV()
+      
+      effect<-updateEffect()
+      design<-updateDesign()
+      evidence<-updateEvidence()
+      if (variablesHeld=="Data" && !applyingAnalysis && switches$doBootstrap) {design$sMethod<-"Resample"}
+      
+      expected<-updateExpected()
+
       if (debug) {print("ExpectedPlot1 - start")}
-      if (expectedResult$running) {
-        IV<-updateIV()
-        IV2<-updateIV2()
-        DV<-updateDV()
-        
-        effect<-updatePrediction()
-        design<-updateDesign()
-        evidence<-updateEvidence()
-        if (variablesHeld=="Data" && !applyingAnalysis && switches$doBootstrap) {design$sMethod<-"Resample"}
-        
-        expected<-updateExpected()
-        expectedResult$result$showType<<-input$Effect_type
-        # expectedResult$nsims<<-expected$nsims
-        
+      stopRunning<-TRUE
+        expectedResult$result$showType<<-input$EvidenceEffect_type
+
         if (input$showAnimation) {
-        ns<-max(round(expectedResult$count/5),2)
+          ns<-max(round(expectedResult$count/4),2)
+          ns<-min(ns,expectedResult$nsims-expectedResult$count)
         } else {
-        ns<-expectedResult$nsims-expectedResult$count
+          ns<-expectedResult$nsims-expectedResult$count
         }
-        if (expectedResult$count+ns>expectedResult$nsims) {ns<-expectedResult$nsims-expectedResult$count}
-        expectedResult<<-doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected,ns)
-        # if (debug) {print("ExpectedPlo1t - sims done ")}
+        if (ns>0) {
+          expected$doingNull<-FALSE
+          if (showProgress) {
+            if (expectedResult$count==0) {
+              showNotification("Expected: starting",id="counting",duration=Inf,closeButton=FALSE,type="message")
+            } else {
+              showNotification(paste0("Expected: ",format(expectedResult$count),"/",format(expectedResult$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
+            }
+          }
+          expectedResult$result<<-doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected,expectedResult$result,ns)
+        }
+        if (expectedResult$count<expectedResult$nsims) {
+          stopRunning<-FALSE
+        }
+      if (expected$type=="NHSTErrors" && expectedResult$nullcount<expectedResult$nsims) {
+        if (input$showAnimation) {
+          ns<-max(round(expectedResult$nullcount/4),2)
+          ns<-min(ns,expectedResult$nsims-expectedResult$nullcount)
+        } else {
+          ns<-expectedResult$nsims-expectedResult$nullcount
+        }
+        if (ns>0) {
+          expected$doingNull<-TRUE
+          if (showProgress) {
+            showNotification(paste0("Expected|Null: ",format(expectedResult$nullcount),"/",format(expectedResult$nsims)),id="counting",duration=Inf,closeButton=FALSE,type="message")
+          }
+          expectedResult$nullresult<<-doExpectedAnalysis(IV,IV2,DV,updateEffect(NULL),design,evidence,expected,expectedResult$nullresult,ns)
+        }
+        if (expectedResult$nullcount<expectedResult$nsims) {
+          stopRunning<-FALSE
+        }
+      }
+      # wind up
+      expectedResult$count<<-length(expectedResult$result$rIV)
+      expectedResult$nullcount<<-length(expectedResult$nullresult$rIV)
+
+      # ? stop running
+      if (stopRunning) {
+        if (showProgress) {removeNotification(id = "counting")}
+      } else {
+        invalidateLater(1)
       }
       
       if (expectedResult$count==0) { return(ggplot()+plotBlankTheme) }
-      
-      if (expectedResult$count<expectedResult$nsims) {
-        # if (debug) {print("ExpectedPlot1 - timer set ")}
-        invalidateLater(1)
-      } 
-      
-      gridTheme<-theme(plot.margin=margin(0,0,0,0,"cm"),
-                       axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
-      
+
       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))
       g<-g+scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
       
-      switch (input$inferD,
+      switch (expected$Infer_2D,
               "separate"={
-                switch (input$Expected_type,
+                switch (expected$type,
                         "EffectSize"={
                           g1<-r_plot(expectedResult$result,r=effect$rIV)
                           g2<-p_plot(expectedResult$result,r=effect$rIV)
@@ -1811,7 +1854,7 @@ inspectHistory<-c()
                 g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
               },
               "2D"={
-                switch (input$Expected_type,
+                switch (expected$type,
                         "EffectSize"={
                           g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"r","p")
                         },
@@ -1828,34 +1871,18 @@ inspectHistory<-c()
 
       if (debug) {print("ExpectedPlot1 - plots done ")}
       return(g)
-    })
+    }
 
-    # # second graph    
-    # output$ExpectedPlot2 <- renderPlot({
-    #   doIt<-input$expectedRun
-    #   if (debug) {print("ExpectedPlot2 - start")}
-    #   if (expectedResult$count<expectedResult$nsims) {
-    #     # if (debug) {print("ExpectedPlot2 - timer set ")}
-    #     invalidateLater(1)
-    #   } 
-    #   
-    #   if (expectedResult$count>1) {
-    #     switch (input$Expected_type,
-    #             "EffectSize"=g<-p_plot(expectedResult$result,r=effect$rIV,n=design$sN),
-    #             "Power"=     g<-nw_plot(expectedResult$result,r=effect$rIV,n=design$sN),
-    #             "NHSTErrors"=g<-e1_plot(expectedResult$result,r=effect$rIV,n=design$sN),
-    #             "CILimits"=  g<-ci2_plot(expectedResult$result,r=effect$rIV,n=design$sN)
-    #   )
-    #   } else {
-    #     g<-ggplot()+plotBlankTheme
-    #   }
-    #   if (debug) {print("ExpectedPlot2 - end")}
-    #   return(g)
-    # })
+    output$ExpectedPlot <- renderPlot({
+      doit<-c(input$EvidenceExpected_type,input$EvidenceInfer_2D,input$EvidenceEffect_type,
+              input$LGEvidenceExpected_type,input$LGEvidenceInfer_2D,input$LGEvidenceEffect_type,
+              input$EvidenceExpectedRun,input$LGEvidenceexpectedRun)
+      makeExpectedGraph()
+    })
     
     # expected report
     output$ExpectedReport <- renderPlot({
-      doIt<-input$expectedRun
+      doIt<-input$EvidenceExpectedRun
       llrConsts<-c(input$llr1,input$llr2)
       
       if (debug) {print("ExpectedReport - start")}
@@ -1867,15 +1894,15 @@ inspectHistory<-c()
       IV2<-updateIV2()
       DV<-updateDV()
 
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       evidence<-updateEvidence()
 
       expected<-updateExpected()
-      expectedResult$result$showType<-input$Effect_type
+      expectedResult$result$showType<-input$EvidenceEffect_type
 
       if (expectedResult$count>1) {
-        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,expectedResult$nullresult,input$Expected_type)
+        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,expectedResult$nullresult,expected$type)
       } else {
         g<-ggplot()+plotBlankTheme
       }
@@ -1890,54 +1917,39 @@ inspectHistory<-c()
     # set explore variable from UI
     # calculations
     # outputs (graph and report)
-# 
-    
-# local variable
+
+# local variables
     lastExplore<-c()
+    showProgress<-TRUE
     
-# UI interface    
-# go to the explore tabs 
-    observeEvent(c(input$exploreRunH,input$exploreRunD,input$exploreRunA),{
-      if (any(c(input$exploreRunH,input$exploreRunD,input$exploreRunA))>0)
-      {validExplore<<-TRUE}
-      
-      if (validExplore){
-        updateTabsetPanel(session, "Graphs",
-                          selected = "Explore")
-        updateTabsetPanel(session, "Reports",
-                          selected = "Explore")
+# main variable    
+    resetExplore<-function(){
+      exploreResult<<-list(result=list(rIVs=c(),pIVs=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nvals=c(),wIVs=c(),psig25=c(),psig=c(),psig75=c(),vals=c()),
+                           nullresult=list(rIVs=c(),pIVs=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nvals=c(),wIVs=c(),psig25=c(),psig=c(),psig75=c(),vals=c()),
+                           count=0,
+                           nullcount=0,
+                           nsims=0,
+                           Explore_show<-NA,
+                           Explore_typeShow<-NA)
+    }
+    resetExplore()
+    
+# UI changes
+    # go to the explore tabs 
+    # and set the explore run valid
+    observeEvent(c(input$exploreRunH,input$exploreRunD),{
+      if (any(c(input$exploreRunH,input$exploreRunD))>0) {
+        validExplore<<-TRUE
+        updateTabsetPanel(session, "Graphs",selected = "Explore")
+        updateTabsetPanel(session, "Reports",selected = "Explore")
       }
     },priority=100)
+    observeEvent(c(input$LGexploreRunH,input$LGexploreRunD),{
+      if (any(c(input$LGexploreRunH,input$LGexploreRunD)>0))
+      {validExplore<<-TRUE}
+    },priority=100)
     
-    # # set explore options    
-    # observeEvent(c(input$Explore_typeH,input$Explore_typeD,input$Explore_typeA),{
-    #   
-    #   if (is.element(input$Explore_typeH,c("EffectSize","EffectSize1","EffectSize2","Interaction","Covariation"))) {
-    #     shinyjs::showElement(id= "Explore_esRange")
-    #     shinyjs::showElement(id= "Explore_esRangeLabel")
-    #   } else {
-    #     shinyjs::hideElement(id= "Explore_esRange")
-    #     shinyjs::hideElement(id= "Explore_esRangeLabel")
-    #   }
-    #   
-    #   if (is.element(input$Explore_typeD,c("SampleSize","Dependence","Outliers","Heteroscedasticity","IVRange","DVRange"))) {
-    #     shinyjs::showElement(id= "Explore_nRange")
-    #     shinyjs::showElement(id= "Explore_nRangeLabel")
-    #     if (input$Explore_typeD=="SampleSize"){ 
-    #       updateNumericInput(session,"Explore_nRange",value=input$Explore_nRange2)
-    #     } else {
-    #       if (is.element(input$Explore_typeD,c("IVRange","DVRange"))) {
-    #         updateNumericInput(session,"Explore_nRange",value=3)
-    #       } else { updateNumericInput(session,"Explore_nRange",value=input$Explore_anomRange2) }
-    #     }
-    #   } else {
-    #     shinyjs::hideElement(id= "Explore_nRange")
-    #     shinyjs::hideElement(id= "Explore_nRangeLabel")
-    #   }
-    #   
-    #   validExplore<<-FALSE
-    # })
-    
+    # and watch for IV2 appearing
     observeEvent(input$IV2choice,{
       if (input$IV2choice=="none") {
         updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2)
@@ -1947,142 +1959,164 @@ inspectHistory<-c()
       }
     })
     
+# here's where we start a run
+    observeEvent(c(input$exploreRunH,input$exploreRunD,input$exploreRunA,
+                   input$LGexploreRunH,input$LGexploreRunD),
+                   {
+                     switch (input$ExploreTab,
+                             "Hypothesis"={
+                               if (!input$ExploreAppendH) {resetExplore()}
+                               exploreResult$nsims<<-exploreResult$count+as.numeric(input$Explore_lengthH)
+                               },
+                             "Design"={
+                               if (!input$ExploreAppendD) {resetExplore()}
+                               exploreResult$nsims<<-exploreResult$count+as.numeric(input$Explore_lengthD)
+                             }
+                     )
+    },priority=100)
+    
+    
 # set explore variable from UI    
     # update explore values    
     updateExplore<-function(){
-      if (!is.element(input$ExploreTab,c("Hypothesis","Design","Anomalies"))) {
-        return(lastExplore)
-      }
-      switch (input$ExploreTab,
-              "Hypothesis"={
-                l<-list(Explore_type=input$Explore_typeH,
-                        Explore_show=input$Explore_showH, 
-                        Explore_typeShow=input$Explore_typeShowH, 
-                        Explore_whichShow=input$Explore_whichShowH, 
-                        Explore_length=as.numeric(input$Explore_lengthH),
-                        Append=input$exploreAppendH)  
-              },
-              "Design"={
-                l<-list(Explore_type=input$Explore_typeD,
-                        Explore_show=input$Explore_showD, 
-                        Explore_typeShow=input$Explore_typeShowD, 
-                        Explore_whichShow=input$Explore_whichShowD, 
-                        Explore_length=as.numeric(input$Explore_lengthD),
-                        Append=input$exploreAppendD)  
-              },
-              "Anomalies"={
-                l<-list(Explore_type=input$Explore_typeA,
-                        Explore_show=input$Explore_showA, 
-                        Explore_typeShow=input$Explore_typeShowA, 
-                        Explore_whichShow=input$Explore_whichShowA, 
-                        Explore_length=as.numeric(input$Explore_lengthA),
-                        Append=input$exploreAppendA)  
-              }
-      )
-      
-      explore<-c(l,list(Explore_npoints=input$Explore_npoints,Explore_quants=input$Explore_quants,
-                        Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_esRange,
-                        full_ylim=input$full_ylim,
-                        Explore_family=input$ExploreTab))
-      if (is.element(explore$Explore_type,c("IV","IV2","DV")))
-      {explore$Explore_type<-paste(explore$Explore_type,input$Explore_VtypeH,sep="")}
-      
-      lastExplore<<-explore
-      explore
-      
+        explore<-lastExplore
+        switch (input$ExploreTab,
+                "Hypothesis"={
+                  l<-list(Explore_type=input$Explore_typeH,
+                          Explore_show=input$Explore_showH, 
+                          Explore_typeShow=input$Explore_typeShowH, 
+                          Explore_whichShow=input$Explore_whichShowH, 
+                          Explore_length=as.numeric(input$Explore_lengthH),
+                          Append=input$ExploreAppendH)  
+                },
+                "Design"={
+                  l<-list(Explore_type=input$Explore_typeD,
+                          Explore_show=input$Explore_showD, 
+                          Explore_typeShow=input$Explore_typeShowD, 
+                          Explore_whichShow=input$Explore_whichShowD, 
+                          Explore_length=as.numeric(input$Explore_lengthD),
+                          Append=input$ExploreAppendD)  
+                }
+        )
+        explore<-c(l,list(Explore_npoints=input$Explore_npoints,Explore_xlog = input$Explore_xlog,Explore_quants=input$Explore_quants,
+                          Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_anomRange,
+                          ExploreFull_ylim=input$ExploreFull_ylim,
+                          Explore_family=input$ExploreTab))
+        
+        if (is.element(explore$Explore_type,c("IV","IV2","DV"))) {
+          explore$Explore_type<-paste(explore$Explore_type,input$Explore_VtypeH,sep="")
+          }
+        lastExplore<<-explore
+        explore
     } 
     
 # Main calculations    
-    exploreAnalysis<-eventReactive(c(input$exploreRunH,input$exploreRunD,input$exploreRunA),{
-      if (!any(c(input$exploreRunH,input$exploreRunD,input$exploreRunA)>0))
-      {return(ggplot()+plotBlankTheme)}
+    doExploreAnalysis <- function(IV,IV2,DV,effect,design,evidence,explore,result,nsim=1,doingNull=FALSE) {
+      if (debug) {print("     doExploreAnalysis - start")}
       
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      explore<-updateExplore()
-      explore$doNull<-FALSE
-      
-      ex<-exploreSimulate(IV,IV2,DV,effect,design,evidence,explore)
-      ex$null<-exploreNullAnalysis()
-      ex$Explore_show<-explore$Explore_show
-      ex$Explore_typeShow<-explore$Explore_typeShow
-      
-      ex      
-    })
-   # null hypothesis version 
-     # keep this separate so that it alone can be called whe switching to NHST
-   exploreNullAnalysis<-eventReactive(c(input$exploreRunH,input$exploreRunD,input$exploreRunA,
-                                         input$Explore_showH,input$Explore_showD,input$Explore_showA),{
-      if (any(c(input$Explore_showH=="NHSTErrors" && input$ExploreTab=="Hypothesis",
-                input$Explore_showD=="NHSTErrors" && input$ExploreTab=="Design",
-                input$Explore_showA=="NHSTErrors" && input$ExploreTab=="Anomalies")
-              )
-          ){
-
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      explore<-updateExplore()
-      explore$doNull<-TRUE
-      
-      exploreSimulate(IV,IV2,DV,effect,design,evidence,explore)
-      } else{
-        NULL
+      if (is.null(result$rIVs) || nrow(result$rIVs)<exploreResult$nsims) {
+      if (nsim==exploreResult$nsims) {showProgress<-FALSE} else {showProgress<-TRUE}
+        result$nsims<-exploreResult$nsims
+      result<-exploreSimulate(IV,IV2,DV,effect,design,evidence,explore,result,nsim,doingNull)
       }
-    })
-
-# Explore outputs
+      result
+    }
+      
+    
+   # Explore outputs
    # show explore analysis        
-    output$ExplorePlot <- renderPlot({
+   makeExploreGraph <- function() {
+     doit<-c(input$Explore_showH,input$Explore_showD,input$LGExplore_showH,input$LGExplore_showD)
+     
+     IV<-updateIV()
+     IV2<-updateIV2()
+     DV<-updateDV()
+
+     if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
+     
+     effect<-updateEffect()
+     design<-updateDesign()
+     evidence<-updateEvidence()
+     
+     # this guarantees that we update without recalculating if possible
+     explore<-updateExplore()
+     
+     stopRunning<-TRUE
+     expectedResult$result$showType<<-input$EvidenceEffect_type
+     
+     if (input$showAnimation) {
+       ns<-2
+       if (exploreResult$count>=10) ns<-5
+       if (exploreResult$count>=50) ns<-10
+       if (exploreResult$count>=100) ns<-25
+       if (exploreResult$count>=500) ns<-100
+       ns<-min(ns,exploreResult$nsims-exploreResult$count)
+     } else {
+       ns<-exploreResult$nsims-exploreResult$count
+     }
+     showNotification(paste0("Explore ",explore$Explore_family," : starting"),id="counting",duration=Inf,closeButton=FALSE,type="message")
+     exploreResult$result<<-doExploreAnalysis(IV,IV2,DV,effect,design,evidence,explore,exploreResult$result,ns,doingNull=FALSE)
+     exploreResult$count<<-nrow(exploreResult$result$rIVs)
+     if (exploreResult$count<exploreResult$nsims) {
+       stopRunning<-FALSE
+     }
+     
+     if (explore$Explore_show=="NHSTErrors") {
+       if (input$showAnimation) {
+         ns<-2
+         if (exploreResult$count>=10) ns<-5
+         if (exploreResult$count>=50) ns<-10
+         if (exploreResult$count>=100) ns<-25
+         if (exploreResult$count>=500) ns<-100
+         ns<-min(ns,exploreResult$nsims-exploreResult$nullcount)
+       } else {
+         ns<-exploreResult$nsims-exploreResult$nullcount
+       }
+       exploreResult$nullresult<<-doExploreAnalysis(IV,IV2,DV,updateEffect(NULL),design,evidence,explore,exploreResult$nullresult,ns,doingNull=TRUE)
+       exploreResult$nullcount<<-nrow(exploreResult$nullresult$rIVs)
+       if (exploreResult$nullcount<exploreResult$nsims) {
+         stopRunning<-FALSE
+       }
+     } else{
+       exploreResult$nullresult<<-NULL
+     }
+     exploreResult$Explore_show<<-explore$Explore_show
+     exploreResult$Explore_typeShow<<-explore$Explore_typeShow
+     
+     exploreResultHold<<-exploreResult
+     if (!stopRunning) {
+       invalidateLater(1)
+     }
+     
+     drawExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
+   }
+
+    output$ExplorePlot <- renderPlot( {
       doIt<-c(input$exploreRunH,input$exploreRunD,input$exploreRunA)
-      
-      IV<-updateIV()
-      IV2<-updateIV2()
-      DV<-updateDV()
-      if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
-
-      effect<-updatePrediction()
-      design<-updateDesign()
-      evidence<-updateEvidence()
-      
-      # this guarantees that we update without recalculating if possible
-      explore<-updateExplore()
-      exploreResult<-exploreAnalysis()
-      if (explore$Explore_family!=exploreResult$Explore_family) {return(ggplot()+plotBlankTheme)}
-
-      if (explore$Explore_show=="NHSTErrors"){
-        exploreResult$null<-exploreNullAnalysis()
-      } 
-      drawExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
-
+      makeExploreGraph()
     })
+    
     
     # report explore analysis        
     output$ExploreReport <- renderPlot({
       doIt<-c(input$exploreRunH,input$exploreRunD,input$exploreRunA)
+      if (exploreResult$count<exploreResult$nsims) {
+        invalidateLater(1)
+      } 
+      
       IV<-updateIV()
       IV2<-updateIV2()
       DV<-updateDV()
 
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       evidence<-updateEvidence()
       
       explore<-updateExplore()
       
       if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
-      exploreResult<-exploreAnalysis()
       
-      reportExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
+      reportExplore(Iv,IV2,DV,effect,design,explore,exploreResult$result)
     })
 
 ##################################################################################    
@@ -2103,61 +2137,146 @@ inspectHistory<-c()
                           selected = "Possible")
         updateTabsetPanel(session, "Reports",
                           selected = "Possible")
+        showPossible<<-input$Likelihood
       }
       
     },priority=100)
     
+    # update samples from populations and vice versa
+    # we check to make sure that we are only copying from the current tab to the hidden one
+    observeEvent(c(input$likelihoodPSampRho),
+                 {
+                   if (input$Likelihood=="Populations") {
+                     updateNumericInput(session,"likelihoodSampRho",value=input$likelihoodPSampRho)
+                   }
+                 })
+    observeEvent(c(input$likelihoodSampRho),
+                 {
+                   if (input$Likelihood=="Samples") {
+                     updateNumericInput(session,"likelihoodPSampRho",value=input$likelihoodSampRho)
+                   }
+                 })
+    
+    
+        
 # set likelihood variable from UI 
     updateLikelihood<-function(){
       IV<-updateIV()
       DV<-updateDV()
-      effect<-updatePrediction()
+      effect<-updateEffect()
       
-      switch (input$Likelihood,
-              "Populations"={
-                list(type=input$Likelihood,
-                     populationDist=paste0(input$likelihood_distrP,'_',input$likelihood_RZ), populationDistK=input$likelihood_distr_kP,
-                     likelihoodNullp=input$likelihoodNullp,
-                     sampleES=input$likelihoodSampRho,populationES=effect$rIV,sampleN=input$sN,
-                     showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendP,
-                     Likelihood_length=as.numeric(input$likelihood_lengthP)
+      if (graphicSource=="Modal") {
+                switch (input$LGshowPossible,
+                        "Populations"={
+                          likelihood<-
+                            list(type=input$LGshowPossible,
+                               priorDist=paste0(input$LGlikelihoodPrior_distr,'_',input$LGlikelihoodPrior_distr_rz), priorDistK=input$LGlikelihoodPrior_distr_k,
+                               priorNullp=input$LGlikelihoodPrior_Nullp,likelihoodUsePrior=input$LGlikelihoodUsePrior,
+                               sampleES=input$LGlikelihoodSampRho,populationES=effect$rIV,sampleN=input$sN,
+                               showTheory=input$LGlikelihoodTheory,longHandLikelihood=input$LGlongHandLikelihood,likelihoodSimSlice=input$LGlikelihoodSimSlice,likelihoodCorrection=input$LGlikelihoodCorrection,
+                               appendSim=input$LGlikelihoodP_append,Likelihood_length=as.numeric(input$LGlikelihoodP_length),
+                               view=input$LGlikelihoodView,azimuth=input$LGlikelihoodAzimuth,elevation=input$LGlikelihoodElevation,range=input$LGlikelihoodRange
+                          )
+                        },
+                        "Samples"={
+                          likelihood<-
+                            list(type=input$LGshowPossible,
+                               priorDist=paste0(input$LGlikelihoodPrior_distr,'_',input$LGlikelihoodPrior_distr_rz), priorDistK=input$LGlikelihoodPrior_distr_k,
+                               world_Nullp=input$LGlikelihoodPrior_Nullp,
+                               sampleES=input$LGlikelihoodSampRho,cutaway=input$LGlikelihood_cutaway,populationES=effect$rIV,sampleN=input$sN,
+                               showTheory=input$LGlikelihoodTheory,longHandLikelihood=input$LGlongHandLikelihood,likelihoodSimSlice=input$LGlikelihoodSimSlice,likelihoodCorrection=input$LGlikelihoodCorrection,
+                               appendSim=input$LGlikelihood_append,Likelihood_length=as.numeric(input$LGlikelihood_length),
+                               view=input$LGlikelihoodView,azimuth=input$LGlikelihoodAzimuth,elevation=input$LGlikelihoodElevation,range=input$LGlikelihoodRange
+                          )
+                        }
                 )
-              },
-              "Samples"={
-                list(type=input$Likelihood,
-                     populationDist=input$likelihood_distrP, populationDistK=input$likelihood_distr_kP,
-                     likelihoodNullp=input$likelihoodNullp,
-                     sampleES=input$likelihoodSampRhoS,populationES=input$likelihoodPopRho,sampleN=input$sN,
-                     showTheory=input$likelihoodTheory,appendSim=input$likelihoodAppendS,
-                     Likelihood_length=as.numeric(input$likelihood_lengthS)
+              } else {
+                switch (showPossible,
+                        "Populations"={
+                          likelihood<-
+                            list(type=showPossible,
+                               priorDist=paste0(input$likelihoodPrior_distr,'_',input$likelihoodPrior_distr_rz), priorDistK=input$likelihoodPrior_distr_k,
+                               priorNullp=input$likelihoodPrior_Nullp,likelihoodUsePrior=input$likelihoodUsePrior,
+                               sampleES=input$likelihoodPSampRho,populationES=effect$rIV,sampleN=input$sN,
+                               showTheory=input$likelihoodTheory,longHandLikelihood=input$longHandLikelihood,likelihoodSimSlice=input$likelihoodSimSlice,likelihoodCorrection=input$likelihoodCorrection,
+                               appendSim=input$likelihoodP_append,Likelihood_length=as.numeric(input$likelihoodP_length),
+                               view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
+                          )
+                        },
+                        "Samples"={
+                          likelihood<-
+                            list(type=showPossible,
+                               priorDist=paste0(input$likelihoodPrior_distr,'_',input$likelihoodPrior_distr_rz), priorDistK=input$likelihoodPrior_distr_k,
+                               priorNullp=input$likelihoodPrior_Nullp,
+                               sampleES=input$likelihoodSampRho,cutaway=input$likelihood_cutaway,populationES=effect$rIV,sampleN=input$sN,
+                               showTheory=input$likelihoodTheory,longHandLikelihood=input$longHandLikelihood,likelihoodSimSlice=input$likelihoodSimSlice,likelihoodCorrection=input$likelihoodCorrection,
+                               appendSim=input$likelihood_append,Likelihood_length=as.numeric(input$likelihood_length),
+                               view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange
+                          )
+                        }
                 )
               }
-      )
-    } 
+      likelihood
+    }
     
 # main likelihood calcuations    
-    likelihoodAnalysis<-eventReactive(c(input$likelihoodRunS,input$likelihoodRunP,
-                                        input$likelihoodNullp,
-                                        input$likelihoodPopRho,
-                                        input$likelihoodSampRho,
-                                        input$newSample,input$expectedRun,
-                                        input$likelihood_distrP,input$likelihood_distr_kP,input$Population_distrS,input$Population_distr_kS),{
-
+    likelihoodReset<-observeEvent(c(input$likelihoodPrior_Nullp,input$likelihoodSampRho,
+                                        input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,input$likelihoodUsePrior,
+                                        input$sN,
+                                        input$longHandLikelihood,
+                                        input$LGlikelihoodPrior_Nullp,input$LGlikelihoodSampRho,
+                                        input$LGlikelihoodPrior_distr,input$LGlikelihoodPrior_distr_rz,input$LGlikelihoodPrior_distr_k,input$LGlikelihoodUsePrior,
+                                        input$LGlikelihoodsN,
+                                        input$LGlongHandLikelihood
+    ),{
+      likelihood_P_ResultHold<<-c()
+      likelihood_S_ResultHold<<-c()
+  })
+      
+    likelihoodAnalysis<-eventReactive(c(input$Likelihood,
+                                        input$likelihood_run,input$likelihoodP_run,
+                                        input$likelihoodPrior_Nullp,input$likelihoodPSampRho,
+                                        input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,input$likelihoodUsePrior,
+                                        input$sN,
+                                        input$likelihoodTheory,
+                                        input$longHandLikelihood,input$likelihoodSimSlice,input$likelihoodCorrection,
+                                        input$LGshowPossible,
+                                        input$LGlikelihood_run,input$LGlikelihoodP_run,
+                                        input$LGlikelihoodPrior_Nullp,input$LGlikelihoodSampRho,
+                                        input$LGlikelihoodPrior_distr,input$LGlikelihoodPrior_distr_rz,input$LGlikelihoodPrior_distr_k,input$LGlikelihoodUsePrior,
+                                        input$LGlikelihoodsN,
+                                        input$LGlikelihoodTheory,
+                                        input$LGlongHandLikelihood,input$LGlikelihoodSimSlice,input$LGlikelihoodCorrection,
+                                        input$EvidencenewSample,input$EvidenceExpectedRun
+                                        ),{
+        if (graphicSource=="None") {return(likelihoodResult)}
+                                          
+        req(input$changed)
+        
+        if (is.element(input$changed,c("likelihood_run","likelihoodP_run","world_Nullp","likelihoodPSampRho",
+                                       "world_distr","world_distr_rz","world_distr_k",
+                                       "likelihoodTheory","LGlikelihoodSimSlice","LGlikelihoodCorrection","sN")))
+        {graphicSource<<-"Main"}
+        if (is.element(input$changed,c("LGshowPossible",
+                                       "LGlikelihood_run","LGlikelihood_run","LGlikelihoodPrior_Nullp","LGlikelihoodSampRho",
+                                       "LGlikelihoodPrior_distr","LGlikelihoodPrior_distr_rz","LGlikelihoodPrior_distr_k",
+                                       "LGlikelihoodTheory","LGlikelihoodSimSlice","LGlikelihoodCorrection","LGlikelihoodsN")))
+        {graphicSource<<-"Modal"}
         IV<-updateIV()
         DV<-updateDV()
-        
-        effect<-updatePrediction()
+
+        effect<-updateEffect()
         design<-updateDesign()
         evidence<-updateEvidence()
         
         likelihood<-updateLikelihood()
-        likelihood$type<-input$Likelihood
 
-        if (input$likelihoodRunS+input$likelihoodRunP>validLikelihood){
-          validLikelihood<<-input$likelihoodRunS+input$likelihoodRunP
-          likelihoodRes<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = TRUE)
+        if ((input$likelihood_run+input$likelihoodP_run+input$LGlikelihood_run+input$LGlikelihoodP_run>validLikelihood)){
+          showNotification(paste0("Possible ",likelihood$type," : starting"),id="counting",duration=Inf,closeButton=FALSE,type="message")
+          validLikelihood<<-validLikelihood+1
+          likelihoodRes<-likelihood_run(IV,DV,effect,design,evidence,likelihood,doSample = TRUE)
         } else {
-          likelihoodRes<-likelihoodRun(IV,DV,effect,design,evidence,likelihood,doSample = FALSE)
+          likelihoodRes<-likelihood_run(IV,DV,effect,design,evidence,likelihood,doSample = FALSE)
         }
         
         switch (likelihood$type,
@@ -2165,39 +2284,41 @@ inspectHistory<-c()
                 "Populations"={likelihoodResult$populations<<-likelihoodRes}
                 )
         likelihoodResult
-    })
+    }
+    )
     
-# likelihood outputs    
-    # show likelihood analysis        
-    output$LikelihoodPlot <- renderPlot({
-      if (!is.element(input$Likelihood,c("Samples","Populations"))) {return(ggplot()+plotBlankTheme)}
+    makeLikelihoodGraph<-function(){
+      if (!is.element(showPossible,c("Samples","Populations"))) {return(ggplot()+plotBlankTheme)}
       IV<-updateIV()
       DV<-updateDV()
       if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
       
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       
       # this guarantees that we update without recalculating if possible
       likelihood<-updateLikelihood()
       likelihoodResult<-likelihoodAnalysis()
-
-      likelihood$view<-input$LikelihoodView
-      likelihood$azimuth<-input$LikelihoodAzimuth
-      likelihood$elevation<-input$LikelihoodElevation
-      likelihood$range<-input$LikelihoodRange
-      drawLikelihood(Iv,DV,effect,design,likelihood,likelihoodResult)
       
+      drawLikelihood(Iv,DV,effect,design,likelihood,likelihoodResult)
+    }
+
+# likelihood outputs    
+    # show likelihood analysis        
+    output$LikelihoodPlot <- renderPlot( {
+      LKtype<-input$Likelihood
+      par(cex=1.2)
+      makeLikelihoodGraph()
     })
     
     # report likelihood analysis        
     output$LikelihoodReport <- renderPlot({
-      if (!is.element(input$Likelihood,c("Samples","Populations"))) {return(ggplot()+plotBlankTheme)}
+      if (!is.element(showPossible,c("Samples","Populations"))) {return(ggplot()+plotBlankTheme)}
       IV<-updateIV()
       DV<-updateDV()
       if (is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
       
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       
       likelihood<-updateLikelihood()
@@ -2330,7 +2451,7 @@ inspectHistory<-c()
       IV2<-updateIV2()
       DV<-updateDV()
       
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       
       data1<-addList(IV,"IV")
@@ -2352,7 +2473,7 @@ inspectHistory<-c()
       IV2<-updateIV2()
       DV<-updateDV()
       
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       
       data1<-addList(IV,"IV")
@@ -2394,7 +2515,7 @@ inspectHistory<-c()
       IV2<-updateIV2()
       DV<-updateDV()
       
-      effect<-updatePrediction()
+      effect<-updateEffect()
       design<-updateDesign()
       evidence<-updateEvidence()
       runBatchFiles(IV,IV2,DV,effect,design,evidence,input)

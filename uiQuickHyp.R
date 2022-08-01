@@ -3,7 +3,7 @@ quickHypotheses<-
   tags$table(width = "100%",class="myTable",
              tags$tr(
                tags$td(width = "45%",
-                       tags$div(style = localStyle, "Hypothesis:")
+                       tags$div(style = localPlainStyle, "Hypothesis:")
                ),
                tags$td(width = "30%",
                        selectInput("Hypchoice", label = NULL,
@@ -16,12 +16,11 @@ quickHypotheses<-
                                    selected="ee",
                                    selectize=FALSE)
                ),
-               tags$td(width = "25%", tags$div(style = localStyle, " ")
-               )
+               tags$td(width = "25%")
              ),
              tags$tr(
                tags$td(width = "45%",
-                       tags$div(style = localStyle, "Presets:")
+                       tags$div(style = localPlainStyle, "Presets:")
                        ),
                tags$td(width = "30%", 
                                         selectInput("Effectchoice", label = NULL,
@@ -30,8 +29,7 @@ quickHypotheses<-
                                                     selected="none",
                                                     selectize=FALSE)
                        ),
-               tags$td(width = "25%", tags$div(style = localStyle, " ")
-               )
+               tags$td(width = "25%")
              )
   )
 } else {
