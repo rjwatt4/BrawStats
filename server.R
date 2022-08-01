@@ -114,6 +114,15 @@ shinyServer(function(input, output, session) {
   }
   )
   
+  observeEvent(input$sN, {
+    n<-input$sN
+    if (n<1) {
+      n<-rw2n(input$rIV,n)
+      updateNumericInput(session,"sN",value=n)
+    }
+  }
+  )
+  
 ####################################
 # generic warning dialogue
   
