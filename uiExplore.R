@@ -69,7 +69,8 @@ designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                     "IV Range" = "IVRange",
                                     "DV Range" = "DVRange"),
                    "Replication"=list("SigOnly"="SigOnly",
-                                      "Power"="Power")
+                                      "Power"="Power",
+                                      "Repeats" = "Repeats")
 )
 } else {
   designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
@@ -205,11 +206,19 @@ ExploreTab <-
                                                 tags$td(width = "10%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
                                                                          tags$div(style = localStyle, "log")
-                                                                         )),
+                                                        )),
                                                 tags$td(width = "10%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
                                                                          checkboxInput("Explore_xlog",label="",value=FALSE)
-                                                                         )),
+                                                        )),
+                                                tags$td(width = "15%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SomeRepeats'",
+                                                                         tags$div(style = localStyle, "range:")
+                                                        )),
+                                                tags$td(width = "10%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SomeRepeats'",
+                                                                         numericInput("Explore_nrRange",label=NULL,value=7,min=1,step=1)
+                                                        )),
                                               ),
                                               tags$tr(
                                                 tags$td(width = "10%", tags$div(style = localStyle, "Show:")),

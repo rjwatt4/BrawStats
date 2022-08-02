@@ -1114,7 +1114,7 @@ inspectHistory<-c()
       design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
                    sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering,
-                   sReplicationOn=input$sReplicationOn,sReplPower=input$sReplPower,sReplSigOnly=input$sReplSigOnly,
+                   sReplicationOn=input$sReplicationOn,sReplPower=input$sReplPower,sReplSigOnly=input$sReplSigOnly,sReplRepeats=input$sReplRepeats,
                    sN_Strata=input$sN_Strata, sR_Strata=input$sR_Strata,
                    sNClu_Cluster=input$sNClu_Cluster, sRClu_Cluster=input$sRClu_Cluster,
                    sNClu_Convenience=input$sNClu_Convenience, sRClu_Convenience=input$sRClu_Convenience, sNCont_Convenience=input$sNCont_Convenience, sRCont_Convenience=input$sRCont_Convenience, sRSpread_Convenience=input$sRSpread_Convenience,
@@ -1358,9 +1358,15 @@ inspectHistory<-c()
       if (is.null(sample)) return(NULL)
       result<-analyseSample(IV,IV2,DV,design,evidence,sample)
       if (!isempty(input$sReplicationOn) && !is.na(input$sReplicationOn) && input$sReplicationOn) {
-        design$sN<-rw2n(result$rIV,input$sReplPower)
-        sample<-makeSample(IV,IV2,DV,effect,design)
-        result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+        while (design$sReplSigOnly && result$pIV>alpha) {
+          sample<-makeSample(IV,IV2,DV,effect,design)
+          result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+        }
+        for (i in 1:design$sReplRepeats) {
+          design$sN<-rw2n(result$rIV,input$sReplPower)
+          sample<-makeSample(IV,IV2,DV,effect,design)
+          result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+        }
       }
       result
     }
@@ -2012,7 +2018,7 @@ inspectHistory<-c()
                 }
         )
         explore<-c(l,list(Explore_npoints=input$Explore_npoints,Explore_xlog = input$Explore_xlog,Explore_quants=input$Explore_quants,
-                          Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_anomRange,
+                          Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_anomRange,Explore_nrRange=input$Explore_nrRange,
                           ExploreFull_ylim=input$ExploreFull_ylim,
                           Explore_family=input$ExploreTab))
         
@@ -2079,10 +2085,10 @@ inspectHistory<-c()
      if (explore$Explore_show=="NHSTErrors") {
        if (input$showAnimation) {
          ns<-2
-         if (exploreResult$count>=10) ns<-5
-         if (exploreResult$count>=50) ns<-10
-         if (exploreResult$count>=100) ns<-25
-         if (exploreResult$count>=500) ns<-100
+         if (exploreResult$nullcount>=10) ns<-5
+         if (exploreResult$nullcount>=50) ns<-10
+         if (exploreResult$nullcount>=100) ns<-25
+         if (exploreResult$nullcount>=500) ns<-100
          ns<-min(ns,exploreResult$nsims-exploreResult$nullcount)
        } else {
          ns<-exploreResult$nsims-exploreResult$nullcount
@@ -2131,7 +2137,7 @@ inspectHistory<-c()
       
       if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
       
-      reportExplore(Iv,IV2,DV,effect,design,explore,exploreResult$result)
+      reportExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
     })
 
 ##################################################################################    

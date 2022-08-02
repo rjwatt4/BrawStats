@@ -80,7 +80,8 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
           "DVRange"={vals<-seq(3,0.5,length.out=npoints)},
           
           "SigOnly"={vals<-c("Yes","No")},
-          "Power"={vals<-seq(0.1,0.9,length.out=npoints)}
+          "Power"={vals<-seq(0.1,0.9,length.out=npoints)},
+          "Repeats" ={vals<-seq(1,explore$Explore_nrRange,length.out=explore$Explore_nrRange)}
   )
 
 
@@ -370,6 +371,9 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             },
             "Power"={
             design$sReplPower<-vals[i]
+            },
+            "Repeats"={
+              design$sReplRepeats<-vals[i]
             }
     )
 

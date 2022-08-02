@@ -208,24 +208,26 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
 
     # Replication?
     if (!isempty(design$sReplicationOn) && !is.na(design$sReplicationOn) && design$sReplicationOn) {
-      while (design$sReplSigOnly && res$pIV>alpha) {
-        sample<-makeSample(IV,IV2,DV,effect,design)
-        res<-analyseSample(IV,IV2,DV,design,evidence,sample)
-      }
-      # note that we do the replication with a one-tailed set up
-      rSign<-sign(res$rIV)
-      effect1<-effect
-      design1<-design
-      design1$sN<-rw2n(res$rIV,design$sReplPower,1)
-      effect1$rIV<-sample$effectRho
-      effect1$populationPDF<-"Single"
-      sample<-makeSample(IV,IV2,DV,effect1,design1)
-      res<-analyseSample(IV,IV2,DV,design1,evidence,sample)
-      if (sign(res$rIV)==rSign) {
-      res$pIV<-res$pIV/2
-      } else {
-        res$pIV<-1
-      }
+        while (design$sReplSigOnly && res$pIV>alpha) {
+          sample<-makeSample(IV,IV2,DV,effect,design)
+          res<-analyseSample(IV,IV2,DV,design,evidence,sample)
+        }
+        # note that we do the replication with a one-tailed set up
+        rSign<-sign(res$rIV)
+        effect1<-effect
+        design1<-design
+        for (i in 1:design$sReplRepeats) {
+          design1$sN<-rw2n(res$rIV,design$sReplPower,1)
+          effect1$rIV<-sample$effectRho
+          effect1$populationPDF<-"Single"
+          sample<-makeSample(IV,IV2,DV,effect1,design1)
+          res<-analyseSample(IV,IV2,DV,design1,evidence,sample)
+          if (sign(res$rIV)==rSign) {
+            res$pIV<-res$pIV/2
+          } else {
+            res$pIV<-1
+          }
+        }
     }
     
     if (is.na(res$rIV)) {
