@@ -399,7 +399,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="yellow", linetype="dotted")
     }
     
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="SampleSize"){
+    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="SampleSize" && effect$populationPDF=="Single"){
       w<-y50
       n<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -493,7 +493,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
   }
   if ((explore$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
-    g<-g+scale_x_log10()
+    g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
   }
   
   if (explore$ExploreFull_ylim){

@@ -123,6 +123,12 @@ shinyServer(function(input, output, session) {
   }
   )
   
+  observeEvent(input$Hypothesis,{
+    if (input$Hypothesis=="World") {
+      updateTabsetPanel(session,"HypothesisDiagram",selected = "World")
+    }
+  })
+  
 ####################################
 # generic warning dialogue
   
@@ -1203,18 +1209,17 @@ inspectHistory<-c()
                 y<-r*0
                 use=which.min(abs(x-effect$rIV))
                 y[use]=1},
-              "Uniform"={y<-r*0+1},
+              "Uniform"={y<-r*0+0.5},
               "Exp"={y<-exp(-abs(r/effect$populationPDFk))},
-              "Gauss"={y<-exp(-abs(r/effect$populationPDFk)^2)},
+              "Gauss"={y<-exp(-0.5*abs(r/effect$populationPDFk)^2)},
       )
       if (effect$populationRZ=="z") {y<-y/(1-x^2)}
-      y<-y/max(y)
-      
+
       x<-c(-1,x,1)
       y<-c(0,y,0)
       pts=data.frame(x=x,y=y)
       g1<-ggplot(pts,aes(x=x,y=y))
-      g1<-g1+geom_polygon(data=pts,aes(x=x,y=y),fill="yellow")+scale_y_continuous(limits = c(0,1.5),labels=NULL,breaks=NULL)
+      g1<-g1+geom_polygon(data=pts,aes(x=x,y=y),fill="yellow")+scale_y_continuous(limits = c(0,1.05),labels=NULL,breaks=NULL)
       g1<-g1+plotTheme+theme(plot.margin=popplotMargins)+labs(x=bquote(r[population]),y="Density")
       if (debug) print("WorldPlot - exit")
       g<-PlotNULL+annotation_custom(grob=ggplotGrob(g1), xmin=0,  xmax=10,  ymin=2.5, ymax=7.5)
@@ -1977,6 +1982,17 @@ inspectHistory<-c()
         updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3)
       }
     })
+    # watch for changes to design
+    observeEvent(input$Explore_typeD,{
+      if (input$Explore_typeD=="SampleSize") {
+        updateNumericInput(session,"Explore_nRange",value=250,min=10,step=50)
+        updateNumericInput(session,"LGExplore_nRange",value=250,min=10,step=50)
+      }
+      if (input$Explore_typeD=="Repeats") {
+        updateNumericInput(session,"Explore_nRange",value=7,min=1,step=1)
+        updateNumericInput(session,"LGExplore_nRange",value=7,min=1,step=1)
+      }
+    })
     
 # here's where we start a run
     observeEvent(c(input$exploreRunH,input$exploreRunD,input$exploreRunA,
@@ -2018,7 +2034,7 @@ inspectHistory<-c()
                 }
         )
         explore<-c(l,list(Explore_npoints=input$Explore_npoints,Explore_xlog = input$Explore_xlog,Explore_quants=input$Explore_quants,
-                          Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_anomRange,Explore_nrRange=input$Explore_nrRange,
+                          Explore_esRange=input$Explore_esRange,Explore_nRange=input$Explore_nRange,Explore_anomRange=input$Explore_anomRange,Explore_nrRange=input$Explore_nRange,
                           ExploreFull_ylim=input$ExploreFull_ylim,
                           Explore_family=input$ExploreTab))
         

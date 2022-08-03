@@ -58,6 +58,7 @@ if (switches$doKeys) {
       updateSelectInput(session,"world_distr",selected="Exp")
       updateSelectInput(session,"world_distr_rz",selected="z")
       updateNumericInput(session,"world_distr_k",value=0.2)
+      updateTabsetPanel(session,"HypothesisDiagram",selected="World")
     }
     
     # control-alt-n set sample size to big (1000)

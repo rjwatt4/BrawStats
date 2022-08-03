@@ -147,6 +147,7 @@ ExploreTab <-
                                                                     variableChoices,selectize=FALSE)
                                                         )
                                                 ),
+                                                tags$td(width = "25%")
                                                 # tags$td(id="Explore_esRangeLabel",width = "25%", tags$div(style = localStyle, "range:")),
                                                 # tags$td(width = "25%", 
                                                 #         conditionalPanel(condition="input.Explore_typeH != 'IV'",
@@ -195,29 +196,21 @@ ExploreTab <-
                                                         selectInput("Explore_typeD",label=NULL,
                                                                     designChoices,selectize=FALSE)
                                                 ),
-                                                tags$td(id="Explore_nRangeLabel",width = "15%", 
-                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
-                                                                         tags$div(style = localStyle, "range:")
-                                                        )),
                                                 tags$td(width = "15%", 
-                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize' || input.Explore_typeD == 'Repeats'",
+                                                                         tags$div(style = localStyle, "max:")
+                                                        )),
+                                                tags$td(width = "25%", 
+                                                        conditionalPanel(condition="input.Explore_typeD == 'SampleSize' || input.Explore_typeD == 'Repeats'",
                                                                          numericInput("Explore_nRange", label=NULL,value=250,min=10,step=50)
                                                 )),
-                                                tags$td(width = "10%", 
+                                                tags$td(width = "5%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
                                                                          tags$div(style = localStyle, "log")
                                                         )),
-                                                tags$td(width = "10%", 
+                                                tags$td(width = "5%", 
                                                         conditionalPanel(condition="input.Explore_typeD == 'SampleSize'",
                                                                          checkboxInput("Explore_xlog",label="",value=FALSE)
-                                                        )),
-                                                tags$td(width = "15%", 
-                                                        conditionalPanel(condition="input.Explore_typeD == 'SomeRepeats'",
-                                                                         tags$div(style = localStyle, "range:")
-                                                        )),
-                                                tags$td(width = "10%", 
-                                                        conditionalPanel(condition="input.Explore_typeD == 'SomeRepeats'",
-                                                                         numericInput("Explore_nrRange",label=NULL,value=7,min=1,step=1)
                                                         )),
                                               ),
                                               tags$tr(
@@ -231,13 +224,13 @@ ExploreTab <-
                                                                          selectInput("Explore_whichShowD", label=NULL,
                                                                     whichShowChoices, selected="Main 1",selectize = FALSE)
                                                 )),
-                                                tags$td(width = "15%", 
+                                                tags$td(width = "25%", 
                                                         conditionalPanel(condition="input.IV2choice != 'none'",
                                                                          selectInput("Explore_typeShowD", label=NULL,
                                                                     extraShowChoices, selected="direct",selectize = FALSE)
                                                 )),
-                                                tags$td(width = "10%", tags$div(style = localStyle, "")),
-                                                tags$td(width = "10%", tags$div(style = localStyle, "")),
+                                                tags$td(width = "5%", tags$div(style = localStyle, "")),
+                                                tags$td(width = "5%", tags$div(style = localStyle, "")),
                                               )),
                                    tags$table(width = "100%",class="myTable",
                                               tags$tr(

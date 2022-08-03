@@ -82,11 +82,11 @@ LGmodalExplore <-
                                                                          designChoices,selectize=FALSE)
                                                      ),
                                                      tags$td(id="LGExplore_nRangeLabel",width = "15%", 
-                                                             conditionalPanel(condition="input.LGExplore_typeD == 'SampleSize'",
-                                                                              tags$div(style = localStyle, "range:")
+                                                             conditionalPanel(condition="input.LGExplore_typeD == 'SampleSize' || input.LGExplore_typeD == 'Repeats'",
+                                                                              tags$div(style = localStyle, "max:")
                                                              )),
                                                      tags$td(width = "15%", 
-                                                             conditionalPanel(condition="input.LGExplore_typeD == 'SampleSize'",
+                                                             conditionalPanel(condition="input.LGExplore_typeD == 'SampleSize' || input.LGExplore_typeD == 'Repeats'",
                                                                               numericInput("LGExplore_nRange", label=NULL,value=250,min=10,step=50)
                                                              )),
                                                      tags$td(width = "10%", 
