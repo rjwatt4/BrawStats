@@ -172,6 +172,13 @@ shinyUI(fluidPage(
     tags$head( # input tables
         tags$style(type="text/css",".table label{ display: table-cell; text-align: center;vertical-align: middle; } .myTable .form-group { display: table-row;}")
     ),
+    tags$head(
+      tags$style(
+        HTML(".shiny-notification {position:fixed;top: calc(5%);left: calc(50.5%);}"
+        )
+      )
+    ),
+    
 
     tags$head(
       tags$style(HTML(

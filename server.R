@@ -25,6 +25,7 @@ source("sampleMake.R")
 source("sampleAnalyse.R")
 source("samplePower.R")
 source("sampleRead.R")
+source("sampleCheck.R")
 source("Johnson_M.R")
 
 source("reportSample.R")
@@ -63,7 +64,30 @@ shinyServer(function(input, output, session) {
   updateSelectInput(session, "IVchoice", choices = variables$name, selected = variables$name[1])
   updateSelectInput(session, "IV2choice", choices = c("none",variables$name), selected = "none")
   updateSelectInput(session, "DVchoice", choices = variables$name, selected = variables$name[3])
-####################################
+  
+  if (switches$doCheating) {
+    exploreDesignChoices<<-c(exploreDesignChoices,"Cheating")
+  } else {
+    shinyjs::hideElement(id="Cheating")
+    shinyjs::hideElement(id="LGEvidenceCheating")
+    shinyjs::hideElement(id="LGExploreCheating")
+    shinyjs::hideElement(id="LGlikelihoodCheating")
+  }
+  
+  if (switches$doReplications) {
+    exploreDesignChoices<<-c(exploreDesignChoices,"Replications")
+  }
+  updateSelectInput(session,"Explore_typeD",choices=designChoices[exploreDesignChoices])
+  updateSelectInput(session,"LGExplore_typeD",choices=designChoices[exploreDesignChoices])
+  
+  if (switches$doWorlds) {
+    exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
+  }
+  updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2[exploreHypothesisChoices])
+  updateSelectInput(session,"LGExplore_typeH",choices=hypothesisChoices2[exploreHypothesisChoices])
+  
+  
+  ####################################
 
   source("serverKeys.R")
   serverKeys(session,input)
@@ -89,24 +113,6 @@ shinyServer(function(input, output, session) {
   }
   )
 
-  observeEvent(input$EvidenceInfer_2D,{
-    presently<-input$EvidenceExpected_type
-    if (input$EvidenceInfer_2D=="separate"){
-      updateSelectInput(session,"EvidenceExpected_type",choices=c("Basic" = "EffectSize",
-                                                          "Power" = "Power",
-                                                          "NHST errors" = "NHSTErrors",
-                                                          "CI limits" = "CILimits",
-                                                          "log(lr)" = "log(lr)"),
-                        selected=presently)
-    } else {
-      updateSelectInput(session,"EvidenceExpected_type",choices=c("Basic" = "EffectSize",
-                                                                  "PopSamp" = "PopSamp",
-                                                          "Power" = "Power",
-                                                          "log(lr)" = "log(lr)"),
-                        selected=presently)
-    }
-  })  
-  
   observeEvent(input$Explore_VtypeH, {
       if (input$Explore_VtypeH=="levels") {
         updateSelectInput(session,"Explore_typeH",selected="DV")
@@ -768,14 +774,14 @@ inspectHistory<-c()
 ######################################################
 ## large display output functions
 
-  designFields<-list(select=c("sMethod"),number=c("sN"),check=c())
+  designFields<-list(select=c("sMethod","sCheating"),number=c("sN","sNRandK","sCheatingK"),check=c("sNRand"))
   hypothesisFields<-list(select=c("world_distr","world_distr_rz"),
                          number=c("rIV","rIV2","rIVIV2","rIVIV2DV","world_distr_k","world_Nullp"),
                          check=c())
   worldFields<-list(select=c("world_distr","world_distr_rz"),
                     number=c("world_distr_k","world_Nullp"),
                     check=c())
-  evidenceFields<-list(select=c("EvidenceInfer_type","EvidenceExpected_type","EvidenceInfer_2D","EvidenceEffect_type","EvidenceExpected_length"),
+  evidenceFields<-list(select=c("EvidenceInfer_type","EvidenceExpected_type","EvidenceExpected_par1","EvidenceExpected_par2","EvidenceEffect_type","EvidenceExpected_length"),
                        number=c(),
                        check=c("EvidenceExpected_append"))
   exploreFields<-list(select=c("Explore_typeH","Explore_VtypeH","Explore_showH","Explore_whichShowH","Explore_typeShowH","Explore_lengthH",
@@ -1117,9 +1123,11 @@ inspectHistory<-c()
     
     updateDesign<-function(){
       if (debug) print("     updateDesign")
-      design<-list(sN=input$sN, sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
+      design<-list(sN=input$sN, sNRand=input$sNRand,sNRandK=input$sNRandK,
+                   sMethod=input$sMethod ,sIV1Use=input$sIV1Use,sIV2Use=input$sIV2Use, 
                    sRangeOn=input$sRangeOn, sIVRange=input$sIVRange, sDVRange=input$sDVRange, 
                    sDependence=input$sDependence, sOutliers=input$sOutliers, sClustering=input$sClustering,
+                   sCheating=input$sCheating,sCheatingK=input$sCheatingK,
                    sReplicationOn=input$sReplicationOn,sReplPower=input$sReplPower,sReplSigOnly=input$sReplSigOnly,sReplRepeats=input$sReplRepeats,
                    sN_Strata=input$sN_Strata, sR_Strata=input$sR_Strata,
                    sNClu_Cluster=input$sNClu_Cluster, sRClu_Cluster=input$sRClu_Cluster,
@@ -1206,7 +1214,7 @@ inspectHistory<-c()
       if (effect$populationRZ=="z") {r<-atanh(x)} else {r<-x}
       switch (effect$populationPDF,
               "Single"={
-                y<-r*0
+                y<-r*0+0.01
                 use=which.min(abs(x-effect$rIV))
                 y[use]=1},
               "Uniform"={y<-r*0+0.5},
@@ -1221,8 +1229,28 @@ inspectHistory<-c()
       g1<-ggplot(pts,aes(x=x,y=y))
       g1<-g1+geom_polygon(data=pts,aes(x=x,y=y),fill="yellow")+scale_y_continuous(limits = c(0,1.05),labels=NULL,breaks=NULL)
       g1<-g1+plotTheme+theme(plot.margin=popplotMargins)+labs(x=bquote(r[population]),y="Density")
+
+      if (input$sNRand) {
+        nbin<-seq(1,qgamma(0.99,shape=input$sNRandK,scale=input$sN/input$sNRandK),length.out=101)
+        ndens<-dgamma(nbin,shape=input$sNRandK,scale=input$sN/input$sNRandK)
+        ndens<-ndens/max(ndens)
+      } else {
+        nbin<-seq(1,250,length.out=251)
+        ndens<-nbin*0+0.01
+        use=which.min(abs(nbin-input$sN))
+        ndens[use]<-1
+      }
+      x<-c(min(nbin),nbin,max(nbin))
+      y<-c(0,ndens,0)
+      pts=data.frame(x=x,y=y)
+      g2<-ggplot(pts,aes(x=x,y=y))
+      g2<-g2+geom_polygon(data=pts,aes(x=x,y=y),fill="yellow")+scale_y_continuous(limits = c(0,1.05),labels=NULL,breaks=NULL)
+      g2<-g2+plotTheme+theme(plot.margin=popplotMargins)+labs(x="n",y="Density")
       if (debug) print("WorldPlot - exit")
-      g<-PlotNULL+annotation_custom(grob=ggplotGrob(g1), xmin=0,  xmax=10,  ymin=2.5, ymax=7.5)
+      
+      g<-PlotNULL+annotation_custom(grob=ggplotGrob(g1), xmin=0,  xmax=10,  ymin=5.5, ymax=10)+
+                  annotation_custom(grob=ggplotGrob(g2), xmin=0,  xmax=10,  ymin=0.5, ymax=5)
+      
         g
     }
     )
@@ -1362,6 +1390,7 @@ inspectHistory<-c()
       sample<-makeSample(IV,IV2,DV,effect,design)
       if (is.null(sample)) return(NULL)
       result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      result<-checkSample(IV,IV2,DV,effect,design,evidence,sample,result)
       if (!isempty(input$sReplicationOn) && !is.na(input$sReplicationOn) && input$sReplicationOn) {
         while (design$sReplSigOnly && result$pIV>alpha) {
           sample<-makeSample(IV,IV2,DV,effect,design)
@@ -1742,12 +1771,30 @@ inspectHistory<-c()
   }
   ,priority=100
   )
+  observeEvent(input$EvidenceExpected_type,{
+    if (!is.element(input$EvidenceExpected_type,c("NHSTErrors","CILimits","2D"))) {
+      switch(input$EvidenceExpected_type,
+           "EffectSize"={
+             updateSelectInput(session,"EvidenceExpected_par1",selected="r")
+             updateSelectInput(session,"EvidenceExpected_par2",selected="p")
+           },
+           "Power" = {
+             updateSelectInput(session,"EvidenceExpected_par1",selected="N")
+             updateSelectInput(session,"EvidenceExpected_par2",selected="w")
+           },
+           "log(lr)" = {
+             updateSelectInput(session,"EvidenceExpected_par1",selected="p")
+             updateSelectInput(session,"EvidenceExpected_par2",selected="s")
+           }           
+           )
+    }
+  })
   
 # set expected variable from UI
     updateExpected<-function(){
         list(
           type=input$EvidenceExpected_type,
-          Infer_2D=input$EvidenceInfer_2D,
+          Expected_par1=input$EvidenceExpected_par1,Expected_par2=input$EvidenceExpected_par2,
           nsims=as.numeric(input$EvidenceExpected_length),
           append=input$EvidenceExpected_append
           )
@@ -1768,8 +1815,8 @@ inspectHistory<-c()
 # Expected outputs
     # show expected result    
     makeExpectedGraph <- function() {
-      doit<-c(input$EvidenceExpected_type,input$EvidenceInfer_2D,input$EvidenceEffect_type,
-              input$LGEvidenceExpected_type,input$LGEvidenceInfer_2D,input$LGEvidenceEffect_type,
+      doit<-c(input$EvidenceExpected_type,input$EvidenceExpected_par1,input$EvidenceExpected_par2,input$EvidenceEffect_type,
+              input$LGEvidenceExpected_type,input$LGEvidenceExpected_par1,input$LGEvidenceExpected_par2,input$LGEvidenceEffect_type,
               input$world_distr,input$world_distr_rz,input$world_distr_k,input$world_Nullp,
               input$LGEvidenceworld_distr,input$LGEvidenceworld_distr_rz,input$LGEvidenceworld_distr_k,input$LGEvidenceworld_Nullp,
               input$EvidenceExpectedRun,input$LGEvidenceExpectedRun)
@@ -1847,59 +1894,35 @@ inspectHistory<-c()
       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))
       g<-g+scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
       
-      switch (expected$Infer_2D,
-              "separate"={
+      if (expected$type=="2D") {
+        g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,expected$Expected_par1,expected$Expected_par2)
+        g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
+      } else {
+        if (is.element(expected$type,c("NHSTErrors","CILimits"))) {
                 switch (expected$type,
-                        "EffectSize"={
-                          g1<-r_plot(expectedResult$result,r=effect$rIV)
-                          g2<-p_plot(expectedResult$result,r=effect$rIV)
-                        },
-                        "Power"=     {
-                          g1<-w_plot(expectedResult$result,r=effect$rIV)
-                          g2<-nw_plot(expectedResult$result,r=effect$rIV)
-                        },
                         "NHSTErrors"={
-                          g2<-e2_plot(expectedResult$result,r=effect$rIV)
                           g1<-e1_plot(expectedResult$nullresult,r=0)
+                          g2<-e2_plot(expectedResult$result,r=effect$rIV)
                         },
                         "CILimits"=  {
                           g1<-ci1_plot(expectedResult$result,r=effect$rIV)
                           g2<-ci2_plot(expectedResult$result,r=effect$rIV)
-                        },
-                        "log(lr)"={
-                          g1<-llr_plot(expectedResult$result,r=effect$rIV)
-                          g2<-p_plot(expectedResult$result,r=effect$rIV)
                         }
                 )
-                g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
-                g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
-              },
-              "2D"={
-                switch (expected$type,
-                        "EffectSize"={
-                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"r","p")
-                        },
-                        "PopSamp"={
-                          draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"rp","r")
-                          },
-                        "Power"= {
-                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","w")
-                        },
-                        "log(lr)"={
-                          g1<-draw2Inference(IV,IV2,DV,effect,design,evidence,expectedResult$result,"p","log(lr)")
-                        }
-                )
-                g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
-              }
-      )
-
+        } else {
+          g1<-drawInference(IV,IV2,DV,effect,design,evidence,expectedResult$result,expected$Expected_par1)
+          g2<-drawInference(IV,IV2,DV,effect,design,evidence,expectedResult$result,expected$Expected_par2)
+        }
+        g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0,xmax=4.5,ymin=0,ymax=10)
+        g<-g+annotation_custom(grob=ggplotGrob(g2+gridTheme),xmin=5,xmax=10,ymin=0,ymax=10)
+      }
       if (debug) {print("ExpectedPlot1 - plots done ")}
       return(g)
     }
 
     output$ExpectedPlot <- renderPlot({
-      doit<-c(input$EvidenceExpected_type,input$EvidenceInfer_2D,input$EvidenceEffect_type,
-              input$LGEvidenceExpected_type,input$LGEvidenceInfer_2D,input$LGEvidenceEffect_type,
+      doit<-c(input$EvidenceExpected_type,input$EvidenceExpected_par1,input$EvidenceExpected_par2,input$EvidenceEffect_type,
+              input$LGEvidenceExpected_type,input$LGEvidenceExpected_par1,input$LGEvidenceExpected_par2,input$LGEvidenceEffect_type,
               input$EvidenceExpectedRun,input$LGEvidenceexpectedRun)
       makeExpectedGraph()
     })
@@ -1926,7 +1949,7 @@ inspectHistory<-c()
       expectedResult$result$showType<-input$EvidenceEffect_type
 
       if (expectedResult$count>1) {
-        g<-reportExpected(IV,IV2,DV,evidence,expectedResult$result,expectedResult$nullresult,expected$type)
+        g<-reportExpected(IV,IV2,DV,evidence,expected,expectedResult$result,expectedResult$nullresult)
       } else {
         g<-ggplot()+plotBlankTheme
       }
@@ -1976,7 +1999,7 @@ inspectHistory<-c()
     # and watch for IV2 appearing
     observeEvent(input$IV2choice,{
       if (input$IV2choice=="none") {
-        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2)
+        updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices2[exploreHypothesisChoices])
       }
       else {
         updateSelectInput(session,"Explore_typeH", choices=hypothesisChoices3)

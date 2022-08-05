@@ -1,9 +1,9 @@
 # world tab
-worldPanel<-function(prefix="",asTable=FALSE) {
+
+worldPanel<-function(prefix="",asTable=FALSE,doAnyway=FALSE) {
   
-  worldTabReserve<-tabPanel("World",value="World",
-                            style = paste("background: ",subpanelcolours$hypothesisC),
-                            tags$table(width = "100%",class="myTable",
+  worldTable<-
+    tags$table(width = "100%",class="myTable",
                                        tags$tr(
                                          tags$td(width = "40%", tags$div(style = localStyle, "Population PDF:")),
                                          tags$td(width = "30%",
@@ -34,11 +34,17 @@ worldPanel<-function(prefix="",asTable=FALSE) {
                                          tags$td(width = "15%"),
                                          tags$td(width = "15%")
                                        )
-                            )
-  )
-  if (switches$doWorlds){
-    worldTab<-worldTabReserve
+    )
+  
+  if (!asTable) {
+    worldTable<-tabPanel("World",value="World",
+                         style = paste("background: ",subpanelcolours$hypothesisC),
+                         worldTable)
+  }
+  if (switches$doWorlds || doAnyway){
+    return(worldTable)
   } else {
-    worldTab<-c()
+    return(c())
   }
 }
+

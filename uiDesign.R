@@ -1,4 +1,5 @@
 source("uiReplication.R")
+source("uiCheating.R")
 
 DesignTab <-
   wellPanel(
@@ -9,7 +10,7 @@ DesignTab <-
                 # sampling tab
                 tabPanel("Design:",value="Design",
                          style = paste("background: ",subpanelcolours$designC)
-                         ),
+                ),
                 tabPanel("Sampling",value="Sampling",
                          style = paste("background: ",subpanelcolours$designC), 
                          wellPanel(
@@ -17,17 +18,30 @@ DesignTab <-
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
                                         tags$td(width = "40%", tags$div(style = localStyle, "Sample Size:")),
-                                        tags$td(width = "60%", 
+                                        tags$td(width = "20%", 
                                                 numericInput("sN",label=NULL,value=design$sN)
+                                        ),
+                                        tags$td(width="15%",
+                                                conditionalPanel(condition="input.sNRand",
+                                                                 tags$div(style = localPlainStyle, "shape:"))
+                                        ),
+                                        tags$td(width = "15%", 
+                                                conditionalPanel(condition="input.sNRand",
+                                                                 numericInput("sNRandK",label=NULL,value=design$sNRandK,min=0,step=0.5))
+                                        ),
+                                        tags$td(width = "10%", 
+                                                checkboxInput("sNRand",label=NULL,value=design$sNRand)
                                         )
                                       ),
+                           ),
+                           tags$table(width = "100%",class="myTable",
                                       tags$tr(id="DesignMethod",
-                                        tags$td(width = "40%", tags$div(style = localStyle, "Method:")),
-                                        tags$td(width = "60%", 
-                                                selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball"),
-                                                            selected=design$sMethod,
-                                                            selectize=FALSE)
-                                        )
+                                              tags$td(width = "40%", tags$div(style = localStyle, "Method:")),
+                                              tags$td(width = "60%", 
+                                                      selectInput("sMethod",label=NULL,c("Random","Stratified","Cluster","Convenience","Snowball"),
+                                                                  selected=design$sMethod,
+                                                                  selectize=FALSE)
+                                              ),
                                       ),
                                       tags$tr(
                                         tags$td(width = "40%", tags$div(style = localStyle, "Usage (IV):")),
@@ -35,20 +49,21 @@ DesignTab <-
                                                 selectInput("sIV1Use",label=NULL,c("Between","Within"),
                                                             selected=design$sIV1Use,
                                                             selectize=FALSE)
-                                        )
+                                        ),
                                       ),
                                       tags$tr(id="IV2Design",
                                               tags$td(width = "40%", 
                                                       conditionalPanel(condition="input.IV2choice != 'none'",
                                                                        tags$div(style = localStyle, "Usage (IV2):"))
-                                                      ),
+                                              ),
                                               tags$td(width = "60%", 
                                                       conditionalPanel(condition="input.IV2choice != 'none'",
                                                                        selectInput("sIV2Use",label=NULL,c("Between","Within"),
-                                                                  selected=design$sIV2Use,
-                                                                  selectize=FALSE)
+                                                                                   selected=design$sIV2Use,
+                                                                                   selectize=FALSE)
+                                                      ),
                                               )
-                                      ))
+                                      )
                            ))
                 ),
                 tabPanel("Anomalies",
@@ -57,47 +72,51 @@ DesignTab <-
                            style = paste("background: ",subpanelcolours$designC,";"),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
-                                        tags$td(width = "40%", tags$div(style = localStyle, "Dependence:")),
-                                        tags$td(width = "60%", 
+                                        tags$td(width = "30%", tags$div(style = localStyle, "Dependence:")),
+                                        tags$td(width = "50%", 
                                                 numericInput("sDependence",label=NULL,value=design$sDependence,min=0, max=1, step=0.1)
-                                        )
+                                        ),
+                                        tags$td(width = "50%")
                                       ),
                                       tags$tr(
-                                        tags$td(width = "40%", tags$div(style = localStyle, "Outliers:")),
-                                        tags$td(width = "60%", 
+                                        tags$td(width = "30%", tags$div(style = localStyle, "Outliers:")),
+                                        tags$td(width = "20%", 
                                                 numericInput("sOutliers",label=NULL,value=design$sOutliers,min=0, max=1, step=0.1)
-                                        )
+                                        ),
+                                        tags$td(width = "50%")
                                       ),
                                       tags$tr(
-                                        tags$td(width = "40%", tags$div(style = localStyle, "Limited Ranges:")),
-                                        tags$td(width = "60%", 
+                                        tags$td(width = "30%", tags$div(style = localStyle, "Limit Range:")),
+                                        tags$td(width = "20%", 
                                                 checkboxInput("sRangeOn",label=NULL,value=design$sRangeOn)
-                                        )
+                                        ),
+                                        tags$td(width = "50%")
                                       )
-                           )
-                         ),
-                conditionalPanel(condition  = "input.sRangeOn",
-                           fluidRow(
-                           column(width=6,offset=0,
-                                  sliderInput("sDVRange",
-                                              label="DV:",
-                                              min = -fullRange,
-                                              max = fullRange,
-                                              step = 0.1,
-                                              value = design$sDVRange
-                                  )
                            ),
-                           column(width=6,offset=0,
-                                  sliderInput("sIVRange",
-                                              label="IV:",
-                                              min = -fullRange,
-                                              max = fullRange,
-                                              step = 0.1,
-                                              value = design$sIVRange
-                                  )
-                           )
-                         )
-                )
+                           conditionalPanel(condition  = "input.sRangeOn",
+                                            fluidRow(
+                                              column(width=6,offset=0,
+                                                     sliderInput("sDVRange",
+                                                                 label="DV:",
+                                                                 min = -fullRange,
+                                                                 max = fullRange,
+                                                                 step = 0.1,
+                                                                 value = design$sDVRange
+                                                     )
+                                              ),
+                                              column(width=6,offset=0,
+                                                     sliderInput("sIVRange",
+                                                                 label="IV:",
+                                                                 min = -fullRange,
+                                                                 max = fullRange,
+                                                                 step = 0.1,
+                                                                 value = design$sIVRange
+                                                     )
+                                              )
+                                            )
+                           ),
+                           uiCheating("")
+                           ),
                 )
                 
                 # replication tab

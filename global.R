@@ -1,5 +1,5 @@
 switches<-list(doLikelihood=TRUE,
-               doWorlds=FALSE,doReplications=FALSE,
+               doWorlds=FALSE,doReplications=FALSE,doCheating=FALSE,
                doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
                startBlank=FALSE,doBootstrap=TRUE,
                importOrdinals=TRUE,
@@ -83,7 +83,8 @@ DV<-list(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2",proportions="
 
 effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,ResidDistr="normal")
 
-design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
+design<-list(sN=42, sNRand=FALSE,sNRandK=2,
+             sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
              sN_Strata=5, sR_Strata=2,
@@ -112,9 +113,11 @@ graphAspect<-0.67
 
 if (is_local) {
   switches$doClipboard<-TRUE
+  
+  if (Sys.getenv("USERNAME")=="rjwatt42") {
+    switches$doBatchFiles<-TRUE
+    switches$doWorlds<-TRUE
+    switches$doReplications<-TRUE
+    switches$doCheating<-TRUE
+  } 
 }
-if (is_local && Sys.getenv("USERNAME")=="rjwatt42") {
-  switches$doBatchFiles<-TRUE
-  switches$doWorlds<-TRUE
-  switches$doReplications<-TRUE
-} 

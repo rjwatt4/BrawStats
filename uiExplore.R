@@ -1,18 +1,3 @@
-hypothesisFullChoices=list("Variables"=list("IV type" = "IVType",
-                                        "DV type" = "DVType",
-                                        "IV/DV type" = "IVDVType",
-                                        "IV skew" = "IVskew",
-                                        "DV skew" = "DVskew",
-                                        "IV kurtosis" = "IVkurtosis",
-                                        "DV kurtosis" = "DVkurtosis",
-                                        "DV levels" = "DVlevels",
-                                        "IV proptn" = "IVprop",
-                                        "DV proptn" = "DVprop"),
-                       "Effects"=list("Effect Size1" = "EffectSize1",
-                                      "Effect Size2" = "EffectSize2",
-                                      "Interaction" = "Interaction",
-                                      "Covariation" = "Covariation")
-)
 
 hypothesisChoices3Plain=list("Variables"=list("IV" = "IV",
                                          "IV2" = "IV2",
@@ -27,7 +12,9 @@ hypothesisChoices3=list("Variables"=list("IV" = "IV",
                         "Effects"=list("Effect Size1" = "EffectSize1",
                                        "Effect Size2" = "EffectSize2",
                                        "Interaction" = "Interaction",
-                                       "Covariation" = "Covariation")
+                                       "Covariation" = "Covariation",
+                                       "Heteroscedasticity" = "Heteroscedasticity"
+                        )
 )
 
 hypothesisChoices2Plain=list("Variables"=list("IV" = "IV",
@@ -35,21 +22,13 @@ hypothesisChoices2Plain=list("Variables"=list("IV" = "IV",
                                          "IV/DV Types" = "IVDVType")
 )
 
-if (switches$doWorlds) {
-  hypothesisChoices2=list("Variables"=list("IV" = "IV",
-                                           "DV" = "DV",
-                                           "IV/DV Types" = "IVDVType"),
-                          "Effects"=list("Effect Size" = "EffectSize1"),
-                          "Worlds"=list("k"="k","pnull"="pnull")
-  )
-  
-} else {
 hypothesisChoices2=list("Variables"=list("IV" = "IV",
                                          "DV" = "DV",
                                          "IV/DV Types" = "IVDVType"),
-                        "Effects"=list("Effect Size" = "EffectSize1")
+                        "Effects"=list("Effect Size" = "EffectSize1",
+                                       "Heteroscedasticity" = "Heteroscedasticity"),
+                        "Worlds"=list("PDF"="PDF","k"="k","pnull"="pnull")
 )
-}
 
 variableChoices=list("& type"="Type",
                      "& skew"="skew",
@@ -59,30 +38,29 @@ variableChoices=list("& type"="Type",
                      "& proptn"="prop"
 )
 
-if (switches$doReplications) {
 designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                    "Sampling Method" = "Method",
                                    "Sample Usage" = "Usage"),
                    "Anomalies"=list("Dependence" = "Dependence",
                                     "Outliers" = "Outliers",
-                                    "Heteroscedasticity" = "Heteroscedasticity",
                                     "IV Range" = "IVRange",
                                     "DV Range" = "DVRange"),
-                   "Replication"=list("SigOnly"="SigOnly",
-                                      "Power"="Power",
-                                      "Repeats" = "Repeats")
+                   "Cheating"=list("Method" = "Cheating",
+                                   "Cheating amount" = "CheatingK"),
+                   "Replications"=list("SigOnly"="SigOnly",
+                                       "Power"="Power",
+                                       "Repeats" = "Repeats")
 )
-} else {
-  designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
+
+designChoicesPlain=list("Sampling"=list("Sample Size" = "SampleSize",
                                      "Sampling Method" = "Method",
                                      "Sample Usage" = "Usage"),
                      "Anomalies"=list("Dependence" = "Dependence",
                                       "Outliers" = "Outliers",
-                                      "Heteroscedasticity" = "Heteroscedasticity",
                                       "IV Range" = "IVRange",
                                       "DV Range" = "DVRange")
   )
-}
+
 anomChoices=list("Anomalies"=list("Dependence" = "Dependence",
                                   "Outliers" = "Outliers",
                                   "Heteroscedasticity" = "Heteroscedasticity"),

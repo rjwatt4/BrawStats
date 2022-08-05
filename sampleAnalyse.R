@@ -205,7 +205,8 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     
     sample<-makeSample(IV,IV2,DV,effect,design)
     res<-analyseSample(IV,IV2,DV,design,evidence,sample)
-
+    res<-checkSample(IV,IV2,DV,effect,design,evidence,sample,res)
+    
     # Replication?
     if (!isempty(design$sReplicationOn) && !is.na(design$sReplicationOn) && design$sReplicationOn) {
         while (design$sReplSigOnly && res$pIV>alpha) {

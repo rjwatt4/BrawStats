@@ -61,6 +61,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             vals<-vals*effectSizeRange
             },
           
+          "PDF"={vals<-c("Single","Uniform","Gauss","Exp")},
           "k"={vals<-10^seq(-1,0,length.out=npoints)},
           "pnull"={vals<-seq(0,1,length.out=npoints)},
           
@@ -78,6 +79,8 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
           "Heteroscedasticity"={vals<-seq(0,1,length.out=npoints)},
           "IVRange"={vals<-seq(3,0.5,length.out=npoints)},
           "DVRange"={vals<-seq(3,0.5,length.out=npoints)},
+          "Cheating"={vals<-c("Grow","Prune","Replace","Retry")},
+          "CheatingK"={vals<-round(seq(0.1,0.5,length.out=npoints)*design$sN)},
           
           "SigOnly"={vals<-c("Yes","No")},
           "Power"={vals<-seq(0.1,0.9,length.out=npoints)},
@@ -348,6 +351,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             "Covariation"={effect$rIVIV2<-vals[i]},
             "Interaction"={effect$rIVIV2DV<-vals[i]},
             
+            "PDF"={effect$populationPDF<-vals[i]},
             "k"={effect$populationPDFk<-vals[i]},
             "pnull"={effect$populationNullp<-vals[i]},
             
@@ -365,6 +369,12 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
               design$sRangeOn<-TRUE
               design$sDVRange<-vals[i]*c(-1,1)
               },
+            "Cheating"={
+              design$sCheating<-vals[i]
+            },
+            "CheatingK"={
+              design$sCheatingK<-vals[i]
+            },
             
             "SigOnly"={
               design$sReplSigOnly<-(vals[i]=="Yes")

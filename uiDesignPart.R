@@ -1,3 +1,5 @@
+source("uiCheating.R")
+
 designPanel <- function(prefix="") {
   wellPanel(
     style = paste("background: ",subpanelcolours$designC,";"),
@@ -5,16 +7,28 @@ designPanel <- function(prefix="") {
                tags$tr(
                  tags$td(width = "35%", tags$div(style = labelStyle, "Design:")),
                  tags$td(width = "15%"),
-                 tags$td(width = "35%"),
-                 tags$td(width = "15%")
+                 tags$td(width = "15%"),
+                 tags$td(width = "15%"),
+                 tags$td(width = "10%"),
+                 tags$td(width = "10%")
                ),
                tags$tr(
                  tags$td(width = "35%", tags$div(style = localStyle, "sample size:")),
                  tags$td(width = "15%", 
                          numericInput(paste0(prefix,"sN"), label=NULL,value=42)
                  ),
-                 tags$td(width = "35%"),
-                 tags$td(width = "15%")
+                 tags$td(width="15%",
+                         conditionalPanel(condition="input.LGsNRand",
+                                          tags$div(style = localPlainStyle, "shape:"))
+                 ),
+                 tags$td(width = "15%", 
+                         conditionalPanel(condition="input.LGsNRand",
+                                          numericInput("LGsNRandK",label=NULL,value=design$sNRandK,min=0,step=0.5))
+                 ),
+                 tags$td(width = "10%", 
+                         checkboxInput("LGsNRand",label=NULL,value=design$sNRand)
+                 ),
+                 tags$td(width = "10%")
                )
     ),
     tags$table(width = "100%",class="myTable",
@@ -26,7 +40,8 @@ designPanel <- function(prefix="") {
                                            selectize=FALSE)
                        )
                ),
-    )
+    ),
+    uiCheating(prefix)
   )
   
 }

@@ -194,6 +194,12 @@ makeSample<-function(IV,IV2,DV,effect,design){
   }
 
   n<-design$sN
+  if (design$sNRand) {
+    n<-rgamma(1,shape=design$sNRandK,scale=design$sN/design$sNRandK)
+    while (n<6 || n>100000) {n<-rgamma(1,shape=design$sNRandK,scale=design$sN/design$sNRandK)}
+  }
+  n<-round(n)
+  
   rho<-effect$rIV
   
   if (!is.na(effect$populationRZ) && !isempty(effect$populationRZ)){

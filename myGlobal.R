@@ -165,7 +165,8 @@ effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,
              populationPDF="Single",populationPDFk=0.2,populationRZ="r",populationNullp=0
 )
 
-design<-list(sN=42, sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
+design<-list(sN=42, sNRand=FALSE,sNRandK=2, 
+             sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
              sN_Strata=5, sR_Strata=2,
@@ -190,4 +191,8 @@ expectedRunning<-FALSE
 exploreResultHold<-c()
 likelihood_P_ResultHold<-c()
 likelihood_S_ResultHold<-c()
+
+exploreDesignChoices<-c("Sampling","Anomalies")
+exploreHypothesisChoices<-c("Variables","Effects")
+worldPanelReserve<-worldPanel("",asTable=FALSE,doAnyway=TRUE)
 

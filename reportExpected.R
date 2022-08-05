@@ -1,11 +1,11 @@
 
-reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
+reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
   
   if (is.null(IV2) | is.null(result$rIVIV2DV)){nc=3}
   else{
     if (is.na(result$rIVIV2DV[1])) {nc=6} else {nc=9}
   }
-  if (expectedType=="NHSTErrors"){nc=3}
+  if (expected$type=="NHSTErrors"){nc=3}
   
   # header
   outputText<-c("\bExpected",paste("nsims=",format(length(result$rIV)),sep=""),rep("",nc-2))
@@ -42,16 +42,16 @@ reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
   }
   
   # column labels
-  switch (expectedType,
-          "EffectSize"={outputText1<-c("   ","r","p")},
-          "Power"={outputText1<-c("   ","w","nw")},
-          "NHSTErrors"={outputText1<-c("   ","I","II")},
-          "CILimits" ={outputText1<-c("   ","lower","upper")},
-          "log(lr)"={outputText1<-c("   ","S","p")}
-  )
+  if (expected$type=="NHSTErrors") {outputText1<-c("   ","I","II")}
+  else {
+    if(expected$type=="CILimits") {outputText1<-c("   ","lower","upper")}
+    else {
+      outputText1<-c("   ",expected$Expected_par1,expected$Expected_par2)
+    }
+  }
   outputText<-c(outputText,rep(outputText1,nc/3))
-  
-  if (expectedType=="NHSTErrors"){
+
+  if (expected$type=="NHSTErrors"){
     e1=paste(format(mean(nullresult$pIV<alpha)*100,digits=report_precision),"%")
     e2=paste(format(mean(result$pIV>=alpha)*100,digits=report_precision),"%")
     outputText<-c(outputText,"",e1,e2)
@@ -67,24 +67,29 @@ reportExpected<-function(IV,IV2,DV,evidence,result,nullresult,expectedType){
     for (i in 1:(nc/3)) {
       r<-rs[,i]
       p<-ps[,i]
-      switch (expectedType,
-              "EffectSize"={
-                a<-r
-                b<-p
-              },
-              "Power"={
-                a<-rn2w(r,result$nval)
-                b<-rw2n(r,0.8)
-              },
-              "CILimits"={
-                a<-r2ci(r,result$nval[1],-1)
-                b<-r2ci(r,result$nval[1],+1)
-              },
-              "log(lr)"={
-                a<-r2llr(r,result$nval)
-                b<-p
-              }
-      )
+      if (expected$type=="CILimits"){
+        a<-r2ci(r,result$nval[1],-1)
+        b<-r2ci(r,result$nval[1],+1)
+      } else {
+        switch (expected$Expected_par1,
+                "r"={a<-r},
+                "p"={a<-p},
+                "s"={a<-r2llr(r,result$nval)},
+                "n"={a<-result$nval},
+                "w"={a<-rn2w(r,result$nval)},
+                "N"={a<-rw2n(r,0.8)},
+                "R"={a<-result$rpIV}
+        )
+        switch (expected$Expected_par2,
+                "r"={b<-r},
+                "p"={b<-p},
+                "s"={b<-r2llr(r,result$nval)},
+                "n"={b<-result$nval},
+                "w"={b<-rn2w(r,result$nval)},
+                "N"={b<-rw2n(r,0.8)},
+                "R"={b<-result$rpIV}
+        )
+      }
       ot1<-c(ot1,
              "mean",
              format(mean(a,na.rm=TRUE),digits=report_precision),

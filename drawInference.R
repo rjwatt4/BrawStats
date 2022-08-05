@@ -4,17 +4,19 @@ drawInference<-function(IV,IV2,DV,effect,design,evidence,result,disp){
   if (!is.null(IV2)){
     r<-c(r,effect$rIV2,effect$rIVIV2DV)
   }
-  
+
   switch (disp,
           "p"={g<-p_plot(result,IV,IV2,DV,r)},
           "r"={g<-r_plot(result,IV,IV2,DV,r)},
+          "n"={g<-n_plot(result,IV,IV2,DV,r)},
           "w"={g<-w_plot(result,IV,IV2,DV,r)},
-          "nw"={g<-nw_plot(result,IV,IV2,DV,r)},
+          "N"={g<-nw_plot(result,IV,IV2,DV,r)},
+          "R"={g<-rp_plot(result,IV,IV2,DV,r)},
           "e1"={g<-e1_plot(result,IV,IV2,DV,r)},
           "e2"={g<-e2_plot(result,IV,IV2,DV,r)},
           "ci1"={g<-ci1_plot(result,IV,IV2,DV,r)},
           "ci2"={g<-ci2_plot(result,IV,IV2,DV,r)},
-          "log(lr)"={g<-llr_plot(result,IV,IV2,DV,r)}
+          "s"={g<-llr_plot(result,IV,IV2,DV,r)}
   )
   
   g+ggtitle(result$an_name)
@@ -40,17 +42,29 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
             d1<-result$rIV
             xlim<-c(-1, 1)
           },
+          "n"={
+            d1<-result$nval
+            xlim<-c(1, max(d1)*1.1)
+          },
           "w"={
             d1<-result$rIV
             d1<-rn2w(d1,result$nval)
             if (wPlotScale=="log10"){ xsc<-1}
             xlim<-c(0,1)
           },
-          "log(lr)"={
+          "s"={
             d1<-atanh(result$rIV)
             d1<-r2llr(d1,result$nval)
             xlim<-c(-0.1, 10)
             disp1<-bquote(log[e](lr))
+          },
+          "N"={
+            d1<-rw2n(result$rIV,0.8)
+            xlim<-c(1, max(d1)*1.1)
+          },
+          "R"={
+            d1<-result$rpIV
+            xlim<-c(-1, 1)
           }
   )
   
@@ -67,12 +81,16 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
             d2<-result$rIV
             ylim<-c(-1, 1)
           },
+          "n"={
+            d2<-result$nval
+            ylim<-c(1, max(d2)*1.1)
+          },
           "w"={
             d2<-rn2w(result$rIV,result$nval)
             if (wPlotScale=="log10"){ ysc<-1}
             ylim<-c(0,1)
           },
-          "log(lr)"={
+          "s"={
             d2<-r2llr(result$rIV,result$nval)
             if (any(d2<0)) {
               ylim<-c(-10, 10)
@@ -80,6 +98,14 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2){
               ylim<-c(-0.1, 10)
             }
             disp2<-bquote(log[e](lr))
+          },
+          "N"={
+            d2<-rw2n(result$rIV,0.8)
+            ylim<-c(1, max(d1)*1.1)
+          },
+          "R"={
+            d2<-result$rpIV
+            ylim<-c(-1, 1)
           }
   )
   

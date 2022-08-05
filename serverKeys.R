@@ -21,17 +21,35 @@ if (switches$doKeys) {
       removeTab("FileTab","Batch",session)
     }
     
-    # control-alt-m - switch to offine version
+    # control-alt-m - switch to offline version
     if (input$keypress==77 && controlKeyOn && altKeyOn){
+      # replications
       if (!switches$doReplications) {
-        insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
         switches$doReplications<<-TRUE
+        insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
+        exploreDesignChoices<<-c(exploreDesignChoices,"Replications")
       }
+      # worlds
       if (!switches$doWorlds) {
-        insertTab("Hypothesis",worldTabReserve,"Effects","after",select=FALSE,session)
-        insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
         switches$doWorlds<<-TRUE
+        insertTab("Hypothesis",worldPanelReserve,"Effects","after",select=FALSE,session)
+        insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
+        exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
       }
+      # cheating
+      if (!switches$doCheating) {
+        switches$doCheating<<-TRUE
+        shinyjs::showElement(id="Cheating")
+        shinyjs::showElement(id="LGEvidenceCheating")
+        shinyjs::showElement(id="LGExploreCheating")
+        shinyjs::showElement(id="LGlikelihoodCheating")
+        exploreDesignChoices<<-c(exploreDesignChoices,"Cheating")
+      }
+      # explore
+      updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2)
+      updateSelectInput(session,"LGExplore_typeH",choices=hypothesisChoices2)
+      updateSelectInput(session,"Explore_typeD",choices=designChoices)
+      updateSelectInput(session,"LGExplore_typeD",choices=designChoices)
     }
     
     # control-V

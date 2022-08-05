@@ -490,7 +490,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     }
   } else {
     if (is.character(exploreResult$result$vals[1]))
-    g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$vals)
+    g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$result$vals)
   }
   if ((explore$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
     g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
