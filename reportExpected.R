@@ -52,8 +52,13 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
   outputText<-c(outputText,rep(outputText1,nc/3))
 
   if (expected$type=="NHSTErrors"){
-    e1=paste(format(mean(nullresult$pIV<alpha)*100,digits=report_precision),"%")
-    e2=paste(format(mean(result$pIV>=alpha)*100,digits=report_precision),"%")
+    if (result$effect$world$worldOn) {
+      e1=paste(format(sum(nullresult$pIV<alpha)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      e2=paste(format(sum(result$pIV>=alpha)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+    } else {
+      e1=paste(format(mean(nullresult$pIV<alpha)*100,digits=report_precision),"%")
+      e2=paste(format(mean(result$pIV>=alpha)*100,digits=report_precision),"%")
+    }
     outputText<-c(outputText,"",e1,e2)
     
   }else{

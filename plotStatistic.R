@@ -17,7 +17,7 @@ collectData<-function(result) {
   ro<-cbind(result$roIV)
   po<-cbind(result$poIV)
   
-  if (is.null(result$r$direct)){
+  if (all(is.na(result$rIV2))){
     rs<-cbind(result$rIV)
     ps<-cbind(result$pIV)
   } else {
@@ -255,8 +255,8 @@ expected_plot<-function(g,pts,result,IV,DV,expType,single=FALSE){
     }
     xoff<-pts$x[1]
     g<-g+
-      geom_polygon(data=pts1,aes(y=x,x=y1+xoff),colour=NA, fill = addTransparency(c1,0.85))+
-      geom_polygon(data=pts1,aes(y=x,x=y2+xoff),colour=NA, fill = addTransparency(c2,0.85))
+      geom_polygon(data=pts1,aes(y=x,x=y1+xoff),colour=NA, fill = c1)+
+      geom_polygon(data=pts1,aes(y=x,x=y2+xoff),colour=NA, fill = c2)
   }
   g
 }
@@ -453,8 +453,13 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
               "e1"={labelPt1<-"p(Type I) = "},
               "e2"={labelPt1<-"p(Type II) = "}
       )
-      labelPt2<-paste0(labelPt1,format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision))
-      labelPt3<-paste0(labelPt2,"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+      if (expType=="e2") {
+        labelPt2<-paste0(labelPt1,format(mean(pvals>=alpha,na.rm=TRUE),digits=graph_precision))
+        labelPt3<-paste0(labelPt2,"  (",format(sum(pvals>=alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+      } else {
+        labelPt2<-paste0(labelPt1,format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision))
+        labelPt3<-paste0(labelPt2,"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+      }
       if (length(xoff)>1) {
         lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt2)
       } else {
