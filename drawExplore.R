@@ -62,6 +62,26 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             ylim<-c(0,1)
             ylabel<-"p(str)"
             g<-g+scale_y_continuous(limits=ylim)
+          },
+          "k"={
+            ylim<-c(-0.01,1.01)
+            ylabel<-"k"
+            g<-g+scale_y_continuous(limits=ylim)
+          },
+          "pNull"={
+            ylim<-c(-0.01,1.01)
+            ylabel<-"pNull"
+            g<-g+scale_y_continuous(limits=ylim)
+          },
+          "PDF"={
+            ylim<-c(0,1)
+            ylabel<-"PDF"
+            g<-g+scale_y_continuous(limits=ylim)
+          },
+          "S"={
+            ylim<-c(min(exploreResult$result$Ss),max(exploreResult$result$Ss))
+            ylabel<-"S"
+            g<-g+scale_y_continuous(limits=ylim)
           }
   )
 
@@ -296,10 +316,48 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
                 col<-all_cols[[explore$Explore_typeShow]]
                 colFill<-names(all_cols[explore$Explore_typeShow])
               }
+            },
+            "k"={
+              showVals<-exploreResult$result$ks
+              lines<-c()
+              col<-"white"
+              colFill<-col
+            },
+            "pNull"={
+              showVals<-exploreResult$result$pnulls
+              lines<-c()
+              col<-"white"
+              colFill<-col
+            },
+            "PDF"={
+              showVals<-exploreResult$result$dists
+              y50<-c()
+              y25<-c()
+              y75<-c()
+              y62<-c()
+              y38<-c()
+              for (i in 1:length(exploreResult$result$vals)){
+                p<-mean(showVals[,i],na.rm=TRUE)
+                p_se<-sqrt(p*(1-p)/length(showVals[,i]))
+                y50[i]<-p
+                y75[i]<-p+p_se*qnorm(0.75)
+                y25[i]<-p+p_se*qnorm(0.25)
+                y62[i]<-p+p_se*qnorm(0.625)
+                y38[i]<-p+p_se*qnorm(0.375)
+              }
+              lines<-c()
+              col<-"white"
+              colFill<-col
+            },
+            "S"={
+              showVals<-exploreResult$result$Ss
+              lines<-c()
+              col<-"white"
+              colFill<-col
             }
     )
   
-    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)"))) {
+    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)","k","S","pNull"))) {
       quants<-explore$Explore_quants/2
       y75<-c()
       y62<-c()
@@ -324,7 +382,6 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     y25[y25<ylim[1]]<-ylim[1]
     y50[y50<ylim[1]]<-NA
     }
-    
 
     vals_offset<-0
     valsRange<-1
@@ -335,7 +392,6 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     if (multi=="allEffects" || multi=="mainEffects") {
       vals_offset<-(ni2-1)*(valsRange*valsGap)
     }
-    
     pts1<-data.frame(vals=vals+vals_offset,y50=y50,y25=y25,y75=y75)
     
     if (explore$Explore_show=="NHSTErrors") {
@@ -355,8 +411,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
         # lines & points        
         g<-g+geom_line(data=pts1,aes(x=vals,y=y50),color=col)
         g<-g+geom_line(data=pts2,aes(x=vals,y=y50e),color=cole)
-        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black", fill = col, size = 7)
-        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=21, colour = "black", fill = cole, size = 7)
+        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=shapes$parameter, colour = "black", fill = col, size = 7)
+        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=shapes$parameter, colour = "black", fill = cole, size = 7)
       } else {
         # shaded fills
         outline<-c(-1,-1,1,1)*0.1
@@ -369,8 +425,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
         ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData,ids=ids)
         g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y,group=ids),colour = "black",fill=cole,alpha=0.5)
         # points        
-        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black", fill = col, size = 7)
-        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=21, colour = "black", fill = cole, size = 7)
+        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=shapes$parameter, colour = "black", fill = col, size = 7)
+        g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=shapes$parameter, colour = "black", fill = cole, size = 7)
       }
     } else {
       if (doLine) {
@@ -388,18 +444,18 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       }
       if (use_col_names){
         pts1<-data.frame(x=vals+vals_offset,y=y50,fill=explore$Explore_typeShow)
-        g<-g+geom_point(data=pts1,aes(x=x,y=y,fill=fill),shape=21, colour = "black", size = markersize)
+        g<-g+geom_point(data=pts1,aes(x=x,y=y,fill=fill),shape=shapes$parameter, colour = "black", size = markersize)
       } else {
-        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=21, colour = "black",fill=col, size = markersize)
+        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=shapes$parameter, colour = "black",fill=col, size = markersize)
       }
     }
     
-    if (is.element(explore$Explore_show,c("EffectSize","Interaction")) && is.element(explore$Explore_type,c("EffectSize","EffectSize1","EffectSize2","Interaction"))){
+    if (is.element(explore$Explore_show,c("EffectSize","Interaction")) && is.element(exploreResult$Explore_type,c("EffectSize","EffectSize1","EffectSize2","Interaction"))){
       pts3<-data.frame(x=c(-1,1),y=c(-1,1))
       g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="yellow", linetype="dotted")
     }
     
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="SampleSize" && effect$populationPDF=="Single"){
+    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && exploreResult$Explore_type=="SampleSize" && effect$world$populationPDF=="Single"){
       w<-y50
       n<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -422,10 +478,10 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
         # label<-paste("Unsafe result","  r_est =", format(r_est,digits=3))
       }
       if (ni_max2>1){label<-paste(explore$Explore_typeShow,": ",label,sep="")}
-      lpts<-data.frame(x=0+vals_offset,y=0.8+(ni_max2-1)/10,label=label)
+      lpts<-data.frame(x=min(n)+vals_offset,y=0.8+(ni_max2-1)/10,label=label)
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3.5)
     }
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && explore$Explore_type=="EffectSize"){
+    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && exploreResult$Explore_type=="EffectSize"){
       w<-y50
       r<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -492,7 +548,10 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     if (is.character(exploreResult$result$vals[1]))
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$result$vals)
   }
-  if ((explore$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
+  if ((exploreResult$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
+    g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
+  }
+  if ((exploreResult$Explore_type=="NoStudies") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
     g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
   }
   
@@ -500,7 +559,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   g<-g+coord_cartesian(ylim = ylim*1.05)
   }
     g<-g+ylab(ylabel)
-    switch (explore$Explore_type,
+    switch (exploreResult$Explore_type,
             "EffectSize"={g<-g+xlab(bquote(r[population]))},
             "EffectSize1"={
               g<-g+xlab(bquote(MainEffect1:r[population]))
@@ -518,7 +577,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               g<-g+xlab(bquote(interaction:r[population]))
               # g<-g+annotate("text",x=Inf,y=-Inf, hjust=1, vjust=-1, angle=0, label="Interaction",color="white")
             },
-            g<-g+xlab(explore$Explore_type)
+            g<-g+xlab(exploreResult$Explore_type)
     )
     
   g+plotTheme

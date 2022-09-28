@@ -23,7 +23,7 @@ DesignTab <-
                                         ),
                                         tags$td(width="15%",
                                                 conditionalPanel(condition="input.sNRand",
-                                                                 tags$div(style = localPlainStyle, "shape:"))
+                                                                 tags$div(style = localPlainStyle, "gamma:"))
                                         ),
                                         tags$td(width = "15%", 
                                                 conditionalPanel(condition="input.sNRand",

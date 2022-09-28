@@ -74,20 +74,26 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
         switch (expected$Expected_par1,
                 "r"={a<-r},
                 "p"={a<-p},
-                "s"={a<-r2llr(r,result$nval)},
+                "log(lr)"={a<-r2llr(r,result$nval)},
                 "n"={a<-result$nval},
                 "w"={a<-rn2w(r,result$nval)},
-                "N"={a<-rw2n(r,0.8)},
-                "R"={a<-result$rpIV}
+                "nw"={a<-rw2n(r,0.8,result$design$sReplTails)},
+                "rp"={a<-result$rpIV},
+                "r1"={a<-result$roIV},
+                "p1"={a<-result$poIV},
+                "wp"={a<-rn2w(result$rpIV,result$nval)}
         )
         switch (expected$Expected_par2,
                 "r"={b<-r},
                 "p"={b<-p},
-                "s"={b<-r2llr(r,result$nval)},
+                "log(lr)"={b<-r2llr(r,result$nval)},
                 "n"={b<-result$nval},
                 "w"={b<-rn2w(r,result$nval)},
-                "N"={b<-rw2n(r,0.8)},
-                "R"={b<-result$rpIV}
+                "nw"={b<-rw2n(r,0.8,result$design$sReplTails)},
+                "rp"={b<-result$rpIV},
+                "r1"={b<-result$roIV},
+                "p1"={b<-result$poIV},
+                "wp"={b<-rn2w(result$rpIV,result$nval)}
         )
       }
       ot1<-c(ot1,

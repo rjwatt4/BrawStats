@@ -9,7 +9,7 @@ wellPanel(id="HelpTabset",
   #              tags$td(width = "5%",
   #         checkboxInput("showHelp","",value=FALSE) 
   #              ),
-  fluidRow(helpHeaderText(HTML("Follow these 4 steps. The <strong>?</strong> tabs give more help."))),
+  fluidRow(headerText(HTML("Follow these 4 steps. The <strong>?</strong> tabs give more help."))),
   # tags$td(width = "90%",
           # conditionalPanel(condition="input.showHelp",            
                            tabsetPanel(id="Help",

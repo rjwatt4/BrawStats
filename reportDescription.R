@@ -119,16 +119,35 @@ reportDescription<-function(IV,IV2,DV,result){
   )
   
   a<-result$normModel
+  if (class(a)=="lmerMod") {
+    an_vars<-c("Intercept")
+    if (IV$type=="Categorical") {
+      for (i in 2:IV$ncats) {
+      an_vars<-c(an_vars,paste0("iv1",IV$cases[i]))
+      }
+    } else {
+      an_vars<-c(an_vars,IV$name)
+    }
+    if (!is.null(IV2$name)) {
+      if (IV2$type=="Categorical") {
+        for (i in 2:IV2$ncats) {
+          an_vars<-c(an_vars,paste0("iv2",IV2$cases[i]))
+        }
+      } else {
+        an_vars<-c(an_vars,IV2$name)
+      }
+    }
+  } else {
+    an_vars<-variable.names(a)
+    an_vars<-sub("iv1$",IV$name,an_vars)
+  }
   
-  an_vars<-variable.names(a)
-  an_vars<-sub("iv1$",IV$name,an_vars)
-  
+  an_vars<-sub("iv1:",paste(IV$name,":",sep=""),an_vars)
+  an_vars<-sub("iv1",paste(IV$name,"|",sep=""),an_vars)
   if (!is.null(IV2)) {
     an_vars<-sub("iv2$",IV2$name,an_vars)
     an_vars<-sub("iv2",paste(IV2$name,"|",sep=""),an_vars)
   } 
-  an_vars<-sub("iv1:",paste(IV$name,":",sep=""),an_vars)
-  an_vars<-sub("iv1",paste(IV$name,"|",sep=""),an_vars)
   
   an_model<-makeFormula(IV,IV2,DV,result,an_vars)
   outputText<-c(outputText,"Formula:",paste(an_model),"","")

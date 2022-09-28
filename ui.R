@@ -10,7 +10,8 @@
 list.of.packages<-c("shiny","shinyWidgets","shinyjs","shinyBS",
                     "ggplot2","tidyr","tools",
                     "mnormt","lme4","MuMIn",
-                    "readxl","writexl","car","stringi","stringr","clipr","SuppDists","e1071","pracma"
+                    "readxl","writexl","car","stringi","stringr","clipr","SuppDists","e1071","pracma",
+                    "htmlwidgets"
                     )
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -19,6 +20,7 @@ library(shiny)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyBS)
+library(htmlwidgets)
 
 library(ggplot2)
 library(tidyr)
@@ -48,6 +50,7 @@ source("uiLikelihood.R")
 source("uiFiles.R")
 
 source("uiWorld.R")
+source("uiMetaAnalysis.R")
 source("uiPrior.R")
 
 
@@ -55,19 +58,62 @@ source("uiHypothesisDiagram.R")
 source("uiPopulationDiagram.R")
 source("uiMainGraph.R")
 source("uiMainReport.R")
+source("uiMetaGraph.R")
 
 source("uiInspectDiagram.R")
 source("uiLargeEvidence.R")
+source("uiLargeMeta.R")
 source("uiLargeExplore.R")
 source("uiLargeLikelihood.R")
 
 source("uiEffectPart.R")
 
+gH="25vw"
+rH="17vw"
+gH="50vh"
+rH="25vh"
+
 shinyUI(fluidPage(
     useShinyjs(),
     
     tags$style(type="text/css",".recalculating {opacity: 1.0;}" ),   
-               
+
+    tags$head(tags$style(paste0("#SamplePlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#DescriptivePlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#InferentialPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#ExpectedPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#ExplorePlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#LikelihoodPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#MetaAnalysisPlot{height:",gH," !important;}"))),
+    
+    tags$head(tags$style(paste0("#HypothesisPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#WorldPlot{height:",gH," !important;}"))),
+    
+    tags$head(tags$style(paste0("#SampleReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#DescriptiveReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#InferentialReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#ExpectedReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#ExploreReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#LikelihoodReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#MetaAnalysisReport{height:",rH," !important;}"))),
+
+    tags$head(tags$style(paste0("#PopulationPlot{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#PredictionPlot{height:",rH," !important;}"))),
+    
+    tags$head(tags$script('
+                        var width = 0;
+                        $(document).on("shiny:connected", function(e) {
+                          width = window.innerWidth;
+                          Shiny.onInputChange("width", width);
+                        });
+                        var height = 0;
+                        $(document).on("shiny:connected", function(e) {
+                          height = window.innerHeight;
+                          Shiny.onInputChange("height", height);
+                        });
+                        '
+                        )),
+    
     tags$script('
     pressedKeyCount = 0;
     $(document).on("keydown", function (e) {
@@ -194,11 +240,17 @@ shinyUI(fluidPage(
         '#LGEvidenceStart3{font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}'
       )),
       tags$style(HTML(
+        '#LGMetaStart{font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}'
+      )),
+      tags$style(HTML(
         '#LGExploreStart{font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}'
         )),
         tags$style(HTML(
           '#LGPossibleStart{font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}'
-        ))
+        )),
+      tags$style(HTML(
+        '#LGMetaStart1{font-size:",format(8*fontScale) ,"pt;font-weight:Bold;color:white; background-color: #005886;height:20px;padding-top:0px;padding-bottom:0px;padding-left:4px;padding-right:4px;margin-bottom:4px;margin-right:12px;margin-top:4px;margin-left:0px}'
+      ))
     ),
     
     
@@ -216,6 +268,13 @@ shinyUI(fluidPage(
       tags$style(type="text/css",'#LGmodalExplore .modal { text-align: right; padding:0px; border: 0;}'),
       tags$style(type="text/css","#LGmodalExplore .modal-footer{ display:none}"),
       tags$style(type="text/css","#LGmodalExplore .modal-header{ display:none}"),
+      
+      tags$style(type="text/css",paste0('#LGmodalMeta .modal-dialog { width:',LGModalWidth ,' ;}')),
+      tags$style(type="text/css",paste0('#LGmodalMeta .modal-body    { width: 100%; height: ', LGModalHeight  ,'; background-color:',maincolours$windowC ,' ;}')),
+      tags$style(type="text/css",'#LGmodalMeta .modal-header {border: 0px; padding: 0px}'),
+      tags$style(type="text/css",'#LGmodalMeta .modal { text-align: right; padding:0px; border: 0;}'),
+      tags$style(type="text/css","#LGmodalMeta .modal-footer{ display:none}"),
+      tags$style(type="text/css","#LGmodalMeta .modal-header{ display:none}"),
       
       tags$style(type="text/css",paste0('#LGmodalEvidence .modal-dialog { width:',LGModalWidth ,' ;}')),
       tags$style(type="text/css",paste0('#LGmodalEvidence .modal-body    { width: 100%; height: ', LGModalHeight  ,'; background-color:',maincolours$windowC ,' ;}')),
@@ -251,7 +310,7 @@ shinyUI(fluidPage(
                      width = 3
                  ),
                  # 
-                 # results`
+                 # results
                  mainPanel(
                      style = paste("background: ",maincolours$windowC), 
                      column(width=4,
@@ -265,6 +324,7 @@ shinyUI(fluidPage(
                      bsModal(id="debugOutput", title="tested Outputs", trigger="testedOutputButton", size = "large",plotOutput("plotPopUp")),
                      inspectDiagram,
                      LGmodalEvidence,
+                     LGmodalMeta,
                      LGmodalExplore,
                      LGmodalPossible,
                      width = 9

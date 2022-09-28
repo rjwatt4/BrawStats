@@ -1,10 +1,9 @@
 # world tab
 priorPanel<-function(prefix="",asTable=FALSE) {
-  wellPanel(
-    style = paste("background: ",subpanelcolours$likelihoodC,";"),
-    tags$table(width = "100%",class="myTable",
+
+  priorTable<-tags$table(width = "100%",class="myTable",
                tags$tr(
-                 tags$td(width = "40%", tags$div(style = localStyle, "Population PDF:")),
+                 tags$td(width = "30%", tags$div(style = localStyle, "pdf:")),
                  tags$td(width = "30%",
                          selectInput(paste0(prefix, "Prior_distr"), label=NULL,
                                      c("Single" = "Single",
@@ -29,15 +28,27 @@ priorPanel<-function(prefix="",asTable=FALSE) {
                                                        step = 0.05,
                                                        value = 0.2)
                          )
-                 )
+                 ),
+                 tags$td(width="10%")
                ),
                tags$tr(
-                 tags$td(width = "40%", tags$div(style = localStyle, "p(null):")),
+                 tags$td(width = "30%", tags$div(style = localStyle, "p(null):")),
                  tags$td(width = "30%", numericInput(paste0(prefix, "Prior_Nullp"), label=NULL,min=0,max=1, step=0.025,value=0)),
                  tags$td(width = "15%"),
-                 tags$td(width = "15%")
+                 tags$td(width = "15%"),
+                 tags$td(width="10%")
                )
-    ),
-    width="100%"
-  )
- }
+    )
+  if (asTable) {
+    return(priorTable)
+  } else {
+    return(
+      wellPanel(
+        style = paste("background: ",subpanelcolours$likelihoodC,";"),
+        priorTable,
+        width="100%"
+      )
+    )
+  }
+}
+

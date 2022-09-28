@@ -17,7 +17,7 @@ inspectMainGraph<-function(inspect) {
            )
     
     pts<-data.frame(x=data,y=y)
-    g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, colour="black", fill=plotcolours$sampleC,size=7)
+    g<-g+geom_point(data=pts,aes(x=x,y=y),shape=shapes$data, colour="black", fill=plotcolours$sampleC,size=7)
     mn<-mean(data)
     
     # showing the residuals

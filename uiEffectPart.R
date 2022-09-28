@@ -10,7 +10,7 @@ eT<-tags$table(width = "100%",class="myTable",
              tags$tr(
                tags$td(width = "40%", tags$div(style = localStyle, "IV",HTML("&rarr;"),"DV :")),
                tags$td(width = "20%", 
-                       numericInput(paste0(prefix,"rIV"), label=NULL,value=0,min=-1,max=1,step=0.05)
+                       numericInput(paste0(prefix,"rIV"), label=NULL,value=effect$rIV,min=-1,max=1,step=0.05)
                ),
                tags$td(width = "40%"),
              ),

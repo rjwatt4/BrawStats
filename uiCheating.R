@@ -10,13 +10,13 @@ uiCheating<-function(prefix="") {
                                                "Replace"="Replace",
                                                "Retry"="Retry"
                                      ),
-                                     selected="None",
+                                     selected=design$sCheating,
                                      selectize=FALSE
                          )
                  ),
                  tags$td(width = "20%", tags$div(style = localStyle, "Amount:")),
                  tags$td(width = "20%",
-                         numericInput(paste0(prefix,"sCheatingK"),label=NULL,value=5))
+                         numericInput(paste0(prefix,"sCheatingK"),label=NULL,value=design$sCheatingK))
                ),
     )
 }

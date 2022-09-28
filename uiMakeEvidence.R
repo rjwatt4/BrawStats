@@ -1,12 +1,14 @@
 source("uiMetaAnalysis.R")
 
+uiMakeEvidence<-function(prefix="") {
+  
 EvidenceTab <-
   
-  wellPanel(id="EvidenceMain",
+  wellPanel(id=paste0(prefix,"EvidenceMain"),
             style = paste("background: ",panelcolours$simulateC), 
             fluidRow(headerText("Make a simulated sample; run multiple samples")),
             # h5("Evidence"),
-            tabsetPanel(id="Evidence", type="tabs",
+            tabsetPanel(id=paste0(prefix,"Evidence"), type="tabs",
                         tabPanel("Evidence:",value="Evidence",
                         ),
                         # single tab
@@ -18,15 +20,15 @@ EvidenceTab <-
                                                       tags$tr(
                                                         tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
                                                         tags$td(width = "35%", 
-                                                                selectInput("EvidenceInfer_type",label=NULL,
+                                                                selectInput(paste0(prefix,"EvidenceInfer_type"),label=NULL,
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
                                                                               "log(lr)" = "log(lr)"),
                                                                             selectize=FALSE)
                                                         ),
                                                         # tags$td(width = "10%", tags$div(style = localStyle, "")),
-                                                        tags$td(width = "25%", actionButton("EvidenceHypothesisApply", "Analyze")),
-                                                        tags$td(width = "25%", actionButton("EvidencenewSample", "New Sample"))
+                                                        tags$td(width = "25%", actionButton(paste0(prefix,"EvidenceHypothesisApply"), "Analyze")),
+                                                        tags$td(width = "25%", actionButton(paste0(prefix,"EvidencenewSample"), "New Sample"))
                                                       )
                                            )
                                  )
@@ -40,7 +42,7 @@ EvidenceTab <-
                                                       tags$tr(
                                                         tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
                                                         tags$td(width = "40%", 
-                                                                selectInput("EvidenceExpected_type",label=NULL,
+                                                                selectInput(paste0(prefix,"EvidenceExpected_type"),label=NULL,
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
                                                                               "NHST errors" = "NHSTErrors",
@@ -53,21 +55,21 @@ EvidenceTab <-
                                                         ),
                                                         tags$td(width = "15%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
-                                                                                 selectInput("EvidenceExpected_par1", label=NULL, 
+                                                                                 selectInput(paste0(prefix,"EvidenceExpected_par1"), label=NULL, 
                                                                                              c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
                                                                                              selected="r", selectize=FALSE)
                                                                                  # ),
                                                         ),
                                                         tags$td(width = "15%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
-                                                                                 selectInput("EvidenceExpected_par2", label=NULL, 
+                                                                                 selectInput(paste0(prefix,"EvidenceExpected_par2"), label=NULL, 
                                                                                              c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
                                                                                              selected="p", selectize=FALSE)
                                                                                  # ),
                                                         ),
                                                         tags$td(width = "15%", 
                                                                 conditionalPanel(condition="input.IV2choice != 'none'",
-                                                                                 selectInput("EvidenceEffect_type",label=NULL,
+                                                                                 selectInput(paste0(prefix,"EvidenceEffect_type"),label=NULL,
                                                                                              c("direct" = "direct",
                                                                                                "unique" = "unique",
                                                                                                "total" = "total",
@@ -82,7 +84,7 @@ EvidenceTab <-
                                                       tags$tr(
                                                           tags$td(width = "15%", tags$div(style = localStyle, "Runs:")),
                                                           tags$td(width = "50%", 
-                                                                  selectInput("EvidenceExpected_length",label=NULL,
+                                                                  selectInput(paste0(prefix,"EvidenceExpected_length"),label=NULL,
                                                                               c("10" = "10",
                                                                                 "50" = "50",
                                                                                 "100" = "100",
@@ -93,8 +95,8 @@ EvidenceTab <-
                                                                               selectize=FALSE)
                                                           ),
                                                           tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                                                          tags$td(width = "5%", checkboxInput("EvidenceExpected_append", label=NULL)),
-                                                          tags$td(width = "20%",actionButton("EvidenceExpectedRun", "Run")
+                                                          tags$td(width = "5%", checkboxInput(paste0(prefix,"EvidenceExpected_append"), label=NULL)),
+                                                          tags$td(width = "20%",actionButton(paste0(prefix,"EvidenceExpectedRun"), "Run")
                                                           )
                                                       )
                                            )
@@ -118,7 +120,7 @@ EvidenceTab <-
                                                tags$tr(
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, "Welch")),
                                                  tags$td(width = "25%", 
-                                                         checkboxInput("Welch",label=NULL,value=evidence$Welch),
+                                                         checkboxInput(paste0(prefix,"Welch"),label=NULL,value=evidence$Welch),
                                                  ),
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
@@ -126,10 +128,10 @@ EvidenceTab <-
                                                tags$tr(
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, "llr(0)")),
                                                  tags$td(width = "25%", 
-                                                         numericInput("llr2",label=NULL,value=evidence$llr$e2,step = 0.1)),
+                                                         numericInput(paste0(prefix,"llr2"),label=NULL,value=evidence$llr$e2,step = 0.1)),
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, "llr(A)")),
                                                  tags$td(width = "25%", 
-                                                         numericInput("llr1",label=NULL,value=evidence$llr$e1,step = 0.1)),
+                                                         numericInput(paste0(prefix,"llr1"),label=NULL,value=evidence$llr$e1,step = 0.1)),
                                                )
                                     ),
                                     conditionalPanel(condition="input.IV2choice != 'none'",
@@ -137,9 +139,9 @@ EvidenceTab <-
                                                                 tags$tr(
                                                                   tags$td(width = "30%", tags$div(style = localPlainStyle, "Interaction:")),
                                                                   tags$td(width = "25%", tags$div(style = localPlainStyle, "analyse")),
-                                                                  tags$td(width = "10%",checkboxInput("rInteractionOn",label=NULL,value=evidence$rInteractionOn)),
+                                                                  tags$td(width = "10%",checkboxInput(paste0(prefix,"rInteractionOn"),label=NULL,value=evidence$rInteractionOn)),
                                                                   tags$td(width = "25%", tags$div(style = localPlainStyle, "show only")),
-                                                                  tags$td(width = "10%", checkboxInput("evidenceInteractionOnly", value=evidence$rInteractionOnly, label=NULL)),
+                                                                  tags$td(width = "10%", checkboxInput(paste0(prefix,"evidenceInteractionOnly"), value=evidence$rInteractionOnly, label=NULL)),
                                                                 ))),
                                     conditionalPanel(condition="input.IV2choice != 'none'",
                                                      tags$table(width = "100%",class="myTable",
@@ -216,3 +218,7 @@ EvidenceTab <-
                         )
             )
   )
+EvidenceTab
+}
+
+

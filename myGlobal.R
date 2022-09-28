@@ -1,6 +1,6 @@
 library(ggplot2)
 
-useSignificanceCols<-FALSE
+useSignificanceCols<-TRUE
 
 fullShowHelp<-FALSE
 
@@ -14,10 +14,9 @@ mainTheme=theme(panel.background = element_rect(fill="#666666", colour="black"),
                 panel.grid.major = element_line(linetype="blank"),panel.grid.minor = element_line(linetype="blank"),
                 plot.background = element_rect(fill=maincolours$graphC, colour=maincolours$graphC))
 SMplotTheme=theme(plot.title=element_text(size=16,face="bold"),axis.title=element_text(size=16,face="bold"),axis.text.x=element_text(size=12),axis.text.y=element_text(size=12))
-LGplotTheme=theme(plot.title=element_text(size=24,face="bold"),axis.title=element_text(size=32,face="bold"),axis.text.x=element_text(size=24),axis.text.y=element_text(size=24))
+LGplotTheme=theme(plot.title=element_text(size=24,face="bold"),axis.title=element_text(size=32,face="bold"),axis.text.x=element_text(size=16),axis.text.y=element_text(size=16))
 
 plotTheme=mainTheme+SMplotTheme
-
 
 plotBlankTheme=theme(panel.background = element_rect(fill=maincolours$graphC, colour=maincolours$graphC),
                 panel.grid.major = element_line(linetype="blank"),panel.grid.minor = element_line(linetype="blank"),
@@ -27,6 +26,7 @@ plotBlankTheme=theme(panel.background = element_rect(fill=maincolours$graphC, co
 
 gridTheme=theme(plot.margin=margin(0,0,0,0,"cm"))
 
+shortCut<-FALSE
 
 mergeVariables<-FALSE
 showInteractionOnly<-TRUE
@@ -47,6 +47,7 @@ points_threshold=50
 wPlotScale="log10"
 # wPlotScale="linear"
 pPlotScale="log10"
+nPlotScale="log10"
 
 alpha<-0.05
 alphaLLR<-3
@@ -54,8 +55,8 @@ anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
-                  nlevs=7,iqr=3,median=4,discrete=TRUE,ordProportions=NA,
-                  ncats=2,cases="C1,C2",proportions="1,1",source="Discrete",
+                  nlevs=7,iqr=3,median=4,discrete="discrete",ordProportions=NA,
+                  ncats=2,cases="C1,C2",proportions="1,1",source="discrete",
                   deploy="Between",targetDeploys="",process="sim"){
   
   var<-list(name=name,type=type,
@@ -161,30 +162,28 @@ getCases<-function(var) {
   }
 }
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,
-             populationPDF="Single",populationPDFk=0.2,populationRZ="r",populationNullp=0
-)
-
-design<-list(sN=42, sNRand=FALSE,sNRandK=2, 
-             sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
-             sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
-             sDependence=0, sOutliers=0, sClustering=0,
-             sN_Strata=5, sR_Strata=2,
-             sNClu_Cluster=5,     sRClu_Cluster=0.7,
-             sNClu_Convenience=1, sRClu_Convenience=0.7, sNCont_Convenience=5, sRCont_Convenience=0.7, sRSpread_Convenience=0.5,
-             sNClu_Snowball=2,   sRClu_Snowball=0.7,   sNCont_Snowball=2,    sRCont_Snowball=0.7,    sRSpread_Snowball=0.1
-)    
-
-evidence<-list(rInteractionOn=TRUE,showType="direct")
-
 varTypes<- c("Interval" = "Interval",
              "Ordinal" = "Ordinal",
              "Categorical" = "Categorical"
 )
 
+#because numericInput with "0." returns NA
+checkNumber<-function(a,b=a) {
+  if (!isempty(a)) {
+    if (is.na(a) || is.null(a)) {a<-0}
+  }
+  a
+}
+oldEffect<-effect
+oldDesign<-design
+oldEvidence<-evidence
+oldMetaAnalysis<-metaAnalysis
+oldLikelihood<-likelihood
 
 importedData<-c()
 lastSample<-c()
+ResultHistory<-c()
+oldWorld_distr_k<-0.2
 
 expectedRunning<-FALSE
 

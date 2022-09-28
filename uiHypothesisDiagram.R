@@ -1,5 +1,4 @@
 
-
 if (switches$doWorlds) {
   HypothesisDiagram <-
     

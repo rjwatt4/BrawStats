@@ -34,9 +34,9 @@ LikelihoodTab <-
                          tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
                                       tags$td(width = "40%", tags$div(style = localStyle, "Target Sample:")),
-                                      tags$td(width = "30%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
+                                      tags$td(width = "30%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=likelihood$targetSample)),
                                       tags$td(width = "15%", tags$div(style = localStyle, "cut:")),
-                                      tags$td(width = "15%", checkboxInput("likelihood_cutaway",label=NULL,value=FALSE))
+                                      tags$td(width = "15%", checkboxInput("likelihood_cutaway",label=NULL,value=likelihood$cutaway))
                                     ),
                          ),
                          tags$table(width = "100%",class="myTable",
@@ -47,7 +47,7 @@ LikelihoodTab <-
                                                           SlikelihoodLengthChoices,selectize=FALSE)
                                       ),
                                       tags$td(width = "20%", tags$div(style = localStyle, "Append:")),
-                                      tags$td(width = "10%", checkboxInput("likelihood_append", label=NULL)),
+                                      tags$td(width = "10%", checkboxInput("likelihood_append", label=NULL,value=likelihood$appendSim)),
                                       tags$td(width = "10%", actionButton("likelihood_run", "Run"))
                                     )
                          ),
@@ -60,9 +60,12 @@ LikelihoodTab <-
                          tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
                                     tags$tr(
                                       tags$td(width = "40%", tags$div(style = localStyle, "Target Sample:")),
-                                      tags$td(width = "30%", numericInput("likelihoodPSampRho", label=NULL,min=-1,max=1, step=0.05,value=0)),
-                                      tags$td(width = "15%",tags$div(style = localStyle, "prior:")),
-                                      tags$td(width = "15%",checkboxInput("likelihoodUsePrior",label=NULL,value=FALSE)),
+                                      tags$td(width = "20%", numericInput("likelihoodPSampRho", label=NULL,min=-1,max=1, step=0.05,value=likelihood$targetSample)),
+                                      tags$td(width = "20%",tags$div(style = localStyle, "prior:")),
+                                      tags$td(width = "20%",selectInput("likelihoodUsePrior",label=NULL,
+                                                                        choices=c("none","world","prior"),selected=likelihood$Use,
+                                                                        selectize=FALSE)
+                                              ),
                                     )
                                     ),
                          tags$table(width = "100%",class="myTable",
@@ -73,7 +76,7 @@ LikelihoodTab <-
                                                           PlikelihoodLengthChoices,selectize=FALSE)
                                       ),
                                       tags$td(width = "20%", tags$div(style = localStyle, "Append:")),
-                                      tags$td(width = "10%", checkboxInput("likelihoodP_append", label=NULL)),
+                                      tags$td(width = "10%", checkboxInput("likelihoodP_append", label=NULL,value=likelihood$appendSim)),
                                       tags$td(width = "10%", actionButton("likelihoodP_run", "Run")),
                                     )
                          ),
@@ -92,6 +95,16 @@ LikelihoodTab <-
                        wellPanel(
                          style = paste("background: ",subpanelcolours$likelihoodC,";"),
                          tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "25%", tags$div(style = paste(localStyle,"text-align: left"), "Analysis")),
+                                      tags$td(width = "25%"),
+                                      tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
+                                      tags$td(width = "25%", 
+                                              # actionButton("LGEvidenceStart","i")
+                                      )
+                                    ),
+                                    ),
+                         tags$table(width = "100%",class="myTable",
                                     # tags$tr(
                                     #   tags$td(width = "50%", tags$div(style = localStyle, "include nulls:")),
                                     #   tags$td(width = "30%", checkboxInput("includeNulls", value=FALSE, label=NULL)),
@@ -99,30 +112,30 @@ LikelihoodTab <-
                                     #   tags$td(width = "10%",actionButton("LGdoPossible","i"))
                                     # ),
                                     tags$tr(
-                                      tags$td(width = "40%", tags$div(style = localPlainStyle, "show theory:")),
-                                      tags$td(width = "10%", checkboxInput("likelihoodTheory", value=TRUE, label=NULL)),
-                                      tags$td(width = "25%"),
-                                      tags$td(width = "20%"),
-                                      tags$td(width = "5%",
-                                              # actionButton("LGPossibleStart","i")
-                                              )
-                                    ),
-                                    tags$tr(
-                                      tags$td(width = "40%", tags$div(style = localPlainStyle, "longhand sims:")),
-                                      tags$td(width = "10%", checkboxInput("longHandLikelihood", value=TRUE, label=NULL)),
                                       tags$td(width = "25%", tags$div(style = localPlainStyle, "sim slice:")),
-                                      tags$td(width = "20%",numericInput("likelihoodSimSlice",label=NULL,value=0.1,max=0.2,min=0.0001,step=0.01)),
-                                      tags$td(width = "5%",checkboxInput("likelihoodCorrection", value=FALSE, label=NULL))
+                                      tags$td(width = "20%",numericInput("likelihoodSimSlice",label=NULL,value=likelihood$likelihoodSimSlice,max=0.2,min=0.0001,step=0.01)),
+                                      tags$td(width = "25%", tags$div(style = localPlainStyle, "correction:")),
+                                      tags$td(width = "30%",checkboxInput("likelihoodCorrection", value=likelihood$likelihoodCorrection, label=NULL))
                                     ),
                                     
                          ),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "25%", tags$div(style = paste(localStyle,"text-align: left"), "Display")),
+                                      tags$td(width = "25%"),
+                                      tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
+                                      tags$td(width = "25%", 
+                                              # actionButton("LGEvidenceStart","i")
+                                      )
+                                    ),
+                                    ),
                          tags$table(width = "100%",class="myTable",
                                     tags$tr(
                                       tags$td(width = "15%", tags$div(style = localPlainStyle, "view:")),
                                       tags$td(width = "20%", 
                                               selectInput("LikelihoodView", label=NULL,
                                                           c("3D" = "3D",
-                                                            "2D" = "2D"),selectize=FALSE)
+                                                            "2D" = "2D"),selected=likelihood$view,selectize=FALSE)
                                       ),
                                       tags$td(width = "5%", tags$div(style = localPlainStyle, "az:")),
                                       tags$td(width = "15%", 
@@ -130,7 +143,7 @@ LikelihoodTab <-
                                                            min = -180,
                                                            max = 180,
                                                            step = 5,
-                                                           value = 35)
+                                                           value = likelihood$azimuth)
                                       ),
                                       tags$td(width = "5%", tags$div(style = localPlainStyle, "elev:")),
                                       tags$td(width = "15%", 
@@ -138,7 +151,7 @@ LikelihoodTab <-
                                                            min = 0,
                                                            max = 90,
                                                            step = 5,
-                                                           value = 15)
+                                                           value = likelihood$elevation)
                                       ),
                                       tags$td(width = "5%", tags$div(style = localPlainStyle, "r:")),
                                       tags$td(width = "20%", 
@@ -149,6 +162,14 @@ LikelihoodTab <-
                                                            value = 1000)
                                       ),
                                     )
+                         ),
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "45%", tags$div(style = localPlainStyle, "long hand:")),
+                                      tags$td(width = "5%", checkboxInput("likelihoodLongHand",label=NULL,value=likelihood$likelihoodLongHand)),
+                                      tags$td(width = "45%",tags$div(style = localPlainStyle, "show theory:")),
+                                      tags$td(width = "5%", checkboxInput("likelihoodTheory", value=likelihood$likelihoodTheory, label=NULL))
+                                    ),
                          )
                        )
               )

@@ -56,8 +56,13 @@ drawCategorical<-function(var){
   dens<-c(0,dens,0)
   pts=data.frame(r=r,dens=dens)
   
-  drawVar(pts,var)+
-    scale_x_continuous(breaks=b,labels=l)+
+  g<-drawVar(pts,var)
+  if (var$deploy=="Within") {
+    pts<-data.frame(x=b,y=pp*0.75)
+    g<-g+geom_line(data=pts,aes(x=x,y=y),colour="white",lwd=1)+
+      geom_point(data=pts,aes(x=x,y=y),colour="black")
+  }
+    g+scale_x_continuous(breaks=b,labels=l)+
     coord_cartesian(xlim = xlim, ylim = c(0, 1.2))
   
 }

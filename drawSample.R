@@ -12,7 +12,7 @@ drawSample<-function(IV,DV,effect,result){
     dotSize<-dotSize*sqrt(100/length(x))
   }
   pts<-data.frame(x=x,y=y);
-  g<-g+geom_point(data=pts,aes(x=x,y=y),shape=21, colour = "black", fill = plotcolours$sampleC, size = dotSize)+
+  g<-g+geom_point(data=pts,aes(x=x,y=y),shape=shapes$data, colour = "black", fill = plotcolours$sampleC, size = dotSize)+
   labs(x=IV$name,y=DV$name)+plotTheme
   g
   

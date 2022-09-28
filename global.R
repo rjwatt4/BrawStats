@@ -1,7 +1,9 @@
 switches<-list(doLikelihood=TRUE,
-               doWorlds=FALSE,doReplications=FALSE,doCheating=FALSE,
+               doWorlds=TRUE,doReplications=TRUE,doCheating=TRUE,
                doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
+               doMetaAnalysis=FALSE,
                startBlank=FALSE,doBootstrap=TRUE,
+               showAnimation=TRUE,
                importOrdinals=TRUE,
                rigidWithin=TRUE)
 debug<-FALSE
@@ -14,13 +16,18 @@ graphWidth="14.5cm"
 graphHeight="8.1cm"
 reportHeight="5cm"
 LGGraphHeight="15cm"
+LGGraphHeightTabs="14.7cm"
 LGPanelHeight="15.3cm"
 LGModalHeight="16.4cm"
 LGModalWidth="32cm"
 diagramPanelWidth="6.9cm"
+diagramPanelWidth="100%"
 diagramUpperPanelHeight=graphHeight
 diagramLowerPanelHeight=reportHeight
 
+expandLabel<-HTML("&#9974")
+emdash="\u2014"
+  
 maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#BFECFF")
 # maincolours<-list(windowC="#002D40",panelC="#005E86",graphC="#FFFFFF")
 
@@ -71,6 +78,8 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
                   infer_sigC="#22FF00",infer_nsigC="#FF2222",
                   infer_err="#333333",infer_nerr="#00CCFF")
 
+shapes<-list(data=21,study=22,parameter=21,meta=24)
+
 labelStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: left;")
 localStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: right;")
 localPlainStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:normal;text-align: right;")
@@ -81,21 +90,69 @@ IV<-list(name="IV",type="Interval",mu=0,sd=1,ncats=2,cases="C1,C2",proportions="
 IV2<-list(name="none",type="Interval",mu=0,sd=1,ncats=2,cases="D1,D2",proportions="1,1")
 DV<-list(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2",proportions="1,1")
 
-effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,ResidDistr="normal")
+effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,
+             world=list(worldOn=FALSE,populationPDF="Single",populationPDFk=0.2,populationRZ="r",populationNullp=0)
+)
 
-design<-list(sN=42, sNRand=FALSE,sNRandK=2,
+nulleffect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,Heteroscedasticity=0,Welch=FALSE,
+                 world=list(worldOn=FALSE,populationPDF="Single",populationPDFk=0.0,populationRZ="r",populationNullp=0)
+)
+
+design<-list(sN=42, sNRand=FALSE,sNRandK=2, 
              sMethod="Random" ,sIV1Use="Between",sIV2Use="Between", 
              sRangeOn=FALSE, sIVRange=c(-3,3), sDVRange=c(-3,3), 
              sDependence=0, sOutliers=0, sClustering=0,
+             sCheating=FALSE,sCheatingK=5,
+             sReplicationOn=FALSE,sReplPower=0.8,sReplTails=2,
+             sReplSigOnly=FALSE,sReplRepeats=1,sReplKeep="last",sReplCorrection=TRUE,
              sN_Strata=5, sR_Strata=2,
-             sNClu_Cluster=7,     sRClu_Cluster=0.25,
+             sNClu_Cluster=5,     sRClu_Cluster=0.7,
              sNClu_Convenience=1, sRClu_Convenience=0.7, sNCont_Convenience=5, sRCont_Convenience=0.7, sRSpread_Convenience=0.5,
              sNClu_Snowball=2,   sRClu_Snowball=0.7,   sNCont_Snowball=2,    sRCont_Snowball=0.7,    sRSpread_Snowball=0.1
 )    
 
-evidence<-list(rInteractionOn=TRUE,showType="direct")
+evidence<-list(rInteractionOn=TRUE,
+               rInteractionOnly=TRUE,
+               showType="EffectSize",
+               showTheory=TRUE,
+               longHand=TRUE,
+               ssqType="Type3",
+               llr=list(e1=c(),e2=0),
+               evidenceCaseOrder="Alphabetic",
+               allScatter="all",
+               Welch=FALSE,
+               dataType="Raw",
+               analysisType="Anova",
+               pScale="log10",wScale="linear",nScale="log10"
+)
 
-llr<-list(e2=0,e1=c())
+metaAnalysis<-list(
+  nstudies=100,
+  meta_fixedAnal="random",
+  sig_only=FALSE,
+  meta_psigAnal=FALSE,
+  meta_nullAnal=FALSE,
+  nsims=1,
+  showTheory=TRUE,
+  append=FALSE
+)
+
+likelihood<-
+  list(type=c(),
+       Use="none",
+       prior=effect$world,
+       world=effect$world,
+       design=list(sampleN=design$sN,sampleNRand=design$sNRand,sampleNRandK=design$sNRandK),
+       targetSample=c(),targetPopulation=0,
+       cutaway=FALSE,
+       ResultHistory=c(),
+       likelihoodTheory=TRUE,
+       likelihoodLongHand=FALSE,
+       likelihoodSimSlice=0.1,likelihoodCorrection=TRUE,
+       appendSim=FALSE,Likelihood_length="10",
+       view="3D",azimuth=40,elevation=15,range=1000,
+       textResult=FALSE
+  )
 
 fullRange<-3
 allScatter<-"all"
@@ -113,11 +170,12 @@ graphAspect<-0.67
 
 if (is_local) {
   switches$doClipboard<-TRUE
-  
-  if (Sys.getenv("USERNAME")=="rjwatt42") {
+
+  if (Sys.getenv("USERNAME")=="rjwatt42" || Sys.info()["user"]=="rogerwatt") {
     switches$doBatchFiles<-TRUE
     switches$doWorlds<-TRUE
     switches$doReplications<-TRUE
     switches$doCheating<-TRUE
+    switches$doMetaAnalysis<-TRUE
   } 
 }

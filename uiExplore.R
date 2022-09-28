@@ -1,3 +1,4 @@
+source("uiExploreMeta.R")
 
 hypothesisChoices3Plain=list("Variables"=list("IV" = "IV",
                                          "IV2" = "IV2",
@@ -27,7 +28,7 @@ hypothesisChoices2=list("Variables"=list("IV" = "IV",
                                          "IV/DV Types" = "IVDVType"),
                         "Effects"=list("Effect Size" = "EffectSize1",
                                        "Heteroscedasticity" = "Heteroscedasticity"),
-                        "Worlds"=list("PDF"="PDF","k"="k","pnull"="pnull")
+                        "Worlds"=list("pdf"="PDF","k"="k","pNull"="pNull")
 )
 
 variableChoices=list("& type"="Type",
@@ -60,13 +61,6 @@ designChoicesPlain=list("Sampling"=list("Sample Size" = "SampleSize",
                                       "IV Range" = "IVRange",
                                       "DV Range" = "DVRange")
   )
-
-anomChoices=list("Anomalies"=list("Dependence" = "Dependence",
-                                  "Outliers" = "Outliers",
-                                  "Heteroscedasticity" = "Heteroscedasticity"),
-                 "Range"=list("IV Range" = "IVRange",
-                              "DV Range" = "DVRange")
-)
 
 effectChoices=list("IV1-DV"="MainEffectIV",
                    "IV2-DV"="MainEffectIV2",
@@ -223,67 +217,24 @@ ExploreTab <-
                                               )
                                    ))
                         ),                        
-                        # tabPanel("Anomalies",id="ExA",
-                        #          style = paste("background: ",subpanelcolours$exploreC), 
-                        #          wellPanel(
-                        #            style = paste("background: ",subpanelcolours$exploreC,";"),
-                        #            tags$table(width = "100%",class="myTable",
-                        #                       tags$tr(
-                        #                         tags$td(width = "10%", tags$div(style = localStyle, "Vary:")),
-                        #                         tags$td(width = "40%", 
-                        #                                 selectInput("Explore_typeA",label=NULL,
-                        #                                             anomChoices,selectize=FALSE)
-                        #                         ),
-                        #                         tags$td(id="Explore_anomRangeLabel",width = "25%", tags$div(style = localStyle, "an-range:")),
-                        #                         tags$td(width = "25%", 
-                        #                                 numericInput("Explore_anomRange", label=NULL,value=0.9)
-                        #                         ),
-                        #                       ),
-                        #                       tags$tr(
-                        #                         tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
-                        #                         tags$td(width = "40%", 
-                        #                                 selectInput("Explore_showA", label=NULL,
-                        #                                             showChoices,width="100%",selectize = FALSE)
-                        #                         ),
-                        #                         conditionalPanel(condition="input.IV2choice != 'none'",
-                        #                                          tags$td(width = "25%", 
-                        #                                 selectInput("Explore_whichShowA", label=NULL,
-                        #                                             whichShowChoices, selected="Main 1",selectize = FALSE)
-                        #                         )),
-                        #                         tags$td(width = "25%", 
-                        #                                 conditionalPanel(condition="input.IV2choice != 'none'",
-                        #                                                  selectInput("Explore_typeShowA", label=NULL,
-                        #                                             extraShowChoices, selected="direct",selectize = FALSE)
-                        #                         ))
-                        #                       )),
-                        #            tags$table(width = "100%",class="myTable",
-                        #                       tags$tr(
-                        #                         tags$td(width = "10%", tags$div(style = localStyle, "Runs:")),
-                        #                         tags$td(width = "30%", 
-                        #                                 selectInput("Explore_lengthA", label=NULL,
-                        #                                             exploreLengthChoices,width="100%",selectize=FALSE)
-                        #                         ),
-                        #                         tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                        #                         tags$td(width = "10%", checkboxInput("ExploreAppendA", label=NULL)),
-                        #                         tags$td(width = "20%", actionButton("exploreRunA", "Run"))
-                        #                       )
-                        #            ))
-                        # ),                        
+                        exploreMeta,
                         tabPanel("#",
                                  style = paste("background: ",subpanelcolours$exploreC), 
                                  wellPanel(
                                    style = paste("background: ",subpanelcolours$exploreC,";"),
                                    tags$table(width = "100%",class="myTable",
                                               tags$tr(
+                                                tags$td(width = "25%", tags$div(style = paste(localStyle,"text-align: left"), "Analysis")),
+                                                tags$td(width = "15%"),
+                                                tags$td(width = "30%"),
+                                                tags$td(width = "25%"),
+                                                tags$td(width = "5%")
+                                              ),
+                                              tags$tr(
                                                 tags$td(width = "25%", tags$div(style = localPlainStyle, "no points:")),
                                                 tags$td(width = "15%", 
                                                         numericInput("Explore_npoints", label=NULL,value=13)
                                                 ),
-                                                tags$td(width = "30%", tags$div(style = localPlainStyle, "quantiles:")),
-                                                tags$td(width = "20%", 
-                                                        numericInput("Explore_quants", label=NULL,value=0.95, step = 0.01,min=0.01,max=0.99)
-                                                ),
-                                                tags$td(width="5%"),
                                                 tags$td(width="5%"),
                                               ),
                                               tags$tr(
@@ -292,20 +243,33 @@ ExploreTab <-
                                                         numericInput("Explore_esRange", label=NULL,value=0.8)
                                                 ),
                                                 tags$td(width = "30%", tags$div(style = localPlainStyle, "anom-range:")),
-                                                tags$td(width = "20%", 
+                                                tags$td(width = "25%", 
                                                         numericInput("Explore_anomRange", label=NULL,value=0.9)
                                                 ),
-                                                tags$td(width="5%"),
                                                 tags$td(width="5%")
                                                 ),
                                               tags$tr(
-                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "full y-lim:")),
-                                                tags$td(width = "15%", checkboxInput("ExploreFull_ylim", label=NULL,value=FALSE)),
+                                                tags$td(width = "25%", tags$div(style = paste(localStyle,"text-align: left"), "Display")),
+                                                tags$td(width = "15%"),
                                                 tags$td(width = "30%"),
-                                                tags$td(width = "20%"),
-                                                tags$td(width="5%"),
-                                                tags$td(width="5%")
-                                              )
+                                                tags$td(width = "25%"),
+                                                tags$td(width = "5%")
+                                              ),
+                                              tags$tr(
+                                                tags$td(width = "25%", tags$div(style = localPlainStyle, "quantiles:")),
+                                                tags$td(width = "15%", 
+                                                        numericInput("Explore_quants", label=NULL,value=0.95, step = 0.01,min=0.01,max=0.99)
+                                                ),
+                                                tags$td(width = "30%", tags$div(style = localPlainStyle, "full y-lim:")),
+                                                tags$td(width = "25%", checkboxInput("ExploreFull_ylim", label=NULL,value=FALSE)),
+                                                tags$td(width = "5%")
+                                              ),
+                                              # tags$tr(
+                                              #   tags$td(width = "45%", tags$div(style = localPlainStyle, "long hand:")),
+                                              #   tags$td(width = "5%"),
+                                              #   tags$td(width = "45%", tags$div(style = localPlainStyle, "show theory:")),
+                                              #   tags$td(width="5%",checkboxInput("exploreTheory",label=NULL,value=TRUE))
+                                              # )
                                    )
                                    )
                         )

@@ -4,13 +4,17 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
           "Anova"= {
             switch (evidence$dataType,
                     "Norm"={anova<-result$normAnova},
-                    "Raw"={anova<-result$rawAnova}
+                    "Raw"={anova<-result$rawAnova},
+                    "NormC"={anova<-result$normAnovaC},
+                    "RawC"={anova<-result$rawAnovaC}
             )
           },
           "Model"= {
             switch (evidence$dataType,
                     "Norm"={anova<-result$normModel},
-                    "Raw"={anova<-result$rawModel}
+                    "Raw"={anova<-result$rawModel},
+                    "NormC"={anova<-result$normModelC},
+                    "RawC"={anova<-result$rawModelC}
             )
             anova<-data.frame(summary(anova)$coefficients)
           }
@@ -21,6 +25,9 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
   an_name<-result$an_name
     outputText<-rep("",nc*2)
     outputText[1]<-paste("\b",an_name,sep="")
+    if (!is.null(IV2)) {
+      outputText[2]<-paste("(",evidence$analysisType,"/",evidence$dataType,")",sep="")
+    }
     
     if (is.null(IV2)){
       outputText<-c(outputText,"\btest-statistic","\b(df) ","\bvalue   ","\bp","\bllr",rep("",nc-5))
@@ -71,9 +78,11 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
     }
     if (!total_done && evidence$analysisType=="Anova") {
     ssq<-sum(anova[,1])#-result$anova[1,1]
+    if (!is.na(ssq)) {ssq<-format(ssq,digits=report_precision)} else {ssq<-""}
+    
     df<-sum(anova[,2])#-result$anova[1,2]
-    # outputText<-c(outputText,rep(" ",nc))
-    outputText<-c(outputText,"\bTotal",format(ssq,digits=report_precision),format(df,digits=report_precision),rep("",nc-3))
+    if (!is.na(df)) {df<-format(df,digits=report_precision)} else {df<-""}
+    outputText<-c(outputText,"\bTotal",ssq,df,rep("",nc-3))
     }
     outputText<-c(outputText,rep(" ",nc))
 

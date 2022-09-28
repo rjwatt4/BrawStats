@@ -81,7 +81,7 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
   g<-g+
     geom_line(data=mn_pts,aes(x=xm,y=ym))+
     geom_errorbar(data=mn_pts,aes(x=xm, ymin=ym-se, ymax=ym+se),width=0.2)+
-    geom_point(data=mn_pts,aes(x=xm,y=ym), shape=21, colour = "black", fill = col, size = 7)
+    geom_point(data=mn_pts,aes(x=xm,y=ym), shape=shapes$data, colour = "black", fill = col, size = 7)
   if (offset<=2){
     g<-g+scale_x_continuous(breaks=b,labels=l)
   }
@@ -155,7 +155,7 @@ drawCatOrdPrediction<-function(g,IV,DV,rho,n,offset= 1){
   g<-g+
     geom_line(data=mn_pts,aes(x=xm,y=ym))+
     geom_errorbar(data=mn_pts,aes(x=xm, ymin=ym-se, ymax=ym+se),width=0.2)+
-    geom_point(data=mn_pts,aes(x=xm,y=ym), shape=21, colour = "black", fill = col, size = 7)
+    geom_point(data=mn_pts,aes(x=xm,y=ym), shape=shapes$data, colour = "black", fill = col, size = 7)
   if (offset<=2){
     g<-g+scale_x_continuous(breaks=b,labels=l)
   }

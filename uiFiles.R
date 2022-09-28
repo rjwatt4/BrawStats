@@ -41,16 +41,16 @@ wellPanel(
                                               actionButton("WSOutputFileSave","Save")),
                                     ),
                          ),
-                         # conditionalPanel(condition="switches.doClipboard",
-                         #                  tags$table(width = "100%",class="myTable",
-                         #                             tags$tr(
-                         #              tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
-                         #              tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
-                         #                      actionButton("wsPaste","Import")),
-                         #              tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
-                         #                      actionButton("wsCopy","Export")),
-                         #            ))
-                         # )
+                         conditionalPanel(condition="switches.doClipboard",
+                                          tags$table(width = "100%",class="myTable",
+                                                     tags$tr(
+                                      tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
+                                      tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
+                                              actionButton("wsPaste","Import")),
+                                      tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
+                                              actionButton("wsCopy","Export")),
+                                    ))
+                         )
                        )
               ),
               tabPanel("Data",
@@ -81,16 +81,16 @@ wellPanel(
                                               actionButton("dataOutputFileSave","Save")),
                                     ),
                          ),
-                         # conditionalPanel(condition="switches.doClipboard",
-                         # tags$table(width = "100%",class="myTable",
-                         #            tags$tr(
-                         #              tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
-                         #              tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
-                         #                      actionButton("dPaste","Import")),
-                         #              tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
-                         #                      actionButton("dCopy","Export")),
-                         #            ))
-                         # )
+                         conditionalPanel(condition="switches.doClipboard",
+                         tags$table(width = "100%",class="myTable",
+                                    tags$tr(
+                                      tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-left: 1px solid black;",tags$div(style = localStyle, "clipboard:")),
+                                      tags$td(width = "50%", style="border-bottom: 1px solid black;border-top: 1px solid black;",
+                                              actionButton("dPaste","Import")),
+                                      tags$td(width = "5%", style="border-bottom: 1px solid black;border-top: 1px solid black;border-right: 1px solid black;",
+                                              actionButton("dCopy","Export")),
+                                    ))
+                         )
                          )
               ),
               batchTab
@@ -109,6 +109,8 @@ wellPanel(
                                      tags$tr(
                                        tags$td(width = "40%", tags$div(style = localPlainStyle, "Export Header: ")),
                                        tags$td(width = "5%", checkboxInput("ExportHeader", value=TRUE, label=NULL)),
+                                       tags$td(width = "35%", tags$div(style = localPlainStyle, "Short Form: ")),
+                                       tags$td(width = "20%", checkboxInput("ExportShortForm", value=TRUE, label=NULL)),
                                      )
                           )
                         )

@@ -1,4 +1,5 @@
 min_p=0.0001
+max_s=6
 min_nw=10
 max_nw=10000
 horiz_scatter=0.5
@@ -8,6 +9,50 @@ se_size=0.75
 se_arrow=0.3
 CI=0.95
 
+histGain<-NA
+
+collectData<-function(result) {
+  ns<-cbind(result$nval)
+  rp<-cbind(result$rpIV)
+  ro<-cbind(result$roIV)
+  po<-cbind(result$poIV)
+  
+  if (is.null(result$r$direct)){
+    rs<-cbind(result$rIV)
+    ps<-cbind(result$pIV)
+  } else {
+    switch (result$showType,
+            "direct"={
+              rs<-rbind(result$r$direct)
+              ps<-rbind(result$p$direct)
+            },
+            "unique"={
+              rs<-rbind(result$r$unique)
+              ps<-rbind(result$p$unique)
+            },
+            "total"={
+              rs<-rbind(result$r$total)
+              ps<-rbind(result$p$total)
+            },
+            "all"={
+              rs<-c()
+              ps<-c()
+              ysc=1/3
+              xoff=c(0,0,0,2,2,2,4,4,4)
+              for (jk in 1:ncol(result$r$direct)) {
+                rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
+                ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
+              }
+            },
+            "coefficients"={
+              rs<-rbind(result$r$coefficients)
+              ps<-rbind(result$p$direct)
+            }
+    )
+  }
+  out<-list(rs=rs,ps=ps,ns=ns,rp=rp,ro=ro,po=po)
+}
+
 makeFiddle<-function(y,yd){
   yz<-c()
   xz<-c()
@@ -15,7 +60,7 @@ makeFiddle<-function(y,yd){
   
   for (i in 1:length(y)){
     found<-(abs(yz-y[i])<yd)
-    if (any(found)) {
+    if (any(found,na.rm=TRUE)) {
       x_max<-max(xz[found])
       x_which<-which.max(xz[found])
       y_at_max<-yz[found][x_which]
@@ -37,141 +82,98 @@ makeFiddle<-function(y,yd){
     }
   }
   
-  # for (i in 1:length(r)) {
-  #   closeness<-abs(r[1:(i-1)]-r[i])
-  #   use<-closeness<rd
-  #   if (any(use)) {
-  #     shift1<-max(rz[use])
-  #     shift2<-min(rz[uuse])
-  #     if (abs(shift1)>abs(shift2)) {
-  #       rz[i] <- shift2-xd
-  #     } else {
-  #       rz[i] <- shift1+xd
-  #     }
-  #   }
-  # }
   return(xz)
 }
 
-get_target<-function(nsvals,vals){
+get_upperEdge<-function(nsvals,vals){
   target1<-max(nsvals,na.rm=TRUE)
   if (any(vals>target1,na.rm=TRUE)){
     target2<-min(vals[vals>target1],na.rm=TRUE)
     target<-(target1+target2)/2
   } else target<-target1+0.001
 }
+get_lowerEdge<-function(nsvals,vals) {
+  target1<-min(nsvals,na.rm=TRUE)
+  if (any(vals<target1)){
+    target2<-max(vals[vals<target1],na.rm=TRUE)
+    if (target2==-Inf) target2=target1-0.5
+    target<-(target1+target2)/2
+  } else {target<-target1-0.5}
+}
+
+getBins<-function(vals,nsvals,target,minVal,maxVal,fixed=FALSE) {
+  nv=max(length(nsvals),length(vals))
+  nb<-round(sqrt(nv)*0.75)
+  nb<-51
+  
+  high_p<-max(vals,na.rm=TRUE)+0.001
+  low_p<-min(vals,na.rm=TRUE)-0.001
+  if (!is.null(minVal)) {
+    low_p<-min(max(minVal,low_p,na.rm=TRUE),target)
+  }
+  if (!is.null(maxVal)) {
+    high_p<-min(maxVal,high_p,na.rm=TRUE)
+  }
+  if (all(is.na(nsvals)) || all(!is.na(nsvals))){
+    bins<-seq(low_p,high_p,length.out=nb)
+  } else {
+    if (fixed) {
+      target_low<-max(-target,low_p)
+      target_high<-min(target,high_p)
+      targetRange<-target_high-target_low
+      nbs<-ceiling(nb*targetRange/(high_p-low_p))
+      binStep<-targetRange/nbs
+      bins<-seq(target_low,target_high,binStep)
+      if (target<high_p) {
+        bins<-c(bins,seq(target+binStep,high_p+binStep,binStep))
+      }
+      if (-target>low_p) {                                
+        bins<-c(rev(seq(-target-binStep,low_p-binStep,-binStep)),bins)
+      }
+    } else {
+    nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
+    binStep<-(high_p-target)/nbs
+    bins<-rev(seq(high_p,low_p-binStep,-binStep))
+    }
+  }
+  bins
+}
 
 expected_hist<-function(vals,nsvals,valType){
 
-  nv=max(length(nsvals),length(vals))
-  nb<-round(sqrt(nv)*0.75)
+  if (is.element(valType,c("r1","rp","ci1","ci2"))) valType<-"r"
+  if (is.element(valType,c("e1","e2","p1"))) valType<-"p"
+  if (is.element(valType,c("wp"))) valType<-"w"
   
   switch (valType,
           "r"=  { # ns is small
-            target<-get_target(abs(nsvals),abs(vals))
-
-            low_p<-min(vals,na.rm=TRUE)-0.001
-            high_p<-max(vals,na.rm=TRUE)+0.001
-            if (all(is.na(nsvals)) || all(!is.na(nsvals))){
-              bins<-seq(low_p,high_p,length.out=nb)
-              } else {
-                target_low<-max(-target,low_p)
-                target_high<-min(target,high_p)
-                targetRange<-target_high-target_low
-                nbs<-ceiling(nb*targetRange/(high_p-low_p))
-                binStep<-targetRange/nbs
-                bins<-seq(target_low,target_high,binStep)
-                if (target<high_p) {
-                  bins<-c(bins,seq(target+binStep,high_p+binStep,binStep))
-                }
-                if (-target>low_p) {
-                  bins<-c(rev(seq(-target-binStep,low_p-binStep,-binStep)),bins)
-                }
-              }
+            target<-get_upperEdge(abs(nsvals),abs(vals))
+            bins<-getBins(vals,nsvals,target,NULL,NULL,TRUE)
           },
           
           "p"=  { # ns is large
-            target<-alpha
-            if (pPlotScale=="log10"){
-              vals[vals<0.000001]<-0.000001
-              vals<-log10(vals)
-              nsvals<-log10(nsvals)
-              target<-log10(target)
-              low_p<-min(max(log10(min_p),min(vals,na.rm=TRUE),na.rm=TRUE),log10(alpha))
-              high_p<-max(vals,na.rm=TRUE)
-            } else {
-              low_p<-max(min_p,min(vals,na.rm=TRUE))
-              high_p<-max(vals,na.rm=TRUE)
-            }
-            if (all(is.na(nsvals)) || all(!is.na(nsvals))){
-              bins<-seq(low_p,high_p,length.out=nb)
-            } else {
-              nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
-              binStep<-(high_p-target)/nbs
-              bins<-rev(seq(high_p,low_p-binStep,-binStep))
-            }
+            target<-log10(alpha)
+            bins<-getBins(vals,nsvals,target,log10(min_p),NULL)
+          },
+            
+          "log(lr)"={
+            target<-3
+            bins<-getBins(vals,nsvals,target,0,5)
+          },
+          
+          "w"=  { # ns is small
+            target<-get_upperEdge(abs(nsvals),abs(vals))
+            bins<-getBins(vals,nsvals,target,log10(min_p),NULL)
           },
           
           "n"= { # ns is small
-            target1<-min(nsvals,na.rm=TRUE)
-            if (any(vals<target1)){
-              target2<-max(vals[vals<target1],na.rm=TRUE)
-              if (target2==-Inf) target2=target1-0.5
-              target<-(target1+target2)/2
-            } else {target<-target1-0.5}
-            
-            low_p<-min(vals,na.rm=TRUE)
-            high_p<-min(10000,max(vals,na.rm=TRUE))
-            
-            if (all(is.na(nsvals)) || all(!is.na(nsvals))){
-              bins<-seq(low_p,high_p,length.out=nb)
-            } else {
-              nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
-              binStep<-(high_p-target)/nbs
-              bins<-rev(seq(high_p,low_p-binStep,-binStep))
-            }
-            },
-            
-          "w"=  { # ns is small
-            target<-get_target(abs(nsvals),abs(vals))
-
-            if (wPlotScale=="log10"){
-              vals[val<0.000001]<-0.000001
-              vals<-log10(vals)
-              nsvals<-log10(nsvals)
-              target<-log10(target)
-              low_p<-max(log10(min_p),min(vals,na.rm=TRUE))
-              high_p<-max(vals,na.rm=TRUE)
-            } else {
-              low_p<-max(min_p,min(vals,na.rm=TRUE))
-              high_p<-max(vals,na.rm=TRUE)
-            }
-            if (all(is.na(nsvals)) || all(!is.na(nsvals))){
-              bins<-seq(low_p,high_p,length.out=nb)
-            } else {
-              nbs<-ceiling(nb*(high_p-target)/(high_p-low_p))
-              binStep<-(high_p-target)/nbs
-              bins<-rev(seq(high_p,low_p-binStep,-binStep))
-            }
+            target<-get_lowerEdge(nsvals,vals)
+            bins<-getBins(vals,nsvals,target,NULL,10000,FALSE)
           },
+          
           "nw"= { # ns is large
-            target1<-min(nsvals,na.rm=TRUE)
-            if (any(vals<target1)){
-              target2<-max(vals[vals<target1],na.rm=TRUE)
-              if (target2==-Inf) target2=target1-0.5
-              target<-(target1+target2)/2
-            } else {target<-target1-0.5}
-            
-            low_p<-min(vals,na.rm=TRUE)
-            high_p<-min(log10(10000),max(vals,na.rm=TRUE))
-            
-            if (all(is.na(nsvals)) || all(!is.na(nsvals))){
-              bins<-seq(low_p,high_p,length.out=nb)
-            } else {
-              nbs<-ceiling(nb*(target-low_p)/(high_p-low_p))
-              binStep<-(target-low_p)/nbs
-              bins<-seq(low_p,high_p+binStep,binStep)
-            }
+            target<-get_lowerEdge(nsvals,vals)
+            bins<-getBins(vals,nsvals,target,NULL,max_nw,FALSE)
           }
   )
   useBins<-c(-Inf,bins,Inf)
@@ -183,8 +185,14 @@ expected_hist<-function(vals,nsvals,valType){
   nsdens<-nsdens$counts
   nsdens<-nsdens[2:(length(nsdens)-1)]
 
-  nsdens<-nsdens/max(dens)/2
-  dens<-dens/max(dens)/2
+  if (is.na(histGain)) {
+    nsdens<-nsdens/max(dens,na.rm=TRUE)/2
+    dens<-dens/max(dens,na.rm=TRUE)/2
+  } else {
+    nsdens<-nsdens/(sum(dens)*(bins[2]-bins[1]))*histGain
+    dens<-dens/(sum(dens)*(bins[2]-bins[1]))*histGain
+  }
+  
   x<-as.vector(matrix(c(bins,bins),2,byrow=TRUE))
   y1<-c(0,as.vector(matrix(c(dens,dens),2,byrow=TRUE)),0)
   y2<-c(0,as.vector(matrix(c(nsdens,nsdens),2,byrow=TRUE)),0)
@@ -192,8 +200,16 @@ expected_hist<-function(vals,nsvals,valType){
   data.frame(y1=c(-y1,rev(y1)), y2=c(-y2,rev(y2)), x=c(x,rev(x)))
 }
 
-expected_plot<-function(g,pts,result,IV,DV,expType){
-  xoff<-pts$x[1]
+start_plot<-function() {
+  g<-ggplot()
+  g<-g+theme(legend.position = "none")+plotTheme
+  g<-g+scale_x_continuous(breaks=NULL)
+  g+theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())
+}
+
+expected_plot<-function(g,pts,result,IV,DV,expType,single=FALSE){
   if (useSignificanceCols){
     c1=plotcolours$infer_sigC
     c2=plotcolours$infer_nsigC
@@ -201,324 +217,267 @@ expected_plot<-function(g,pts,result,IV,DV,expType){
     c1=plotcolours$descriptionC
     c2=plotcolours$descriptionC
   }
-  switch (expType,
-          "r"={
-          },
-          "p"={
-          },
-          "n"={
-          },
-          "w"={
-            c1=plotcolours$infer_sigC
-            c2=plotcolours$infer_nsigC
-          },
-          "nw"={
-            c1=plotcolours$infer_sigC
-            c2=plotcolours$infer_nsigC
-          },
-          "e1"={
-            expType<-"p"
-            c1=plotcolours$infer_err
-            c2=plotcolours$infer_nsigC
-          },
-          "e2"={
-            expType<-"p"
-            c1=plotcolours$infer_sigC
-            c2=plotcolours$infer_err
-          },
-          "ci1"={},
-          "ci2"={}
-  )
-          
-  pts1<-expected_hist(pts$y1,pts$y2,expType)
-
-  g<-g+
-    geom_polygon(data=pts1,aes(y=x,x=y1+xoff),colour=NA, fill = c1)+
-    geom_polygon(data=pts1,aes(y=x,x=y2+xoff),colour=NA, fill = c2)+
-    theme(legend.position = "none")+
-      theme(axis.title.x=element_blank(),
-            axis.text.x=element_blank(),
-            axis.ticks.x=element_blank())
+  if (expType=="e1") {
+    c1=plotcolours$infer_err
+    c2=plotcolours$infer_nsigC
+  }
+  if (expType=="e2") {
+    c1=plotcolours$infer_sigC
+    c2=plotcolours$infer_err
+  }
+  dotSize<-(plotTheme$axis.title$size)/3
+  
+  if (single) {
+    xr<-makeFiddle(pts$y1,2/40)
+    
+    if (expType=="r" && length(pts$y1)==1 && !is.null(result$rCI)){
+      pts1se<-data.frame(x=pts$x,y=result$rCI)
+      if (result$pIV<alpha) {c<-c1} else (c<-c2)
+      g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=c,size=se_size)
+    }
+    if (expType=="p" && length(pts$y1)==1 && !is.null(result$pCI)){
+      pts1se<-data.frame(x=pts$x,y=log10(result$pCI))
+      if (result$pIV<alpha) {c<-c1} else (c<-c2)
+      g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=c,size=se_size)
+    }
+    
+    pts$x<-pts$x+xr
+    pts1=pts[pts$y2,]
+    g<-g+geom_point(data=pts1,aes(x=x, y=y1),shape=shapes$study, colour = "black", fill = c2, size = dotSize)
+    pts2=pts[!pts$y2,]
+    g<-g+geom_point(data=pts2,aes(x=x, y=y1),shape=shapes$study, colour = "black", fill = c1, size = dotSize)
+    
+  } else {
+    if (is.logical(pts$y2)) {
+      pts1<-expected_hist(pts$y1,pts$y1[pts$y2],expType)
+    } else {
+      pts1<-expected_hist(pts$y1,pts$y2,expType)
+    }
+    xoff<-pts$x[1]
+    g<-g+
+      geom_polygon(data=pts1,aes(y=x,x=y1+xoff),colour=NA, fill = addTransparency(c1,0.85))+
+      geom_polygon(data=pts1,aes(y=x,x=y2+xoff),colour=NA, fill = addTransparency(c2,0.85))
+  }
   g
 }
 
-r_plot<-function(result,IV,IV2=NULL,DV,r=0){
+
+r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
   rActual<-r
   rActual[is.na(r)]<-0
-  n<-result$nval
-  
-    ylim<-c(-1, 1)
-    ysc=1
 
-  if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
+  single<-TRUE
+  if (length(result$rIV)>points_threshold) {single<-FALSE}
+  
+  if (all(is.na(result$rIVIV2DV)) && is.null(IV2)){
     xoff=0
-    rs<-result$rIV
-    ps<-result$pIV
   } else {
     if (is.na(result$rIVIV2DV[1])){
       xoff=c(0,2)
     } else {
-        xoff=c(0,2,4)
-        }
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "all"={
-              rs<-c()
-              ps<-c()
-              ysc=1/3
-              xoff=c(0,0,0,2,2,2,4,4,4)
-              for (jk in 1:ncol(result$r$direct)) {
-                rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
-                ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
-              }
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            }
-    )
+      xoff=c(0,2,4)
+    }
   }
-
+  
+  switch (expType,
+          "r"={
+            ylim<-c(-1, 1)
+            ylabel<-"r"
+            },
+          "p"={
+            ylim<-c(min_p, 1)
+            ylabel<-bquote(p)
+          },
+          "p1"={
+            ylim<-c(min_p, 1)
+            ylabel<-bquote(p[1])
+          },
+          "log(lr)"={
+            ylim<-c(0, max_s)
+            ylabel<-"S"
+            },
+          "w"={
+            ylim<-c(0.01, 1)
+            ylabel<-bquote(w)
+          },
+          "nw"={
+            ylim<-c(1, max_nw)
+            ylabel<-bquote(n[w=80])
+            },
+          "n"={
+            ylim<-c(1, result$design$sN*5*1.1)
+            ylabel<-"n"
+          },
+          "rp"={
+            ylim<-c(-1, 1)
+            ylabel<-"R"
+          },
+          "r1"={
+            ylim<-c(-1, 1)
+            ylabel<-bquote(r[1])
+          },
+          "wp"={
+            ylim<-c(0.01, 1)
+            ylabel<-bquote(w)
+          },
+          "ci1"={
+            ylim<-c(-1,1)
+            ylabel<-"r"
+          },
+          "ci2"={
+            ylim<-c(-1,1)
+            ylabel<-"r"
+          },
+          "e1"={
+            ylim<-c(min_p, 1)
+            ylabel<-bquote(p)
+          },
+          "e2"={
+            ylim<-c(min_p, 1)
+            ylabel<-bquote(p)
+          }
+  )
+  if (logScale) {
+    ylim<-log10(ylim)
+    ylabel<-bquote(log[10](.(ylabel)))
+  }  
+  
+  if (!all(is.na(result$rIV))) {
+    data<-collectData(result)
+    switch (expType,
+            "r"={},
+            "rp"={data$rs<-data$rp},
+            "r1"={data$rs<-data$ro},
+            "p"={data$rs<-data$ps},
+            "p1"={data$rs<-data$po},
+            "log(lr)"={data$rs<-r2llr(data$rs,data$ns)},
+            "n"={data$rs<-data$ns},
+            "w"={data$rs<-rn2w(data$rs,data$ns)},
+            "wp"={data$rs<-rn2w(data$rp,data$ns)},
+            "nw"={data$rs<-rw2n(data$rs,0.8,result$design$sReplTails)},
+            "ci1"={data$rs<-r2ci(data$rs,data$ns,-1)},
+            "ci2"={data$rs<-r2ci(data$rs,data$ns,+1)},
+            "e1"={data$rs<-data$ps},
+            "e2"={data$rs<-data$ps}
+    )
+    if (logScale) {
+      data$rs<-log10(data$rs)
+    }  
+  }    
+  g<-start_plot()
+  
+  # make theory
   for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
+    if (result$evidence$showTheory) {
+      if (is.element(expType,c("p","e1","e2","p1"))) {
+        if (logScale) {
+          yv<-seq(log10(min_p),0,length.out=51)
+          yvUse<-10^yv
+        }else{
+          yv<-seq(0,1,length.out=51)
+          yvUse<-yv
+        }
+        xd<-fullRSamplingDist(yvUse,result$effect$world,result$design,"p",logScale=logScale)
+      } else {
+        npt<-101
+      switch(expType,
+             "r"={
+               yv<-seq(-1,1,length.out=npt)*0.99
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
+             },
+             "r1"={
+               yv<-seq(-1,1,length.out=npt)*0.99
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
+             },
+             "w"={
+               yv<-seq(alpha*1.01,1/1.01,length.out=npt)
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"w",logScale=logScale)
+             },
+             "log(lr)"={
+               yv<-seq(0,max_s,length.out=npt)
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"log(lr)",logScale=logScale)
+             },
+             "nw"={
+               if (logScale) {
+                 yv<-seq(log10(5),log10(max_nw),length.out=npt)
+                 yvUse<-10^yv
+               }else{
+                 yv<-5+seq(0,max_nw,length.out=npt)
+                 yvUse<-yv
+               }
+               xd<-fullRSamplingDist(yvUse,result$effect$world,result$design,"nw",logScale=logScale)
+             },
+             "rp"={
+               yv<-seq(-1,1,length.out=npt)*0.99
+               xd<-fullRPopulationDist(yv,result$effect$world)
+             },
+             "n"={
+               if (logScale) {
+                 yv<-seq(log10(5),log10(5*result$design$sN),length.out=npt)
+                 yvUse<-yv^10
+               }else{
+                 yv<-5+seq(0,5*result$design$sN,length.out=npt)
+                 yvUse<-yv
+               }
+               xd<-getNDist(yv,result$design,logScale=logScale)
+             },
+             "wp"={
+               yv<-seq(alpha*1.01,1/1.01,length.out=npt)
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"wp",logScale=logScale)
+             }
+      )
+      }
+      xd[is.na(xd)]<-0
+        xd<-xd/max(xd)/2
+      histGain<<-sum(xd)*(yv[2]-yv[1])
+      ptsp<-data.frame(y=c(yv,rev(yv)),x=c(xd,-rev(xd))+xoff[i])
+      g<-g+geom_polygon(data=ptsp,aes(x=x,y=y),colour="black",fill="white")
+    } else {
+      histGain<-NA
     }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        xr<-makeFiddle(rvals,2/40)
-        # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        xr=0
-      }
 
+    # then the samples
+  if (!all(is.na(result$rIV))) {
+      rvals<-data$rs[,i]
+      pvals<-data$ps[,i]>=alpha
       if (result$showType=="all") {
-      pts=data.frame(x=xoff[i]+xr,y=(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
+        ysc<-1/3
+        rvals<-(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1
+      }
+      pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=pvals,n<-data$ns)
+      g<-expected_plot(g,pts,result,IV,DV,expType,single)
+    
+    if (is.element(expType,c("p","e1","e2"))) {
+      switch (expType,
+              "p"={labelPt1<-"p(sig) = "},
+              "e1"={labelPt1<-"p(Type I) = "},
+              "e2"={labelPt1<-"p(Type II) = "}
+      )
+      labelPt2<-paste0(labelPt1,format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision))
+      labelPt3<-paste0(labelPt2,"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+      if (length(xoff)>1) {
+        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt2)
       } else {
-        pts=data.frame(x=xoff[i]+xr,y=rvals)
+        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt3)
       }
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}     
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=r_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      }
-
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-
-      if (useSignificanceCols){
-        c1=plotcolours$infer_sigC
-        c2=plotcolours$infer_nsigC
-      } else {
-        c1=plotcolours$descriptionC
-        c2=plotcolours$descriptionC
-      }
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotSize*sqrt(ysc))
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotSize*sqrt(ysc))
+      g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     }
-    else
-    {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      rvals_sig<-rvals
-      rvals_sig[pvals>=alpha]<-NA
-      rvals_nsig<-rvals
-      rvals_nsig[pvals<alpha]=NA
-      if (result$showType=="all") {
-        y1<-((rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-      y2<-((rvals_nsig+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-      pts<-data.frame(x=rvals*0+xoff[i],y1=y1,y2=y2)
-      } else {
-        pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=rvals_nsig)
-      }
-        
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g<-expected_plot(g,pts,result,IV,DV,"r")
+    
+    if (is.element(expType,c("r","ci1","ci2"))) {
       lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label=paste("actual =",format(rActual[i],digits=graph_precision)))
-      g<-g+
-        geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
+      g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
     }
-    if (length(xoff)>1)
-      if (rem(i,3)==1)
+  }
+  }
+  
+  if (length(xoff)>1)
+    if (rem(i,3)==1)
       switch (xoff[i]/2+1,
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
               {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
       )
-  }
-  
-    if (result$showType=="all") {
-      for (i in 1:3) {
-        g<-g+geom_hline(yintercept=(-1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
-        g<-g+geom_hline(yintercept=(0.0+1)*ysc*0.9+(i-1)*ysc*2-1, linetype="dotted", color="black", size=0.5)
-        g<-g+geom_hline(yintercept=(1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
-      }
-      g<-g+coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))+
-        scale_y_continuous(breaks=(c(-1,0,1,-1,0,1,-1,0,1)+1)*ysc*0.9+(c(1,1,1,2,2,2,3,3,3)-1)*ysc*2-1,labels=c(-1,0,1,-1,0,1,-1,0,1))
-    } else {
-      g<-g+geom_hline(yintercept=0.0, linetype="dotted", color="black", size=0.5)+
-        coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
-    }
-    g<-g+theme(legend.position = "none")+plotTheme
-    g<-g+ylab("r")+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
-}
 
-
-rp_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  rActual<-r
-  rActual[is.na(r)]<-0
-  n<-result$nval
-  
-  ylim<-c(-1, 1)
-  ysc=1
-  
-  if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
-    xoff=0
-    rs<-result$rpIV
-    ps<-result$pIV
-  } else {
-    if (is.na(result$rIVIV2DV[1])){
-      xoff=c(0,2)
-    } else {
-      xoff=c(0,2,4)
-    }
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "all"={
-              rs<-c()
-              ps<-c()
-              ysc=1/3
-              xoff=c(0,0,0,2,2,2,4,4,4)
-              for (jk in 1:ncol(result$r$direct)) {
-                rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
-                ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
-              }
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            }
-    )
-  }
-  
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        xr<-makeFiddle(rvals,2/40)
-        # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        xr=0
-      }
-      
-      if (result$showType=="all") {
-        pts=data.frame(x=xoff[i]+xr,y=(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-      } else {
-        pts=data.frame(x=xoff[i]+xr,y=rvals)
-      }
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}     
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=r_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      }
-      
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      
-      if (useSignificanceCols){
-        c1=plotcolours$infer_sigC
-        c2=plotcolours$infer_nsigC
-      } else {
-        c1=plotcolours$descriptionC
-        c2=plotcolours$descriptionC
-      }
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotSize*sqrt(ysc))
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotSize*sqrt(ysc))
-    }
-    else
-    {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      rvals_sig<-rvals
-      rvals_sig[pvals>=alpha]<-NA
-      rvals_nsig<-rvals
-      rvals_nsig[pvals<alpha]=NA
-      if (result$showType=="all") {
-        y1<-((rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-        y2<-((rvals_nsig+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-        pts<-data.frame(x=rvals*0+xoff[i],y1=y1,y2=y2)
-      } else {
-        pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=rvals_nsig)
-      }
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g<-expected_plot(g,pts,result,IV,DV,"r")
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label=paste("actual =",format(rActual[i],digits=graph_precision)))
-      g<-g+
-        geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
-    }
-    if (length(xoff)>1)
-      if (rem(i,3)==1)
-        switch (xoff[i]/2+1,
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-        )
-  }
-  
   if (result$showType=="all") {
     for (i in 1:3) {
       g<-g+geom_hline(yintercept=(-1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
@@ -531,841 +490,95 @@ rp_plot<-function(result,IV,IV2=NULL,DV,r=0){
     g<-g+geom_hline(yintercept=0.0, linetype="dotted", color="black", size=0.5)+
       coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
   }
-  g<-g+theme(legend.position = "none")+plotTheme
-  g<-g+ylab("R")+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  g<-g+ylab(ylabel)
+  g
+}
+
+
+r1_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  r_plot(result,IV,IV2,DV,r,"r1")
+}
+
+rp_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  r_plot(result,IV,IV2,DV,r,"rp")
 }
 
 llr_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  rActual<-r
-  rActual[is.na(r)]<-0
-  n<-result$nval
-  
-  ylim<-c(-0.1, 10)
-  ysc=1
-  
-  if (all(is.na(result$rIVIV2DV)) & is.null(IV2)){
-    xoff=0
-    rs<-result$rIV
-    ps<-result$pIV
-  } else {
-    if (is.na(result$rIVIV2DV[1])){
-      xoff=c(0,2)
-    } else {
-      xoff=c(0,2,4)
-    }
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "all"={
-              rs<-c()
-              ps<-c()
-              ysc=1/3
-              xoff=c(0,0,0,2,2,2,4,4,4)
-              for (jk in 1:ncol(result$r$direct)) {
-                rs<-cbind(rs,result$r$direct[,jk],result$r$unique[,jk],result$r$total[,jk])
-                ps<-cbind(ps,result$p$direct[,jk],result$p$unique[,jk],result$p$total[,jk])
-              }
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            }
-    )
-  }
-  
-  # convert to log likelihood
-  rs<-r2llr(rs,n)
-  rActual<-r2llr(rActual,n)
-
-  
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        xr<-makeFiddle(rvals,2/40)
-        # xr<-runif(nrow(rs),min=-1,max=1)/length(xoff)*horiz_scatter
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        xr=0
-      }
-      
-      if (result$showType=="all") {
-        pts=data.frame(x=xoff[i]+xr,y=(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-      } else {
-        pts=data.frame(x=xoff[i]+xr,y=rvals)
-      }
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}     
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=r_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      }
-      
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      if (useSignificanceCols){
-        c1=plotcolours$infer_sigC
-        c2=plotcolours$infer_nsigC
-      } else {
-        c1=plotcolours$descriptionC
-        c2=plotcolours$descriptionC
-      }
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = c2, size = dotSize*sqrt(ysc))
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = c1, size = dotSize*sqrt(ysc))
-    }
-    else
-    {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      rvals_sig<-rvals
-      rvals_sig[pvals>=alpha]<-NA
-      rvals_nsig<-rvals
-      rvals_nsig[pvals<alpha]=NA
-      if (result$showType=="all") {
-        y1<-((rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-        y2<-((rvals_nsig+1)*ysc*0.9+rem(i-1,3)*ysc*2-1)
-        pts<-data.frame(x=rvals*0+xoff[i],y1=y1,y2=y2)
-      } else {
-        pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=rvals_nsig)
-      }
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g<-expected_plot(g,pts,result,IV,DV,"r")
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label=paste("actual =",format(rActual[i],digits=graph_precision)))
-      g<-g+
-        geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
-    }
-    if (length(xoff)>1)
-      if (rem(i,3)==1)
-        switch (xoff[i]/2+1,
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-        )
-  }
-  
-  if (result$showType=="all") {
-    for (i in 1:3) {
-      g<-g+geom_hline(yintercept=(-1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
-      g<-g+geom_hline(yintercept=(0.0+1)*ysc*0.9+(i-1)*ysc*2-1, linetype="dotted", color="black", size=0.5)
-      g<-g+geom_hline(yintercept=(1+1)*ysc*0.9+(i-1)*ysc*2-1, color="black", size=1)
-    }
-    g<-g+coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))+
-      scale_y_continuous(breaks=(c(-1,0,1,-1,0,1,-1,0,1)+1)*ysc*0.9+(c(1,1,1,2,2,2,3,3,3)-1)*ysc*2-1,labels=c(-1,0,1,-1,0,1,-1,0,1))
-  } else {
-    g<-g+geom_hline(yintercept=0.0, linetype="dotted", color="black", size=0.5)+
-      coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
-  }
-  g<-g+theme(legend.position = "none")+plotTheme
-  g<-g+ylab("S")+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  r_plot(result,IV,IV2,DV,r,"log(lr)")
 }
 
 p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){
-  n<-result$nval
+  g<-r_plot(result,IV,IV2,DV,r,ptype,pPlotScale=="log10")
   
-  switch (ptype,
-         "p"={
-            pt_sigcol<-plotcolours$infer_sigC
-            pt_nsigcol<-plotcolours$infer_nsigC
-          },
-          "e1"={
-            pt_sigcol<-plotcolours$infer_err
-            pt_nsigcol<-plotcolours$infer_nsigC
-          },
-          "e2"={
-            pt_sigcol<-plotcolours$infer_sigC
-            pt_nsigcol<-plotcolours$infer_err
-          }
-          )
-  
-    if (pPlotScale=="log10"){
-    ylim<-c(log10(min_p), 0)
-  } else{
-    ylim<-c(0,1)
-  }
-  if (is.null(IV2) & all(is.na(result$rIVIV2DV))){
-    xoff=0
-    rs<-result$rIV
-    ps<-result$pIV
-  } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "all"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            },
-    )
-  }
-
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(ps)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        if (pPlotScale=="log10") {
-          xr<-makeFiddle(log10(pvals),4/40)
-        } else{
-          xr<-makeFiddle(pvals,1/40)
-        }
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        xr=0
-      }
-     
-      pvals[pvals<min_p]<-min_p
-      if (pPlotScale=="log10") {
-        pts=data.frame(x=xoff[i]+xr,y=log10(pvals))
-      } else {
-        pts=data.frame(x=xoff[i]+xr,y=pvals)
-      }
-
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        p_ci<-r2p(abs(r_ci),result$nval)
-        if (r_ci[1]<0 && r_ci[2]>0) {
-          p_ci[2]<-min(p_ci)
-          p_ci[1]<-1
-        }
-        if (pPlotScale=="log10") p_ci<-log10(p_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=p_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      } 
-      
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      pt_col<-pt_nsigcol
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-      pt_col<-pt_sigcol
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-    }
-    else {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      pvals_sig<-pvals
-      pvals_sig[pvals>=alpha]<-NA
-      pvals_nsig<-pvals
-      pvals_nsig[pvals<alpha]<-NA
-      # if (pPlotScale=="log10") {
-      #   pts<-data.frame(x=pvals*0+xoff[i],y1=log10(pvals),y2=log10(pvals_nsig))
-      # } else {
-        pts<-data.frame(x=pvals*0+xoff[i],y1=pvals,y2=pvals_nsig)
-      # }
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g <- expected_plot(g,pts,result,IV,DV,ptype)
-      
-    }
-    
-    # make annotations
-    switch (ptype,
-            "p"={
-              labelPt1<-"p(sig) = "
-              labelPt2<-format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)
-              labelPt3<-paste0("  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
-            },
-            "e1"={
-              labelPt1<-"p(Type I) = "
-              labelPt2<-format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision)
-              labelPt3<-paste0("  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
-            },
-            "e2"={
-              labelPt1<-"p(Type II) = "
-              labelPt2<-format(mean(pvals>=alpha,na.rm=TRUE),digits=graph_precision)
-              labelPt3<-paste0("  (",format(sum(pvals>=alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
-            }
-    )
-    
-    if (length(xoff)>1) {
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = paste0(labelPt1,labelPt2))
-    } else {
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = paste0(labelPt1,labelPt2,labelPt3))
-    }
-    g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
-    if (length(xoff)>1)
-      if (i<=3)
-        switch (i,
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-              )
-  }
-  g<-g+plotTheme+
-    coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
-    
   if (pPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(1), linetype="dotted", color="#FF4422", size=0.5)+
       geom_hline(yintercept=log10(0.005), linetype="dotted", color="#44FF22", size=0.5)+
       geom_hline(yintercept=log10(0.01), linetype="dotted", color="#44FF22", size=0.5)+
       geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
-      scale_y_continuous(breaks=c(-4,-3,-2,-1,0),labels=c(0.0001,0.001,0.01,0.1,1))+ 
-      ylab(bquote(log[10](p)))
+      scale_y_continuous(breaks=c(-4,-3,-2,-1,0),labels=c(0.0001,0.001,0.01,0.1,1))
   } else
   {
     g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
-      scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))+ 
-      ylab(bquote(p))
+      scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))
   }
-  g<-g+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  g
 }
 
-
-n_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  n<-result$nval
+p1_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p1"){
+  g<-r_plot(result,IV,IV2,DV,r,ptype,pPlotScale=="log10")
   
-  nwActual<-n
-  ylim<-c(1, max(n)*1.1)
-  
-  xoff=0
-  rs<-result$rIV
-  ps<-result$pIV
-  ns<-result$nval
-  
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      nvals<-ns[,i]
-      if (is.matrix(rs) && nrow(rs)>1){
-        xr<-makeFiddle(nvals,5)
-      } else {
-        xr=0
-      }
-      
-      pts=data.frame(x=xoff[i]+xr,y=nvals)
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      
-      dotSize=min(10,20/sqrt(length(nvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      pt_col<-plotcolours$infer_nsigC
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-      pt_col<-plotcolours$infer_sigC
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-    }
-    else {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      nvals<-ns[,i]
-
-      nvals_sig<-nvals
-      nvals_sig[pvals>=alpha]<-NA
-      nvals_nsig<-nvals
-      nvals_nsig[pvals<alpha]<-NA
-      pts<-data.frame(x=nvals*0+xoff[i],y1=nvals,y2=nvals_nsig)
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g <- expected_plot(g,pts,result,IV,DV,"n")
-      
-      # lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], label = paste("p(sig) =",format(mean(pvals<alpha),digits=graph_precision)))
-      # g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
-    }
+  if (pPlotScale=="log10") {
+    g<-g+geom_hline(yintercept=log10(1), linetype="dotted", color="#FF4422", size=0.5)+
+      geom_hline(yintercept=log10(0.005), linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=log10(0.01), linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
+      scale_y_continuous(breaks=c(-4,-3,-2,-1,0),labels=c(0.0001,0.001,0.01,0.1,1))
+  } else
+  {
+    g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
+      scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))
   }
-  g<-g+plotTheme+
-    coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
-  
-  g<-g+geom_hline(yintercept=(50), linetype="dotted", color="#FFFF22", size=0.5)+
-    geom_hline(yintercept=log10(500), linetype="dotted", color="#FFFF22", size=0.5)+
-    scale_y_continuous()+ylab("n")
-  g<-g+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  g
 }
 
 
 w_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  n<-result$nval
-  
-  wActual<-rn2w(r,n)
-  if (wPlotScale=="log10"){
-    ylim<-c(log10(min_p), 0)
-  } else{
-    ylim<-c(0,1)
-  }
-  if (is.null(IV2) & all(is.na(result$rIVIV2DV))){
-    xoff=0
-    rs<-result$rIV
-    ps<-result$pIV
-  } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            },
-    )
-  }
-  
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        wvals<-rn2w(rvals,result$nval)
-        if (wPlotScale=="log10") {
-          xr<-makeFiddle(wvals,4/40)
-        } else{
-          xr<-makeFiddle(wvals,1/40)
-        }
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        wvals<-rn2w(rvals,result$nval)
-        xr=0
-      }
-      
-      
-      if (wPlotScale=="log10") {
-        pts=data.frame(x=xoff[i]+xr,y=log10(wvals))
-      } else {
-        pts=data.frame(x=xoff[i]+xr,y=wvals)
-      }
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        w_ci<-rn2w(abs(r_ci),result$nval)
-        if (r_ci[1]<0 && r_ci[2]>0) {
-          w_ci[2]<-max(w_ci)
-          w_ci[1]<-alpha
-        }
-        if (wPlotScale=="log10") w_ci<-log10(w_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=w_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      } 
-      
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      pt_col<-plotcolours$infer_nsigC
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-      pt_col<-plotcolours$infer_sigC
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-    }
-    else {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      wvals<-rn2w(rvals,result$nval)
-      wvals_sig<-wvals
-      wvals_sig[pvals>=alpha]<-NA
-      wvals_nsig<-wvals
-      wvals_nsig[pvals<alpha]<-NA
-      if (wPlotScale=="log10") {
-        pts<-data.frame(x=wvals*0+xoff[i],y1=log10(wvals),y2=log10(wvals_nsig))
-      } else {
-        pts<-data.frame(x=wvals*0+xoff[i],y1=wvals,y2=wvals_nsig)
-      }
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g <- expected_plot(g,pts,result,IV,DV,"w")
-      
-      # lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], label = paste("p(sig) =",format(mean(pvals<alpha),digits=graph_precision)))
-      # g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
-    }
-    if (length(xoff)>1)
-      switch (i,
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-      )
-  }
-  g<-g+plotTheme+
-    coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
+  g<-r_plot(result,IV,IV2,DV,r,"w",wPlotScale=="log10")
   
   if (wPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
       geom_hline(yintercept=log10(0.5), linetype="dotted", color="#44FF22", size=0.5)+
-      geom_hline(yintercept=log10(0.8), linetype="dotted", color="#44FF22", size=0.5)+
-      geom_hline(yintercept=log10(wActual), color="#FFFFFF", size=0.5)+
-      scale_y_continuous(breaks=c(-4,-3,-2,-1,0),labels=c(0.0001,0.001,0.01,0.1,1))+ 
-      ylab(bquote(log[10](w[est])))
-  } else
-  {
+      geom_hline(yintercept=log10(0.8), linetype="dotted", color="#44FF22", size=0.5)
+  } else {
     g<-g+geom_hline(yintercept=alpha, linetype="dotted", color="#44FF22", size=0.5)+
-         geom_hline(yintercept=0.5, linetype="dotted", color="#44FF22", size=0.5)+
-         geom_hline(yintercept=0.8, linetype="dotted", color="#44FF22", size=0.5)+
-         geom_hline(yintercept=wActual, color="#FFFFFF", size=0.5)+
-         scale_y_continuous(breaks=seq(0,1,0.1),labels=seq(0,1,0.1))+ 
-         ylab(bquote(w[est]))
+      geom_hline(yintercept=0.5, linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=0.8, linetype="dotted", color="#44FF22", size=0.5)
   }
-  g<-g+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  g
 }
 
+wp_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  g<-r_plot(result,IV,IV2,DV,r,"wp",wPlotScale=="log10")
+  
+  if (wPlotScale=="log10") {
+    g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=log10(0.5), linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=log10(0.8), linetype="dotted", color="#44FF22", size=0.5)
+  } else {
+    g<-g+geom_hline(yintercept=alpha, linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=0.5, linetype="dotted", color="#44FF22", size=0.5)+
+      geom_hline(yintercept=0.8, linetype="dotted", color="#44FF22", size=0.5)
+  }
+  g
+}
 
+n_plot<-function(result,IV,IV2=NULL,DV,r=0){
+  r_plot(result,IV,IV2,DV,r,"n",nPlotScale=="log10")
+}
 
 nw_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  n<-result$nval
-  
-  nwActual<-rw2n(r,0.8)
-  ylim<-c(log10(1), log10(10000))
-  
-  if (is.null(IV2) & all(is.na(result$rIVIV2DV))){
-    xoff=0
-    rs<-result$rIV
-    ps<-result$pIV
-  } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
-    switch (result$showType,
-            "direct"={
-              rs<-result$r$direct
-              ps<-result$p$direct
-            },
-            "unique"={
-              rs<-result$r$unique
-              ps<-result$p$unique
-            },
-            "total"={
-              rs<-result$r$total
-              ps<-result$p$total
-            },
-            "coefficients"={
-              rs<-result$r$coefficients
-              ps<-result$p$direct
-            },
-    )
-  }
-  
-  for (i in 1:length(xoff)){
-    single<-TRUE
-    if (is.matrix(rs)) {
-      if (nrow(rs)>points_threshold) {single<-FALSE}
-    }
-    if (single) {
-      if (is.matrix(rs) && nrow(rs)>1){
-        rvals<-rs[,i]
-        pvals<-ps[,i]
-        nwvals<-log10(rw2n(rvals,0.8))
-        xr<-makeFiddle(nwvals,4/40)
-      }
-      else {
-        rvals<-rs[i]
-        pvals<-ps[i]
-        nwvals<-log10(rw2n(rvals,0.8))
-        xr=0
-      }
-      
-      pts=data.frame(x=xoff[i]+xr,y=nwvals)
-
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      
-      if (length(rvals)==1){
-        z_se<-1/sqrt(result$nval-3)
-        z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-        r_ci<-tanh(z_ci)
-        nw_ci<-rw2n(abs(r_ci),0.8)
-        if (r_ci[1]<0 && r_ci[2]>0) {
-          nw_ci[2]<-min(nw_ci)
-          nw_ci[1]<-100000
-        }
-        nw_ci<-log10(nw_ci)
-        pts1se<-data.frame(x=c(0,0)+xoff[i],y=nw_ci)
-        g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=se_colour,size=se_size)
-      } 
-      
-      dotSize=min(10,20/sqrt(length(rvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      pt_col<-plotcolours$infer_nsigC
-      use<-(pvals>=alpha)
-      pts1=pts[use,]
-      g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-      pt_col<-plotcolours$infer_sigC
-      pts2=pts[!use,]
-      g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=21, colour = "black", fill = pt_col, size = dotSize)
-    }
-    else {
-      rvals<-rs[,i]
-      pvals<-ps[,i]
-      nwvals<-log10(rw2n(rvals,0.8))
-      
-      nwvals_sig<-nwvals
-      nwvals_sig[pvals>=alpha]<-NA
-      nwvals_nsig<-nwvals
-      nwvals_nsig[pvals<alpha]<-NA
-        pts<-data.frame(x=nwvals*0+xoff[i],y1=nwvals,y2=nwvals_nsig)
-
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g <- expected_plot(g,pts,result,IV,DV,"nw")
-      
-      # lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], label = paste("p(sig) =",format(mean(pvals<alpha),digits=graph_precision)))
-      # g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
-    }
-    if (length(xoff)>1)
-      switch (i,
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-      )
-  }
-  g<-g+plotTheme+
-    coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(0,diff(ylim)/16))
-  
-  g<-g+geom_hline(yintercept=log10(50), linetype="dotted", color="#FFFF22", size=0.5)+
-    geom_hline(yintercept=log10(nwActual), color="#FFFFFF", size=0.5)+
-    geom_hline(yintercept=log10(500), linetype="dotted", color="#FFFF22", size=0.5)+
-    scale_y_continuous(breaks=seq(0,4,1),labels=10^seq(0,4,1))+ 
-    ylab(bquote(log[10](n[w=80])))
-  g<-g+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
+  r_plot(result,IV,IV2,DV,r,"nw",nPlotScale=="log10")
 }
-
-
-w1_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  n<-result$nval
-  wActual<-rn2w(r,n)
-  if (wPlotScale=="log10") {
-    ylim<-c(log10(alpha), 0)
-  } else {
-    ylim<-c(0, 1)
-  }
-  
-  if (is.null(IV2) & all(is.na(result$rIVIV2DV))){
-    xoff=0
-  } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
-  }
-  
-  for (i in 1:length(xoff)){
-    
-    switch (i,rvals<-result$rIV,rvals<-result$rIV2,rvals<-result$rIVIV2DV)
-    switch (i,pvals<-result$pIV,pvals<-result$pIV2,pvals<-result$pIVIV2DV)
-    wvals<-rn2w(rvals,result$nval)
-    
-  if (length(wvals)==1) {
-    if (wPlotScale=="log10"){
-      pts=data.frame(x=0+xoff[i],y=log10(wvals))
-    } else { pts=data.frame(x=0+xoff[i],y=wvals)
-    }
-    dotSize=min(10,20/sqrt(length(wvals)))
-    dotSize<-(plotTheme$axis.title$size)/3
-    pt_col<-plotcolours$infer_nsigC
-    if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
-    
-    if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-    g<-g+geom_point(shape=21, colour = "black", fill = pt_col, size = dotSize)+
-      theme(legend.position = "none")
-    
-    if (length(rvals)==1){
-      z_se<-1/sqrt(result$nval-3)
-      z_ci<-atanh(rvals)+z_se*c(-1,1)*qnorm(1-(1-CI)/2)
-      r_ci<-tanh(z_ci)
-      w_ci<-rn2w(abs(r_ci),result$nval)
-      if (r_ci[1]<0 && r_ci[2]>0) w_ci[1]<-0.05
-      if (wPlotScale=="log10") w_ci<-log10(w_ci)
-      pts1se<-data.frame(x=c(0,0)+xoff[i],y=w_ci)
-      g<-g+geom_line(data=pts1se,aes(x=x,y=y),colour="black")
-    } 
-  }
-  else {
-    wvals_sig<-wvals
-    wvals_sig[pvals>=alpha]<-NA
-    wvals_nsig<-wvals
-    wvals_nsig[pvals<alpha]<-NA
-    if (wPlotScale=="log10"){
-      pts<-data.frame(x=wvals*0+xoff[i],y1=log10(wvals),y2=log10(wvals_nsig))
-    } else {
-      pts<-data.frame(x=wvals*0+xoff[i],y1=wvals,y2=wvals_nsig)
-    }
-    
-    if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-    g <- expected_plot(g,pts,result,IV,DV,"w")
-    lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = paste("actual =",format(wActual[i],digits=graph_precision)))
-    g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
-    if (length(xoff)>1)
-      switch (i,
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-              {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-      )
-  }
-  }
-  g<-g+plotTheme
-  if (wPlotScale=="log10") {
-  g<-g+geom_hline(yintercept=log10(0.8), linetype="dotted", color="#FFFF22", size=0.5)+
-    geom_hline(yintercept=log10(wActual), color="#FFFFFF", size=0.5)+
-    geom_hline(yintercept=log10(alpha), linetype="dotted", color="#FFFF22", size=0.5)+
-    scale_y_continuous(breaks=log10(c(alpha,seq(0.1,1,0.1))),labels=c(alpha,seq(0.1,1,0.1)))+
-    ylab(bquote(log[10](w[est])))
-  }
-  else {
-    g<-g+geom_hline(yintercept=0.8, linetype="dotted", color="#FFFF22", size=0.5)+
-      geom_hline(yintercept=wActual, color="#FFFFFF", size=0.5)+
-      geom_hline(yintercept=alpha, linetype="dotted", color="#FFFF22", size=0.5)+
-      scale_y_continuous(breaks=seq(0.0,1,0.1),labels=c(seq(0.0,1,0.1)))+
-      ylab(bquote(w[est]))
-  }
-
-    g<-g+coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(-1,1)*diff(ylim)/16)
-    g<-g+scale_x_continuous(breaks=NULL)
-    g+theme(axis.title.x=element_blank(),
-            axis.text.x=element_blank(),
-            axis.ticks.x=element_blank())
-    
-  
-}
-
-nw1_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  n<-result$nval
-  nwActual<-rw2n(r,0.8)
-  ylim<-c(log10(1), log10(10000))
-  
-  if (is.null(IV2) & all(is.na(result$rIVIV2DV))){
-    xoff=0
-  } else {
-    if (is.na(result$rIVIV2DV[1])){xoff=c(0,2)}else{xoff=c(0,2,4)}
-  }
-  
-  for (i in 1:length(xoff)){
-    switch (i,rvals<-result$rIV,rvals<-result$rIV2,rvals<-result$rIVIV2DV)
-    switch (i,pvals<-result$pIV,pvals<-result$pIV2,pvals<-result$pIVIV2DV)
-    nwvals<-rw2n(rvals,0.8)
-    
-    if (length(nwvals)==1) {
-      pts=data.frame(x=0+xoff[i],y=log10(nwvals))
-      dotSize=min(10,20/sqrt(length(nwvals)))
-      dotSize<-(plotTheme$axis.title$size)/3
-      pt_col<-plotcolours$infer_nsigC
-      if (pvals<alpha) {pt_col<-plotcolours$infer_sigC}
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g<-g+geom_point(shape=21, colour = "black", fill = pt_col, size = dotSize)+
-        theme(legend.position = "none")
-    }
-    else {
-      nwvals_sig<-nwvals
-      nwvals_sig[pvals>=alpha]<-NA
-      nwvals_nsig<-nwvals
-      nwvals_nsig[pvals<alpha]<-NA
-      pts<-data.frame(x=nwvals*0+xoff[i],y1=log10(nwvals),y2=log10(nwvals_nsig))
-      
-      if (i==1){g<-ggplot(pts,aes(x=x, y=y))}      
-      g <-expected_plot(g,pts,result,IV,DV,"nw")
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1], label=paste("actual =",format(nwActual[i],digits=graph_precision)))
-      g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
-      if (length(xoff)>1)
-        switch (i,
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 1",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Main Effect 2",color="white",size=3)},
-                {g<-g+annotate("text",x=xoff[i],y=ylim[2]+diff(ylim)/16,label="Interaction",color="white",size=3)}
-        )
-    }
-  }
-  
-  g<-g+geom_hline(yintercept=log10(50), linetype="dotted", color="#FFFF22", size=0.5)+
-    geom_hline(yintercept=log10(nwActual), color="#FFFFFF", size=0.5)+
-    geom_hline(yintercept=log10(500), linetype="dotted", color="#FFFF22", size=0.5)+
-    plotTheme+
-    scale_y_continuous(breaks=seq(0,4,1),labels=10^seq(0,4,1))+ 
-    coord_cartesian(xlim = c(min(xoff),max(xoff))+c(-1,1), ylim = ylim+c(-1,1)*diff(ylim)/16)+
-    ylab(bquote(log[10](n[w=80])))
-  g<-g+scale_x_continuous(breaks=NULL)
-  g+theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
-  
-}
-
 
 e2_plot<-function(result,IV,IV2=NULL,DV,r=0){
   p_plot(result,IV,IV2,DV,r,ptype="e2")
@@ -1376,24 +589,11 @@ e1_plot<-function(result,IV,IV2=NULL,DV,r=0){
 }
 
 ci1_plot<-function(result,IV=NULL,IV2=NULL,DV=NULL,r=0){
-  result$rIV<-r2ci(result$rIV,result$nval[1],-1)
-  if (!is.null(IV2) | !all(is.na(result$rIVIV2DV))) {
-    result$r$direct<-r2ci(result$r$direct,result$nval[1],-1)
-    result$r$unique<-r2ci(result$r$unique,result$nval[1],-1)
-    result$r$total<-r2ci(result$r$total,result$nval[1],-1)
-  }
-  
-  r_plot(result,IV,IV2,DV,r)
+  r_plot(result,IV,IV2,DV,r,"ci1")
 }
 
 ci2_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  result$rIV<-r2ci(result$rIV,result$nval[1],+1)
-  if (!is.null(IV2) | !all(is.na(result$rIVIV2DV))) {
-    result$r$direct<-r2ci(result$r$direct,result$nval[1],+1)
-    result$r$unique<-r2ci(result$r$unique,result$nval[1],+1)
-    result$r$total<-r2ci(result$r$total,result$nval[1],+1)
-  }
-  r_plot(result,IV,IV2,DV,r)
+  r_plot(result,IV,IV2,DV,r,"ci2")
 }
 
 

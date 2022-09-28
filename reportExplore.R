@@ -86,9 +86,31 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
             }
           },
+          "k"={
+            showVals<-exploreResult$result$ks
+          },
+          "pNull"={
+            showVals<-exploreResult$result$pnulls
+          },
+          "PDF"={
+            showVals<-exploreResult$result$dists
+            y50<-c()
+            y25<-c()
+            y75<-c()
+            for (i in 1:length(exploreResult$result$vals)){
+              p<-mean(showVals[,i],na.rm=TRUE)
+              p_se<-sqrt(p*(1-p)/length(showVals[,i]))
+              y50[i]<-p
+              y75[i]<-p+p_se*qnorm(0.75)
+              y25[i]<-p+p_se*qnorm(0.25)
+            }
+          },
+          "S"={
+            showVals<-exploreResult$result$Ss
+          }
   )
 
-  if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)"))) {
+  if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)","k","pNull","S"))) {
     y75<-c()
     y50<-c()
     y25<-c()
@@ -101,7 +123,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   
   outputText<-rep("",nc+1)
   outputText[1]<-"\bExplore:"
-  outputText[2]<-explore$Explore_type
+  outputText[2]<-exploreResult$Explore_type
   outputText[3]<-paste("nsims=",format(nrow(exploreResult$result$rIVs)),sep="")
   outputText<-c(outputText,rep("",nc+1))
   

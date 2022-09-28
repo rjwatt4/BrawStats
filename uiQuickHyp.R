@@ -12,8 +12,9 @@ quickHypotheses<-
                                           "o~i"="io","o~o"="oo","o~c2"="c2o","o~c3"="c3o",
                                           "c~i"="ic","c~o"="oc","c~c2"="c2c","c~c3"="c3c"," ",
                                           "i~i+i"="iii","i~c+i"="cii","i~i+c"="ici","i~c+c"="cci","  ",
-                                          "c~i+i"="iic","c~c+i"="cic","c~i+c"="icc","c~c+c"="ccc","empty"="ee"),
-                                   selected="ee",
+                                          "i~w+i"="wii","i~i+w"="iwi","i~w+c"="wci","i~w+w"="wwi","  ",
+                                          "c~i+i"="iic","c~c+i"="cic","c~i+c"="icc","c~c+c"="ccc"),
+                                   selected="ii",
                                    selectize=FALSE)
                ),
                tags$td(width = "25%")
