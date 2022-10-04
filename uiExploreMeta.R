@@ -12,7 +12,7 @@ showMetaChoices=c(
   "pdf"="PDF",
   "k"="k",
   "pNull"="pNull",
-  "S"="S"
+  "log(lk)"="S"
 )
 exploreLengthChoices=c("10" = "10",
                        "50" = "50",

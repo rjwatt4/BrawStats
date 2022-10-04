@@ -16,7 +16,7 @@ graphWidth="14.5cm"
 graphHeight="8.1cm"
 reportHeight="5cm"
 LGGraphHeight="15cm"
-LGGraphHeightTabs="14.7cm"
+LGGraphHeightTabs="14.5cm"
 LGPanelHeight="15.3cm"
 LGModalHeight="16.4cm"
 LGModalWidth="32cm"
@@ -104,7 +104,7 @@ design<-list(sN=42, sNRand=FALSE,sNRandK=2,
              sDependence=0, sOutliers=0, sClustering=0,
              sCheating=FALSE,sCheatingK=5,
              sReplicationOn=FALSE,sReplPower=0.8,sReplTails=2,
-             sReplSigOnly=FALSE,sReplRepeats=1,sReplKeep="last",sReplCorrection=TRUE,
+             sReplSigOnly=FALSE,sReplRepeats=1,sReplKeep="last",sReplCorrection=FALSE,
              sN_Strata=5, sR_Strata=2,
              sNClu_Cluster=5,     sRClu_Cluster=0.7,
              sNClu_Convenience=1, sRClu_Convenience=0.7, sNCont_Convenience=5, sRCont_Convenience=0.7, sRSpread_Convenience=0.5,
@@ -167,6 +167,11 @@ is_local <- Sys.getenv('SHINY_PORT') == ""
 screen<-c(1220,520)
 screen<-c(100,100)
 graphAspect<-0.67
+
+doStop<-TRUE
+stopLabel<-"Stop"
+pauseWait<-200
+cycles2observe<-5
 
 if (is_local) {
   switches$doClipboard<-TRUE

@@ -186,7 +186,7 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
                 
                 ylim<-c(min(yall)*1.2,max(0,max(yall)*1.2))
                 if (metaWhich=="Single") {
-                  g<-g+scale_y_continuous(limits = ylim)+ylab("S")
+                  g<-g+scale_y_continuous(limits = ylim)+ylab("log(lk)")
                 } else {
                   g<-g+scale_y_continuous(limits = ylim,breaks=c())+ylab("")
                 }

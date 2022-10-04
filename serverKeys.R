@@ -1,6 +1,8 @@
 ####################################
 #KEYBOARD: capture keyboard events
 
+ascii<-function(ch) strtoi(charToRaw(toupper(ch)),16L)
+
 serverKeys <- function(session,input) {
 if (switches$doKeys) {
   keyrespond<-observeEvent(input$pressedKey,{
@@ -11,8 +13,8 @@ if (switches$doKeys) {
     if (input$keypress==18) altKeyOn<<-TRUE
     
     
-    # control-alt-l - switch to online version
-    if (is_local && input$keypress==76 && controlKeyOn && altKeyOn){
+    # control-alt-n - switch to online version
+    if (is_local && input$keypress==78 && controlKeyOn && altKeyOn){
       switches$doReplications<<-FALSE
       switches$doWorlds<<-FALSE
       removeTab("Design","Replicate",session)
@@ -72,21 +74,56 @@ if (switches$doKeys) {
     }
     
     # control-alt-e set world to exp(0.2)
-    if (input$keypress==69 && controlKeyOn && altKeyOn){
+    if (input$keypress==ascii("e") && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"world_on",value=TRUE)
       updateSelectInput(session,"world_distr",selected="Exp")
       updateSelectInput(session,"world_distr_rz",selected="z")
       updateNumericInput(session,"world_distr_k",value=0.2)
+      updateCheckboxInput(session,"sNRand",value=TRUE)
       updateTabsetPanel(session,"HypothesisDiagram",selected="World")
     }
+    
+    # control-alt-g set world to gauss(0.2)
+    if (input$keypress==ascii("g") && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"world_on",value=TRUE)
+      updateSelectInput(session,"world_distr",selected="Gauss")
+      updateSelectInput(session,"world_distr_rz",selected="z")
+      updateNumericInput(session,"world_distr_k",value=0.2)
+      updateCheckboxInput(session,"sNRand",value=TRUE)
+      updateTabsetPanel(session,"HypothesisDiagram",selected="World")
+    }
+    
+    # control-alt-s set world to single(0.2)
+    if (input$keypress==ascii("s") && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"world_on",value=TRUE)
+      updateSelectInput(session,"world_distr",selected="Single")
+      updateSelectInput(session,"world_distr_rz",selected="z")
+      updateNumericInput(session,"rIV",value=0.2)
+      updateCheckboxInput(session,"sNRand",value=TRUE)
+      updateTabsetPanel(session,"HypothesisDiagram",selected="World")
+    }
+    
+    # control-alt-l set longHand to FALSE
+    if (input$keypress==ascii("l") && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"evidenceLongHand",value=FALSE)
+      updateCheckboxInput(session,"likelihoodLongHand",value=FALSE)
+    }
+    
     
     # control-alt-n set sample size to big (1000)
     if (input$keypress==78 && controlKeyOn && altKeyOn){
       updateNumericInput(session,"sN",value=1000)
     }
     
-    # control-alt-r set effect size to 0.3
-    if (input$keypress==82 && controlKeyOn && altKeyOn){
+    # control-alt-f set effect size to 0.3
+    if (input$keypress==70 && controlKeyOn && altKeyOn){
       updateNumericInput(session,"rIV",value=0.3)
+    }
+    
+    # control-alt-r set replication
+    if (input$keypress==82 && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"sReplicationOn",value=TRUE)
+      updateNumericInput(session,"sReplRepeats",value=3)
     }
     
     # control-alt-3 set IV2

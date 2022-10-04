@@ -1,5 +1,5 @@
 
-checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
+cheatSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
   if (result$pIV<alpha) return(result)
   if (design$sCheating=="None") return(result)
@@ -8,7 +8,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
     ntrials<-0
     while (result$pIV>alpha && ntrials<design$sCheatingK) {
       sample<-makeSample(IV,IV2,DV,effect,design)
-      result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
       ntrials<-ntrials+1
     }
     return(result)
@@ -27,7 +27,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
         sample1$iv<-sample1$iv[use]
         sample1$dv<-sample1$dv[use]
         design$sN<-length(sample1$iv)
-        result1<-analyseSample(IV,IV2,DV,design,evidence,sample1)
+        result1<-analyseSample(IV,IV2,DV,effect,design,evidence,sample1)
         ps<-c(ps,result1$pIV)
       }
       keep<-ps>min(ps)
@@ -37,7 +37,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
       sample$ivplot<-sample$ivplot[keep]
       sample$dvplot<-sample$dvplot[keep]
       
-      result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
       ntrials<-ntrials+1
     }
     return(result)
@@ -63,7 +63,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
       sample$dvplot<-c(sample$dvplot,sample2$dvplot[ntrials+1])
       design$sN<-design$sN+1
       
-      result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
       ntrials<-ntrials+1
     }
     return(result)
@@ -82,7 +82,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
         sample1$iv<-sample1$iv[use]
         sample1$dv<-sample1$dv[use]
 
-        result1<-analyseSample(IV,IV2,DV,design,evidence,sample1)
+        result1<-analyseSample(IV,IV2,DV,effect,design,evidence,sample1)
         ps<-c(ps,result1$pIV)
       }
       change<-which.min(ps)
@@ -91,7 +91,7 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
       sample$ivplot[change]<-sample2$ivplot[ntrials+1]
       sample$dvplot[change]<-sample2$dvplot[ntrials+1]
       
-      result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+      result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
       ntrials<-ntrials+1
     }
     return(result)
@@ -99,3 +99,57 @@ checkSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
 }
 
+replicateSample<-function(IV,IV2,DV,effect,design,evidence,sample,res) {
+  res1<-res
+  ResultHistory<-list(n=res$nval,r=res$rIV,rp=res$rpIV)
+  
+  if (!isempty(design$sReplicationOn) && !is.na(design$sReplicationOn) && design$sReplicationOn) {
+    while (design$sReplSigOnly && res$pIV>alpha) {
+      if (evidence$longHand) {
+        sample<-makeSample(IV,IV2,DV,effect,design)
+        res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
+      } else {
+        res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,FALSE)
+      }
+    }
+    res1<-res
+    resHold<-res
+    # now we freeze the population effect size
+    effect$rIV<-res$rpIV
+    effect$world$worldOn<-FALSE
+    # if we are doing one-tailed we need the sign
+    rSign<-sign(res$rIV)
+    
+    design1<-design
+    for (i in 1:design$sReplRepeats) {
+      # get the relevant sample effect size for the power calc
+      if (design$sReplCorrection) {r<-rSamp2Pop(res$rIV,design1$sN,effect$world)} else {r<-res$rIV}
+      # get the new sample size
+      design1$sN<-rw2n(r,design$sReplPower,design$sReplTails)
+      
+      if (evidence$longHand) {
+        sample<-makeSample(IV,IV2,DV,effect,design1)
+        res<-analyseSample(IV,IV2,DV,effect,design1,evidence,sample)
+      } else {
+        res<-sampleShortCut(IV,IV2,DV,effect,design1,evidence,1,FALSE)
+      }
+
+      if ((design$sReplKeep=="largest" && res$nval>resHold$nval) || design$sReplKeep=="last")
+        { resHold<-res }
+      ResultHistory$n<-c(ResultHistory$n,res$nval)
+      ResultHistory$r<-c(ResultHistory$r,res$rIV)
+      ResultHistory$rp<-c(ResultHistory$rp,res$rpIV)
+      # if (sign(res$rIV)==rSign) {
+      #   res$pIV<-res$pIV/2
+      # } else {
+      #   res$pIV<-1
+      # }
+    }
+    res<-resHold
+  }
+  res$ResultHistory<-ResultHistory
+  res$roIV<-res1$rIV
+  res$poIV<-res1$pIV
+  
+  res
+}

@@ -18,14 +18,15 @@ designPanel <- function(prefix="") {
                                         ),
                                         tags$td(width="15%",
                                                 conditionalPanel(condition="input.LGsNRand",
-                                                                 tags$div(style = localPlainStyle, "gamma:"))
+                                                                 tags$div(style = localPlainStyle, "gamma:",id=paste0(prefix,"gamma"))
+                                                                 )
                                         ),
                                         tags$td(width = "15%", 
                                                 conditionalPanel(condition="input.LGsNRand",
-                                                                 numericInput("LGsNRandK",label=NULL,value=design$sNRandK,min=0,step=0.5))
+                                                                 numericInput(paste0(prefix,"sNRandK"),label=NULL,value=design$sNRandK,min=0,step=0.5))
                                         ),
                                         tags$td(width = "10%", 
-                                                checkboxInput("LGsNRand",label=NULL,value=design$sNRand)
+                                                checkboxInput(paste0(prefix,"sNRand"),label=NULL,value=design$sNRand)
                                         ),
                                         tags$td(width = "10%")
                                       )

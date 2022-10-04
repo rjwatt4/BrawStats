@@ -8,6 +8,9 @@ LGmodalMeta <-
             fluidRow(
               style=paste0("height: ",LGPanelHeight),
               column(offset=0,width=3, 
+                     hypothesisPanel("LGMeta"),
+                     designPanel("LGMeta"),
+                     
                      wellPanel(
                        style = paste("background: ",subpanelcolours$simulateC,";"),
                        tabsetPanel(id="LGEvidenceShow", type="tabs",
@@ -46,21 +49,6 @@ LGmodalMeta <-
                                    selected="MetaAnalysis"
                        )
                      ),
-                     wellPanel(
-                       style = paste("background: ",subpanelcolours$hypothesisC,";"),
-                       tabsetPanel(id="LGHypothesisPart", type="tabs",
-                                   tabPanel("Hypothesis:",value="Hypothesis",
-                                   ),
-                                   # single tab
-                                   tabPanel("Effect",value="Effect",id="uiLGEffect",
-                                            effectPanel("LGMeta",asTable = TRUE),
-                                   ),
-                                   tabPanel("World",value="World",id="uiLGWorld",
-                                            worldPanel("LGMeta",asTable = TRUE),
-                                   )
-                       )
-                     ),
-                     designPanel("LGMeta"),
                      wellPanel(
                        style = paste("background: ",subpanelcolours$simulateC,";"),
                        tags$table(width = "100%",class="myTable",

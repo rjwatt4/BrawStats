@@ -17,7 +17,7 @@ eT<-tags$table(width = "100%",class="myTable",
              tags$tr(
                tags$td(width = "40%", 
                        conditionalPanel(condition=paste0("input.IV2choice != 'none'"),
-                                        tags$div(style = localStyle, "IV2",HTML("&rarr;"),"DV :")
+                                        tags$div(style = localStyle, "IV2",HTML("&rarr;"),"DV :",id=paste0(prefix,"IV2-DV"))
                        )),
                tags$td(width = "20%", 
                        conditionalPanel(condition=paste0("input.IV2choice != 'none'"),
@@ -35,7 +35,7 @@ eT<-tags$table(width = "100%",class="myTable",
              tags$tr(
                tags$td(width = "40%", 
                        conditionalPanel(condition=paste0("input.IV2choice != 'none'"),
-                                        tags$div(style = localStyle, "IV",HTML("&rarr;"),"IV2 :")
+                                        tags$div(style = localStyle, "IV",HTML("&rarr;"),"IV2 :",id=paste0(prefix,"IV1-IV2"))
                        )),
                tags$td(width = "20%", 
                        conditionalPanel(condition=paste0("input.IV2choice != 'none'"),
@@ -51,7 +51,7 @@ eT<-tags$table(width = "100%",class="myTable",
              tags$tr(
                tags$td(width = "40%", 
                        conditionalPanel(condition="input.IV2choice != 'none'",
-                                        tags$div(style = localStyle, "IV*IV2",HTML("&rarr;"),"DV :")
+                                        tags$div(style = localStyle, "IV*IV2",HTML("&rarr;"),"DV :",id=paste0(prefix,"IV1-IV2-DV"))
                        )),
                tags$td(width = "20%", 
                        conditionalPanel(condition=paste0("input.IV2choice != 'none'"),

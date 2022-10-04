@@ -168,67 +168,13 @@ makeSampleVar<-function(design,n,MV){
 
 makeSample<-function(IV,IV2,DV,effect,design){
   
-  # check effect sizes before going any further
-  fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
-  while (fullES>=1) {
-    effect$rIV<-effect$rIV*0.9
-    effect$rIV2<-effect$rIV2*0.9
-    effect$rIVIV2<-effect$rIVIV2*0.9
-    effect$rIVIV2DV<-effect$rIVIV2DV*0.9
-    fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
-  }
-  
-  total1<-effect$rIV+effect$rIV2*effect$rIVIV2
-  while (total1>=1) {
-    effect$rIV<-effect$rIV*0.9
-    effect$rIV2<-effect$rIV2*0.9
-    effect$rIVIV2<-effect$rIVIV2*0.9
-    total1<-effect$rIV+effect$rIV2*effect$rIVIV2
-  }
-  total2<-effect$rIV2+effect$rIV*effect$rIVIV2
-  while (total2>=1) {
-    effect$rIV<-effect$rIV*0.9
-    effect$rIV2<-effect$rIV2*0.9
-    effect$rIVIV2<-effect$rIVIV2*0.9
-    total1<-effect$rIV2+effect$rIV*effect$rIVIV2
-  }
-
   n<-design$sN
   if (design$sNRand) {
-    n<-rgamma(1,shape=design$sNRandK,scale=design$sN/design$sNRandK)
-    while (n<6 || n>100000) {n<-rgamma(1,shape=design$sNRandK,scale=design$sN/design$sNRandK)}
+    n<-5+rgamma(1,shape=design$sNRandK,scale=(design$sN-5)/design$sNRandK)
+    while (n>100000) {n<-rgamma(1,shape=design$sNRandK,scale=design$sN/design$sNRandK)}
   }
   n<-round(n)
-  
-  rho<-effect$rIV
-  
-  if (!is.na(effect$populationRZ) && !isempty(effect$populationRZ)){
-    switch (effect$populationRZ,
-            "r"={
-              switch (effect$populationPDF,
-                      "Single"={rho<-effect$rIV},
-                      "Uniform"={rho<-runif(1,min=-1,max=1)},
-                      "Exp"={rho<-rexp(1,rate=1/effect$populationPDFk)*sign((runif(1)*2-1))},
-                      "Gauss"={rho<-rnorm(1,mean=0,sd=effect$populationPDFk)*sign((runif(1)*2-1))}
-              )
-            },
-            "z"={
-              switch (effect$populationPDF,
-                      "Single"={rho<-effect$rIV},
-                      "Uniform"={rho<-runif(1,min=-10,max=10)},
-                      "Exp"={rho<-rexp(1,rate=1/effect$populationPDFk)*sign((runif(1)*2-1))},
-                      "Gauss"={rho<-rnorm(1,mean=0,sd=effect$populationPDFk)*sign((runif(1)*2-1))}
-              )
-              rho<-tanh(rho)
-            }
-    )
-    if (effect$populationNullp>0) {
-      if (runif(1)<=effect$populationNullp)
-      {rho<-0}
-    }
-    rho<-max(min(rho,0.99),-0.99)
-  }
-  
+
   if (n==0){
     iv<-array(0,0)  
     dv<-iv
@@ -370,10 +316,67 @@ makeSample<-function(IV,IV2,DV,effect,design){
           }
         }
         
+      rho<-0
       # save the result
       lastSample<<-list(participant=id, iv=iv, iv2=iv2, dv=dv)
       
     } else {
+      # check effect sizes before going any further
+      fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
+      while (fullES>=1) {
+        effect$rIV<-effect$rIV*0.9
+        effect$rIV2<-effect$rIV2*0.9
+        effect$rIVIV2<-effect$rIVIV2*0.9
+        effect$rIVIV2DV<-effect$rIVIV2DV*0.9
+        fullES<-effect$rIV^2+effect$rIV2^2+2*effect$rIV*effect$rIV2*effect$rIVIV2+effect$rIVIV2DV^2
+      }
+      
+      total1<-effect$rIV+effect$rIV2*effect$rIVIV2
+      while (total1>=1) {
+        effect$rIV<-effect$rIV*0.9
+        effect$rIV2<-effect$rIV2*0.9
+        effect$rIVIV2<-effect$rIVIV2*0.9
+        total1<-effect$rIV+effect$rIV2*effect$rIVIV2
+      }
+      total2<-effect$rIV2+effect$rIV*effect$rIVIV2
+      while (total2>=1) {
+        effect$rIV<-effect$rIV*0.9
+        effect$rIV2<-effect$rIV2*0.9
+        effect$rIVIV2<-effect$rIVIV2*0.9
+        total1<-effect$rIV2+effect$rIV*effect$rIVIV2
+      }
+      
+      rho<-effect$rIV
+      
+      if (effect$world$worldOn) {
+      if (!is.na(effect$world$populationRZ) && !isempty(effect$world$populationRZ)){
+        switch (effect$world$populationRZ,
+                "r"={
+                  switch (effect$world$populationPDF,
+                          "Single"={rho<-effect$world$populationPDFk},
+                          "Uniform"={rho<-runif(1,min=-1,max=1)},
+                          "Exp"={rho<-rexp(1,rate=1/effect$world$populationPDFk)*sign((runif(1)*2-1))},
+                          "Gauss"={rho<-rnorm(1,mean=0,sd=effect$world$populationPDFk)*sign((runif(1)*2-1))}
+                  )
+                },
+                "z"={
+                  switch (effect$world$populationPDF,
+                          "Single"={rho<-effect$world$populationPDFk},
+                          "Uniform"={rho<-runif(1,min=-10,max=10)},
+                          "Exp"={rho<-rexp(1,rate=1/effect$world$populationPDFk)*sign((runif(1)*2-1))},
+                          "Gauss"={rho<-rnorm(1,mean=0,sd=effect$world$populationPDFk)*sign((runif(1)*2-1))}
+                  )
+                  rho<-tanh(rho)
+                }
+        )
+        if (effect$world$populationNullp>0) {
+          if (runif(1)<=effect$world$populationNullp)
+          {rho<-0}
+        }
+        rho<-max(min(rho,0.99),-0.99)
+      }
+      }
+      
       # deal with opportunity sampling    
       #  by setting up some anomalies
       if (design$sMethod=="Opportunity"){
@@ -397,7 +400,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
              "Ordinal"={
              },
              "Categorical"={
-               if (IV$source=="Discrete") {
+               if (IV$source=="discrete") {
                  ng<-IV$ncats
                  pp<-IV$proportions
                  # pp<-as.numeric(unlist(strsplit(IV$proportions,",")))
@@ -424,7 +427,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                "Ordinal"={
                },
                "Categorical"={
-                 if (IV2$source=="Discrete") {
+                 if (IV2$source=="discrete") {
                    ng<-IV2$ncats
                    pp<-IV2$proportions
                    # pp<-as.numeric(unlist(strsplit(IV2$proportions,",")))
@@ -553,7 +556,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                  breaks<-qnorm(cumsum(proportions)/sum(proportions))
                  vals=ivr*0
                  for (i in 1:ng) {vals=vals+(ivr>breaks[i])}
-                 if (!IV$discrete) {
+                 if (!IV$discrete=="discrete") {
                    vals=vals+runif(length(vals),min=-0.5,max=0.5)
                  }
                  iv<-vals
@@ -591,7 +594,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=iv2r*0
                for (i in 1:ng) {vals=vals+(iv2r>breaks[i])}
-               if (!IV2$discrete) {
+               if (!IV2$discrete=="discrete") {
                  vals=vals+runif(length(vals),min=-0.5,max=0.5)
                }
                iv2<-vals
@@ -631,7 +634,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
                breaks<-qnorm(cumsum(proportions)/sum(proportions))
                vals=dvr*0
                for (i in 1:ng) {vals=vals+(dvr>breaks[i])}
-               if (!DV$discrete) {
+               if (!DV$discrete=="discrete") {
                  vals=vals+runif(length(vals),min=-0.5,max=0.5)
                }
                dv<-vals
@@ -771,6 +774,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
     }
   } 
   
-  sample<-list(participant=id, iv=iv,iv2=iv2, dv=dv,ivplot=xplot,iv2plot=x2plot,dvplot=yplot,sampleRho=sampleRho,samplePval=samplePval,effectRho=rho,IVs=IVs,IV2s=IV2s, DVs=DVs)
+  sample<-list(participant=id, iv=iv,iv2=iv2, dv=dv,ivplot=xplot,iv2plot=x2plot,dvplot=yplot,
+               sampleRho=sampleRho,samplePval=samplePval,effectRho=rho,IVs=IVs,IV2s=IV2s, DVs=DVs)
   sample
 }

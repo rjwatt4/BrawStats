@@ -268,7 +268,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             },
             "log(lr)"={
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns)
+              showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
 
               if (is.null(IV2)){
                 col<-"yellow"
@@ -289,7 +289,6 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
                 col<-all_cols[[explore$Explore_typeShow]]
                 colFill<-names(all_cols[explore$Explore_typeShow])
               }
-              showVals<-r2llr(lines,ns)
             },
             "p(str)"={
               y50<-c()
@@ -298,7 +297,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y62<-c()
               y38<-c()
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns)
+              showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
               for (i in 1:length(exploreResult$result$vals)){
                 p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
                 p_se<-sqrt(p*(1-p)/length(pVals[,i]))

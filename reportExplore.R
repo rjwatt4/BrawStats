@@ -71,14 +71,14 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
           },
           "log(lr)"={
             ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns)
+            showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
           },
           "p(str)"={
             y75<-c()
             y50<-c()
             y25<-c()
             ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns)
+            showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
             for (i in 1:length(exploreResult$result$vals)){
               p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
               y50[i]<-p

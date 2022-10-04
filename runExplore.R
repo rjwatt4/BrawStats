@@ -7,7 +7,7 @@ maxESrange<-0.95
 absRange<-FALSE
 quants=0.25
 
-exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResult,nsim,doingNull=FALSE){
+exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explore,exploreResult,nsim,doingNull=FALSE,showProgress=FALSE){
   
   npoints<-explore$Explore_npoints
   quants<-explore$Explore_quants
@@ -62,8 +62,8 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             },
           
           "PDF"={vals<-c("Single","Uniform","Gauss","Exp")},
-          "k"={vals<-10^seq(-1,0,length.out=npoints)},
-          "pnull"={vals<-seq(0,1,length.out=npoints)},
+          "k"={vals<-10^seq(-1,-0.1,length.out=npoints)},
+          "pNull"={vals<-seq(0,1,length.out=npoints)},
           
           "SampleSize"={
             if (explore$Explore_xlog){
@@ -84,28 +84,38 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
           
           "SigOnly"={vals<-c("Yes","No")},
           "Power"={vals<-seq(0.1,0.9,length.out=npoints)},
-          "Repeats" ={vals<-seq(1,explore$Explore_nrRange,length.out=explore$Explore_nrRange)}
+          "Repeats" ={vals<-seq(1,explore$Explore_nrRange,length.out=explore$Explore_nrRange)},
+          
+          "NoStudies"={
+            if (explore$Explore_Mxlog){
+              vals<-round(10^seq(log10(min_n),log10(explore$Explore_metaRange),length.out=npoints))
+            }else{
+              vals<-round(seq(min_n,explore$Explore_metaRange,length.out=npoints))
+            }
+            },
+          "sig_only"={vals<-c(FALSE,TRUE)}
   )
 
-
-  if (explore$Explore_length>20) {n_sims<-10} else {n_sims<-explore$Explore_length}
   n_sims<-nsim
-  for (ni in n_sims){
-    if (is.null(exploreResult$rIVs)) {nc<-0+ni}
-    else {nc<-nrow(exploreResult$rIVs)+ni}
-    # for (ni in seq(n_sims,explore$Explore_length,n_sims)){
-      
+  if (is.null(exploreResult$rIVs)) {nc<-0}
+  else {nc<-exploreResult$count}
+  if (showProgress) {
+    if (doingNull) {
+      showNotification(paste("Explore/Null:  n=",format(nc),"/",format(exploreResult$nsims),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+    } else {
+      showNotification(paste("Explore:  n=",format(nc),"/",format(exploreResult$nsims),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
+    }
+  }
+  
+  for (ni in 1:n_sims){
+    
     main_res<-list(rval=c(),pval=c(),nval=c(),
                    r1=list(direct=c(),unique=c(),total=c()),
                    r2=list(direct=c(),unique=c(),total=c()),
-                   r3=list(direct=c(),unique=c(),total=c()))
+                   r3=list(direct=c(),unique=c(),total=c())
+                   )
   
     for (i in 1:length(vals)){
-      if (doingNull) {
-        showNotification(paste("Explore/Null:  n=",format(nc),"/",format(exploreResult$nsims), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
-      } else {
-        showNotification(paste("Explore:  n=",format(nc),"/",format(exploreResult$nsims), ":  ", format(i),"/",format(length(vals)),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
-      }
     switch (explore$Explore_type,
             "IVType"={
               switch (vals[i],
@@ -351,9 +361,19 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             "Covariation"={effect$rIVIV2<-vals[i]},
             "Interaction"={effect$rIVIV2DV<-vals[i]},
             
-            "PDF"={effect$populationPDF<-vals[i]},
-            "k"={effect$populationPDFk<-vals[i]},
-            "pnull"={effect$populationNullp<-vals[i]},
+            "PDF"={
+              effect$world$worldOn<-TRUE
+              effect$world$populationPDF<-vals[i]
+              },
+            "k"={
+              effect$world$worldOn<-TRUE
+              effect$world$populationPDFk<-vals[i]
+              },
+            "pNull"={
+              effect$world$worldOn<-TRUE
+              effect$world$populationNullp<-vals[i]
+                     metaAnalysis$meta_nullAnal<-TRUE
+                     },
             
             "Heteroscedasticity"={effect$Heteroscedasticity<-vals[i]},
             "SampleSize"={design$sN<-round(vals[i])},
@@ -384,6 +404,14 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
             },
             "Repeats"={
               design$sReplRepeats<-vals[i]
+            },
+            
+            "NoStudies"={
+              metaAnalysis$nstudies<-vals[i]
+            },
+            "sig_only"={
+              metaAnalysis$sig_only<-vals[i]
+              metaAnalysis$meta_psigAnal<-vals[i]
             }
     )
 
@@ -393,78 +421,110 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,explore,exploreResu
     #   effect$rIVIV2DV<-0
     # }
 
-      res<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE,showProgress=FALSE)
-      
-    main_res$rval<-cbind(main_res$rval,res$rIV)
-    main_res$pval<-cbind(main_res$pval,res$pIV)
-    main_res$nval<-cbind(main_res$nval,res$nval)
-
-    if (!is.null(IV2)){
-    main_res$r1$direct<-cbind(main_res$r1$direct,res$r$direct[,1])
-    main_res$r1$unique<-cbind(main_res$r1$unique,res$r$unique[,1])
-    main_res$r1$total<-cbind(main_res$r1$total,res$r$total[,1])
-    
-    main_res$r2$direct<-cbind(main_res$r2$direct,res$r$direct[,2])
-    main_res$r2$unique<-cbind(main_res$r2$unique,res$r$unique[,2])
-    main_res$r2$total<-cbind(main_res$r2$total,res$r$total[,2])
-    
-    main_res$r3$direct<-cbind(main_res$r3$direct,res$r$direct[,3])
-    main_res$r3$unique<-cbind(main_res$r3$unique,res$r$unique[,3])
-    main_res$r3$total<-cbind(main_res$r3$total,res$r$total[,3])
-    
-    main_res$p1$direct<-cbind(main_res$p1$direct,res$p$direct[,1])
-    main_res$p1$unique<-cbind(main_res$p1$unique,res$p$unique[,1])
-    main_res$p1$total<-cbind(main_res$p1$total,res$p$total[,1])
-    
-    main_res$p2$direct<-cbind(main_res$p2$direct,res$p$direct[,2])
-    main_res$p2$unique<-cbind(main_res$p2$unique,res$p$unique[,2])
-    main_res$p2$total<-cbind(main_res$p2$total,res$p$total[,2])
-    
-    main_res$p3$direct<-cbind(main_res$p3$direct,res$p$direct[,3])
-    main_res$p3$unique<-cbind(main_res$p3$unique,res$p$unique[,3])
-    main_res$p3$total<-cbind(main_res$p3$total,res$p$total[,3])
+      if (explore$Explore_family=="MetaAnalysis") {
+        # if (explore$ExploreLongHand) {
+          result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only,
+                                   showProgress=showProgress,progressPrefix=paste0("MetaAnalysis: ",metaResult$count+1,":"))
+        # } else {
+        #   result<-sampleShortCut(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only)
+        # }
+        metaResult$result<-result
+        metaResult<-runMetaAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis,metaResult)
+        main_res$ks<-cbind(main_res$ks,metaResult$bestK)
+        main_res$pnulls<-cbind(main_res$pnulls,metaResult$bestNull)
+        main_res$Ss<-cbind(main_res$Ss,metaResult$bestS)
+        main_res$dists<-cbind(main_res$dists,metaResult$bestDist==effect$world$populationPDF)
+        main_res$rval<-cbind(main_res$rval,metaResult$bestS)
+      } else {
+        # if (explore$ExploreLongHand) {
+        res<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,1,appendData=FALSE,sigOnly=FALSE,showProgress=FALSE)
+        # } else {
+        #   res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,appendData=FALSE,sigOnly=FALSE)
+        # }
+        main_res$rval<-cbind(main_res$rval,res$rIV)
+        main_res$pval<-cbind(main_res$pval,res$pIV)
+        main_res$nval<-cbind(main_res$nval,res$nval)
+        
+        if (!is.null(IV2)){
+          main_res$r1$direct<-cbind(main_res$r1$direct,res$r$direct[,1])
+          main_res$r1$unique<-cbind(main_res$r1$unique,res$r$unique[,1])
+          main_res$r1$total<-cbind(main_res$r1$total,res$r$total[,1])
+          
+          main_res$r2$direct<-cbind(main_res$r2$direct,res$r$direct[,2])
+          main_res$r2$unique<-cbind(main_res$r2$unique,res$r$unique[,2])
+          main_res$r2$total<-cbind(main_res$r2$total,res$r$total[,2])
+          
+          main_res$r3$direct<-cbind(main_res$r3$direct,res$r$direct[,3])
+          main_res$r3$unique<-cbind(main_res$r3$unique,res$r$unique[,3])
+          main_res$r3$total<-cbind(main_res$r3$total,res$r$total[,3])
+          
+          main_res$p1$direct<-cbind(main_res$p1$direct,res$p$direct[,1])
+          main_res$p1$unique<-cbind(main_res$p1$unique,res$p$unique[,1])
+          main_res$p1$total<-cbind(main_res$p1$total,res$p$total[,1])
+          
+          main_res$p2$direct<-cbind(main_res$p2$direct,res$p$direct[,2])
+          main_res$p2$unique<-cbind(main_res$p2$unique,res$p$unique[,2])
+          main_res$p2$total<-cbind(main_res$p2$total,res$p$total[,2])
+          
+          main_res$p3$direct<-cbind(main_res$p3$direct,res$p$direct[,3])
+          main_res$p3$unique<-cbind(main_res$p3$unique,res$p$unique[,3])
+          main_res$p3$total<-cbind(main_res$p3$total,res$p$total[,3])
+        }
+        # if (i>1) {removeNotification(id = "counting")}
+      }
     }
-    # if (i>1) {removeNotification(id = "counting")}
-  }
-
-    exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
-    exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
-    exploreResult$nvals<-rbind(exploreResult$nvals,main_res$nval)
     
-    exploreResult$r1$direct<-rbind(exploreResult$r1$direct,main_res$r1$direct)
-    exploreResult$r1$unique<-rbind(exploreResult$r1$unique,main_res$r1$unique)
-    exploreResult$r1$total<-rbind(exploreResult$r1$total,main_res$r1$total)
-    
-    exploreResult$r2$direct<-rbind(exploreResult$r2$direct,main_res$r2$direct)
-    exploreResult$r2$unique<-rbind(exploreResult$r2$unique,main_res$r2$unique)
-    exploreResult$r2$total<-rbind(exploreResult$r2$total,main_res$r2$total)
-    
-    exploreResult$r3$direct<-rbind(exploreResult$r3$direct,main_res$r3$direct)
-    exploreResult$r3$unique<-rbind(exploreResult$r3$unique,main_res$r3$unique)
-    exploreResult$r3$total<-rbind(exploreResult$r3$total,main_res$r3$total)
-    
-    exploreResult$p1$direct<-rbind(exploreResult$p1$direct,main_res$p1$direct)
-    exploreResult$p1$unique<-rbind(exploreResult$p1$unique,main_res$p1$unique)
-    exploreResult$p1$total<-rbind(exploreResult$p1$total,main_res$p1$total)
-    
-    exploreResult$p2$direct<-rbind(exploreResult$p2$direct,main_res$p2$direct)
-    exploreResult$p2$unique<-rbind(exploreResult$p2$unique,main_res$p2$unique)
-    exploreResult$p2$total<-rbind(exploreResult$p2$total,main_res$p2$total)
-    
-    exploreResult$p3$direct<-rbind(exploreResult$p3$direct,main_res$p3$direct)
-    exploreResult$p3$unique<-rbind(exploreResult$p3$unique,main_res$p3$unique)
-    exploreResult$p3$total<-rbind(exploreResult$p3$total,main_res$p3$total)
-    
-  }
+    if (explore$Explore_family=="MetaAnalysis") {
+      exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
+      exploreResult$ks<-rbind(exploreResult$ks,main_res$ks)
+      exploreResult$pnulls<-rbind(exploreResult$pnulls,main_res$pnulls)
+      exploreResult$Ss<-rbind(exploreResult$Ss,main_res$Ss)
+      exploreResult$dists<-rbind(exploreResult$dists,main_res$dists)
+      
+    } else {
+        exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
+        exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
+        exploreResult$nvals<-rbind(exploreResult$nvals,main_res$nval)
+        
+        exploreResult$r1$direct<-rbind(exploreResult$r1$direct,main_res$r1$direct)
+        exploreResult$r1$unique<-rbind(exploreResult$r1$unique,main_res$r1$unique)
+        exploreResult$r1$total<-rbind(exploreResult$r1$total,main_res$r1$total)
+        
+        exploreResult$r2$direct<-rbind(exploreResult$r2$direct,main_res$r2$direct)
+        exploreResult$r2$unique<-rbind(exploreResult$r2$unique,main_res$r2$unique)
+        exploreResult$r2$total<-rbind(exploreResult$r2$total,main_res$r2$total)
+        
+        exploreResult$r3$direct<-rbind(exploreResult$r3$direct,main_res$r3$direct)
+        exploreResult$r3$unique<-rbind(exploreResult$r3$unique,main_res$r3$unique)
+        exploreResult$r3$total<-rbind(exploreResult$r3$total,main_res$r3$total)
+        
+        exploreResult$p1$direct<-rbind(exploreResult$p1$direct,main_res$p1$direct)
+        exploreResult$p1$unique<-rbind(exploreResult$p1$unique,main_res$p1$unique)
+        exploreResult$p1$total<-rbind(exploreResult$p1$total,main_res$p1$total)
+        
+        exploreResult$p2$direct<-rbind(exploreResult$p2$direct,main_res$p2$direct)
+        exploreResult$p2$unique<-rbind(exploreResult$p2$unique,main_res$p2$unique)
+        exploreResult$p2$total<-rbind(exploreResult$p2$total,main_res$p2$total)
+        
+        exploreResult$p3$direct<-rbind(exploreResult$p3$direct,main_res$p3$direct)
+        exploreResult$p3$unique<-rbind(exploreResult$p3$unique,main_res$p3$unique)
+        exploreResult$p3$total<-rbind(exploreResult$p3$total,main_res$p3$total)
+        
+        exploreResult$wIVs<-rn2w(exploreResult$rIVs,exploreResult$nvals)
+        for (i in 1:length(vals)) {
+          p<-mean(exploreResult$pIVs[,i]<alpha)
+          exploreResult$psig[i]<-p
+          exploreResult$psig25[i]<-p-sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
+          exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
+        }
+      }
+    }
   removeNotification(id = "counting")
   
-  exploreResult$wIVs<-rn2w(exploreResult$rIVs,exploreResult$nvals)
-  for (i in 1:length(vals)) {
-    p<-mean(exploreResult$pIVs[,i]<alpha)
-    exploreResult$psig[i]<-p
-    exploreResult$psig25[i]<-p-sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
-    exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
-  }
   exploreResult$vals<-vals
+  exploreResult$Explore_type<-explore$Explore_type
+  exploreResult$Explore_show<-explore$Explore_show
+  exploreResult$Explore_typeShow<-explore$Explore_typeShow
+  exploreResult$Explore_family<-explore$Explore_family
   exploreResult
 }

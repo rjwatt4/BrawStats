@@ -48,7 +48,7 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
             xlim<-c(-1, 1)
           },
           "log(lr)"={
-            d1<-r2llr(result$rIV,result$nval)
+            d1<-r2llr(result$rIV,result$nval,result$evidence$llr)
             xlim<-c(-0.1, 10)
             disp1<-bquote(log[e](lr))
           },
@@ -138,7 +138,7 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
             ylim<-c(0,1)
           },
           "log(lr)"={
-            d2<-r2llr(result$rIV,result$nval)
+            d2<-r2llr(result$rIV,result$nval,result$evidence$llr)
             if (any(d2<0)) {
               ylim<-c(-10, 10)
             } else {
@@ -191,7 +191,7 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
     pts2=pts[!use,]
     g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=shapes$study, colour = "black", fill = c1, size = dotSize)
   } else {
-    if (length(d1)<2000) {
+    if (length(d1)<=10000) {
       use<-(pvals>=alpha)
       pts1=pts[use,]
       g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=shapes$study, colour = c2, fill = c2, size = dotSize/4)

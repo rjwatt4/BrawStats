@@ -111,7 +111,21 @@ wellPanel(id="HelpTabset",
                                       )
                            )
                          )
+                ),
+                tabPanel("Web",id="Web",
+                         style = paste("background: ",maincolours$graphC),
+                         wellPanel(
+                           style = paste("background: ",maincolours$graphC,";"),
+                           tags$table(width = "100%",class="myTable",
+                                      tags$tr(
+                                        tags$div(style = helpStyle,
+                                                 tags$br(HTML("<b>"),"More information:",HTML("</b>")),
+                                                 tags$br(HTML('&emsp;'), a("Here",href="https://doingpsychstats.wordpress.com/resources/brawstats-software/", target="_blank"))
+                                        )
+                                      )
+                           )
+                         )
                 )
-                # ) ) )
+                           # ) ) )
  )
 )

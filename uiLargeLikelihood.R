@@ -1,3 +1,4 @@
+source("uiHypothesisPart.R")
 source("uiDesignPart.R")
 
 LGmodalPossible <-
@@ -7,6 +8,9 @@ LGmodalPossible <-
             fluidRow(
               style=paste0("height: ",LGPanelHeight),
               column(offset=0,width=3, 
+                     hypothesisPanel("LGlikelihood"),
+                     designPanel("LGlikelihood"),
+                     
                      wellPanel(
                        style = paste("background: ",subpanelcolours$likelihoodC,";"),
                        tabsetPanel(id="LGshowPossible", type="tabs",
@@ -138,21 +142,6 @@ LGmodalPossible <-
                                           )
                                  )
                        ),
-                     wellPanel(
-                       style = paste("background: ",subpanelcolours$hypothesisC,";"),
-                       tabsetPanel(id="LGHypothesisPart", type="tabs",
-                                   tabPanel("Hypothesis:",value="Hypothesis",
-                                   ),
-                                   # single tab
-                                   tabPanel("Effect",value="Effect",id="uiLGEffect",
-                                            effectPanel("LGlikelihood",asTable = TRUE),
-                                   ),
-                                   tabPanel("World",value="World",id="uiLGWorld",
-                                            worldPanel("LGlikelihood",asTable = TRUE),
-                                   )
-                       )
-                     ),
-                     designPanel("LGlikelihood"),
                      wellPanel(
                            style = paste("background: ",subpanelcolours$likelihoodC,";"),
                            tags$table(width = "100%",class="myTable",

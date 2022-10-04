@@ -34,7 +34,7 @@ r2se<-function(r,n){
     print("r2se n-exception")
     n[n<3]<-4
   }
-  sqrt((1-r^2)/(n-2))
+  sqrt((1-r^2)/(as.vector(n)-2))
 }
 
 r2ci<-function(r,n,s=0){
@@ -55,7 +55,7 @@ r2ci<-function(r,n,s=0){
   }
 }
 
-r2llr<-function(r,n) {
+r2llr<-function(r,n,llr=list(e1=c(),e2=0)) {
   if (any(abs(r)>1)) {
     print(paste("r2llr r-exception",format(max(abs(r)),digits=3)))
     r[abs(r)>1]<-1
@@ -64,10 +64,11 @@ r2llr<-function(r,n) {
     print("r2llr n-exception")
     n[n<3]<-4
   }
-  r<-atan(r)
-  if (isempty(llr$e1) || is.na(llr$e1)) { llr1=r }
+  z<-atanh(r)
+  if (isempty(llr$e1) || is.na(llr$e1)) { llr1=z }
   else {llr1=llr$e1}
-  showVals<-log(dnorm(llr1,mean=r,sd=1/sqrt(n-3))/dnorm(llr$e2,mean=r,sd=1/sqrt(n-3)))
+  showVals<-log(dnorm(llr1,mean=z,sd=1/sqrt(n-3))/dnorm(llr$e2,mean=z,sd=1/sqrt(n-3)))
+  # for llr1=0 this can be simplified to just this: z^2*(n-3)/2
 }
 
 
@@ -144,7 +145,9 @@ model2directeffect<-function(mF){
   # looking at the sd of predictions for all possible cases of categorical predictors
   
   if (class(mF)[1]=="lmerMod") {
-    v<-predict(mF,cbind(data1,data.frame(participant="1")))
+    p1<-data$participant
+    p1<-levels(p1)[1]
+    v<-predict(mF,cbind(data1,data.frame(participant=p1)))
   } else {
     v<-predict.lm(mF,data1)
   }
@@ -169,10 +172,22 @@ model2directeffect<-function(mF){
   
 }
 
+appendList <- function (x1, x2) 
+{
+  xnames <- names(x1)
+  for (v in names(x2)) {
+    x2[[v]]<-if (is.null(x2[[v]])) NA else x2[[v]]
+    x1[[v]] <- if (v %in% xnames && is.list(x1[[v]]) && is.list(x2[[v]])) 
+      appendList(x1[[v]], x2[[v]])
+    else c(x1[[v]], x2[[v]])
+  }
+  x1
+}
 
 
-
-multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FALSE, earlierResult=c(), showProgress=TRUE,progressPrefix=""){
+multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims=1,appendData=FALSE, earlierResult=c(),sigOnly=FALSE, showProgress=TRUE,progressPrefix=""){
+  if (n_sims==1) {showProgress<-FALSE}
+  
   rho<-effect$rIV
   rho2<-effect$rIV2
   
@@ -191,9 +206,14 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
   }
 
     if (appendData) {
-    main_res<-earlierResult
+    mainResult<-earlierResult
   } else {
-    main_res<-list(rpIV=c(),rIV=c(),pIV=c(),rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),nval=c(),r=list(direct=c(),unique=c(),total=c(),coefficients=c()),showType=design$showType)
+    mainResult<-list(rpIV=c(),roIV=c(),rIV=c(),pIV=c(),
+                   rIV2=c(),pIV2=c(),rIVIV2DV=c(),pIVIV2DV=c(),
+                   nval=c(),
+                   r=list(direct=c(),unique=c(),total=c(),coefficients=c()),
+                   p=list(direct=c(),unique=c(),total=c()),
+                   showType=design$showType)
   }
   
   for (i in 1:n_sims){
@@ -203,83 +223,74 @@ multipleAnalysis<-function(IV,IV2,DV,effect,design,evidence,n_sims,appendData=FA
     effect$rIV<-rho[i]
     if (!is.null(IV2)) {effect$rIV2<-rho2[i]}
     
-    sample<-makeSample(IV,IV2,DV,effect,design)
-    res<-analyseSample(IV,IV2,DV,design,evidence,sample)
-    res<-checkSample(IV,IV2,DV,effect,design,evidence,sample,res)
-    
-    # Replication?
-    if (!isempty(design$sReplicationOn) && !is.na(design$sReplicationOn) && design$sReplicationOn) {
-        while (design$sReplSigOnly && res$pIV>alpha) {
-          sample<-makeSample(IV,IV2,DV,effect,design)
-          res<-analyseSample(IV,IV2,DV,design,evidence,sample)
-        }
-        # note that we do the replication with a one-tailed set up
-        rSign<-sign(res$rIV)
-        effect1<-effect
-        design1<-design
-        for (i in 1:design$sReplRepeats) {
-          design1$sN<-rw2n(res$rIV,design$sReplPower,1)
-          effect1$rIV<-sample$effectRho
-          effect1$populationPDF<-"Single"
-          sample<-makeSample(IV,IV2,DV,effect1,design1)
-          res<-analyseSample(IV,IV2,DV,design1,evidence,sample)
-          if (sign(res$rIV)==rSign) {
-            res$pIV<-res$pIV/2
-          } else {
-            res$pIV<-1
-          }
-        }
-    }
-    
+    res<-runSimulation(IV,IV2,DV,effect,design,evidence,sigOnly)
+      
     if (is.na(res$rIV)) {
       res$rIV<-0
       res$pIV<-1
-      res$nval<-0}
-    main_res$rpIV<-rbind(main_res$rpIV,res$rpIV)
-    main_res$rIV<-rbind(main_res$rIV,res$rIV)
-    main_res$pIV<-rbind(main_res$pIV,res$pIV)
-    main_res$nval<-rbind(main_res$nval,res$nval)
+      res$nval<-0
+    }
+    newResult<-list(rpIV=res$rpIV,roIV=res$roIV,rIV=res$rIV,pIV=res$pIV,poIV=res$poIV,
+                    rIV2=res$rIV2,pIV2=res$pIV2,rIVIV2DV=res$rIVIV2DV,pIVIV2DV=res$pIVIV2DV,
+                    nval=res$nval,
+                    r=list(direct=res$r$direct,unique=res$r$unique,total=res$r$total,coefficients=res$r$coefficients),
+                    p=list(direct=res$p$direct,unique=res$p$unique,total=res$p$total),
+                    showType=design$showType)
+    
 
     if (class(res$rawModel)[1]=="lmerMod") {
       coeffs<-colMeans(coef(res$rawModel)$participant)
     } else {
       coeffs<-res$rawModel$coefficients
     }
+    newResult$r$coefficients<-as.double(coeffs[2:length(coeffs)])
+    # mainResult<-appendList(mainResult,newResult)
+    
+    mainResult$rpIV<-rbind(mainResult$rpIV,newResult$rpIV)
+    mainResult$rIV<-rbind(mainResult$rIV,newResult$rIV)
+    mainResult$roIV<-rbind(mainResult$roIV,newResult$roIV)
+    mainResult$pIV<-rbind(mainResult$pIV,newResult$pIV)
+    mainResult$poIV<-rbind(mainResult$poIV,newResult$poIV)
+    mainResult$nval<-rbind(mainResult$nval,newResult$nval)
     if (!is.null(IV2)){
-      main_res$rIV2<-rbind(main_res$rIV2,res$rIV2)
-      main_res$pIV2<-rbind(main_res$pIV2,res$pIV2)
-      main_res$rIVIV2DV<-rbind(main_res$rIVIV2DV,res$rIVIV2DV)
-      main_res$pIVIV2DV<-rbind(main_res$pIVIV2DV,res$pIVIV2DV)
-      
-      main_res$r$direct<-rbind(main_res$r$direct,res$r$direct)
-      main_res$r$unique<-rbind(main_res$r$unique,res$r$unique)
-      main_res$r$total<-rbind(main_res$r$total,res$r$total)
-      main_res$r$coefficients<-rbind(main_res$r$coefficients,as.double(coeffs[2:length(coeffs)]))
-                                     
-      main_res$p$direct<-rbind(main_res$p$direct,res$p$direct)
-      main_res$p$unique<-rbind(main_res$p$unique,res$p$unique)
-      main_res$p$total<-rbind(main_res$p$total,res$p$total)
-      
+      mainResult$rIV2<-rbind(mainResult$rIV2,newResult$rIV2)
+      mainResult$pIV2<-rbind(mainResult$pIV2,newResult$pIV2)
+      mainResult$rIVIV2DV<-rbind(mainResult$rIVIV2DV,newResult$rIVIV2DV)
+      mainResult$pIVIV2DV<-rbind(mainResult$pIVIV2DV,newResult$pIVIV2DV)
+
+      mainResult$r$direct<-rbind(mainResult$r$direct,newResult$r$direct)
+      mainResult$r$unique<-rbind(mainResult$r$unique,newResult$r$unique)
+      mainResult$r$total<-rbind(mainResult$r$total,newResult$r$total)
+      mainResult$r$coefficients<-rbind(mainResult$r$coefficients,newResult$r$coefficients)
+
+      mainResult$p$direct<-rbind(mainResult$p$direct,newResult$p$direct)
+      mainResult$p$unique<-rbind(mainResult$p$unique,newResult$p$unique)
+      mainResult$p$total<-rbind(mainResult$p$total,newResult$p$total)
+
     } else {
-      main_res$rIV2<-rbind(main_res$rIV2,NA)
-      main_res$pIV2<-rbind(main_res$pIV2,NA)
-      main_res$rIVIV2DV<-rbind(main_res$rIVIV2DV,NA)
-      main_res$pIVIV2DV<-rbind(main_res$pIVIV2DV,NA)
-      
-      main_res$r$direct<-rbind(main_res$r$direct,res$rIV)
-      main_res$r$unique<-rbind(main_res$r$unique,res$rIV)
-      main_res$r$total<-rbind(main_res$r$total,res$rIV)
-      main_res$r$coefficients<-rbind(main_res$r$coefficients,as.double(coeffs)[2:length(coeffs)])
-      
-      main_res$p$direct<-rbind(main_res$p$direct,res$pIV)
-      main_res$p$unique<-rbind(main_res$p$unique,res$pIV)
-      main_res$p$total<-rbind(main_res$p$total,res$pIV)
-      
+      mainResult$rIV2<-rbind(mainResult$rIV2,NA)
+      mainResult$pIV2<-rbind(mainResult$pIV2,NA)
+      mainResult$rIVIV2DV<-rbind(mainResult$rIVIV2DV,NA)
+      mainResult$pIVIV2DV<-rbind(mainResult$pIVIV2DV,NA)
+
+      mainResult$r$direct<-rbind(mainResult$r$direct,newResult$rIV)
+      mainResult$r$unique<-rbind(mainResult$r$unique,newResult$rIV)
+      mainResult$r$total<-rbind(mainResult$r$total,newResult$rIV)
+      mainResult$r$coefficients<-rbind(mainResult$r$coefficients,newResult$r$coefficients)
+
+      mainResult$p$direct<-rbind(mainResult$p$direct,newResult$pIV)
+      mainResult$p$unique<-rbind(mainResult$p$unique,newResult$pIV)
+      mainResult$p$total<-rbind(mainResult$p$total,newResult$pIV)
+
     }
   }
   if (showProgress) removeNotification(id="counting")
-  main_res$showType<-evidence$showType
-  main_res
+  mainResult$showType<-evidence$showType
+  mainResult$effect<-effect
+  mainResult$design<-design
+  mainResult$evidence<-evidence
+  
+  mainResult
 }
 
 convert2Interval<-function(var) {
@@ -288,10 +299,9 @@ convert2Interval<-function(var) {
   var$sd<-var$iqr*qnorm(0.75)
 }
 
-analyseSample<-function(IV,IV2,DV,design,evidence,result){
+analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
 
   if (is.null(IV2)) {no_ivs<-1} else {no_ivs<-2}
-  
   # CONVERT ALL ORDINAL VARIABLES TO INTERVAL  
   if (IV$type=="Ordinal") {
     IV$type<-"Interval"
@@ -334,6 +344,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   
   #MAKE NORM DATA STORAGE
     # centre variables on zero
+    # this helps with the interaction term
     if (IV$type=="Interval")  iv1=(iv1-mean(iv1,na.rm=TRUE))/sd(iv1,na.rm=TRUE)
     if (!is.null(IV2) && IV2$type=="Interval") iv2=(iv2-mean(iv2,na.rm=TRUE))/sd(iv2,na.rm=TRUE)
     if (DV$type=="Interval")  dv=(dv-mean(dv,na.rm=TRUE))/sd(dv,na.rm=TRUE)
@@ -375,6 +386,9 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   if ((IV$type=="Categorical" && design$sIV1Use=="Within") || (!is.null(IV2) && IV2$type=="Categorical" && design$sIV2Use=="Within")){
     doingWithin<-TRUE
     formula<-paste(formula,"+(1|participant)",sep="")
+    if ((IV$type=="Categorical" && design$sIV1Use=="Within") && (!is.null(IV2) && IV2$type=="Categorical" && design$sIV2Use=="Within")){
+      formula<-paste(formula,"+(1|iv1:participant)+(1|iv2:participant)",sep="")
+    }
   } else {
     doingWithin<-FALSE
   }
@@ -389,11 +403,15 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   if (DV$type=="Categorical") {
     if (doingWithin) {
       lmRaw<-glmer(formula=as.formula(formula),data=resultRawData,family="binomial")
+      lmRawC<-glmer(formula=as.formula(formula),data=resultRawData,family="binomial",contrasts=contrasts)
       # lmNorm to calculate effect sizes
-      lmNorm<-glmer(formula=as.formula(formula),data=resultNormData,family="binomial",contrasts=contrasts)
+      lmNorm<-glmer(formula=as.formula(formula),data=resultNormData,family="binomial")
+      lmNormC<-glmer(formula=as.formula(formula),data=resultNormData,family="binomial",contrasts=contrasts)
     } else {
       lmRaw<-glm(formula=as.formula(formula),data=resultRawData,family="binomial")
-      lmNorm<-glm(formula=as.formula(formula),data=resultNormData,family="binomial",contrasts=contrasts)
+      lmRawC<-glm(formula=as.formula(formula),data=resultRawData,family="binomial",contrasts=contrasts)
+      lmNorm<-glm(formula=as.formula(formula),data=resultNormData,family="binomial")
+      lmNormC<-glm(formula=as.formula(formula),data=resultNormData,family="binomial",contrasts=contrasts)
     }
     testMethod<-"F"
     pcol=3;prow=2
@@ -402,12 +420,16 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
     # lmRaw to report model
     if (doingWithin) {
       lmRaw<-lmer(formula=as.formula(formula),data=resultRawData)
+      lmRawC<-lmer(formula=as.formula(formula),data=resultRawData,contrasts=contrasts)
       # lmNorm to calculate effect sizes
-      lmNorm<-lmer(formula=as.formula(formula),data=resultNormData,contrasts=contrasts)
+      lmNorm<-lmer(formula=as.formula(formula),data=resultNormData)
+      lmNormC<-lmer(formula=as.formula(formula),data=resultNormData,contrasts=contrasts)
     } else {
-    lmRaw<-lm(formula=as.formula(formula),data=resultRawData)
-    # lmNorm to calculate effect sizes
-    lmNorm<-lm(formula=as.formula(formula),data=resultNormData,contrasts=contrasts)
+      lmRaw<-lm(formula=as.formula(formula),data=resultRawData)
+      lmRawC<-lm(formula=as.formula(formula),data=resultRawData,contrasts=contrasts)
+      # lmNorm to calculate effect sizes
+      lmNorm<-lm(formula=as.formula(formula),data=resultNormData)
+      lmNormC<-lm(formula=as.formula(formula),data=resultNormData,contrasts=contrasts)
     }
     testMethod<-"F"
     pcol=4;prow=2;
@@ -416,25 +438,75 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   switch (evidence$ssqType,
           "Type1"={
             anRaw<-Anova(lmRaw,test=testMethod)
+            anRawC<-Anova(lmRawC,test=testMethod)
             anNorm<-Anova(lmNorm,test=testMethod)
+            anNormC<-Anova(lmNormC,test=testMethod)
           },
           "Type2"={
             anRaw<-Anova(lmRaw,test=testMethod,type=2)
+            anRawC<-Anova(lmRawC,test=testMethod,type=2)
             anNorm<-Anova(lmNorm,test=testMethod,type=2)
+            anNormC<-Anova(lmNormC,test=testMethod,type=2)
           },
           "Type3"={
             anRaw<-Anova(lmRaw,test=testMethod,type=3,singular.ok=TRUE)
+            anRawC<-Anova(lmRawC,test=testMethod,type=3,singular.ok=TRUE)
             anNorm<-Anova(lmNorm,test=testMethod,type=3,singular.ok=TRUE)
+            anNormC<-Anova(lmNormC,test=testMethod,type=3,singular.ok=TRUE)
           }
           )
-  anU<-Anova(lmNorm,test="F",type=3,singular.ok=TRUE)
 
+  anU<-Anova(lmNormC,test="F",type=3,singular.ok=TRUE)
+  if (class(lmRaw)[1]=="lmerMod") {
+    # we need to sort this to match Jamovi etc
+    # we use anNormC as the starting point, but replace any Interval predictors
+    anRaw<-anNormC
+    if (IV$type!="Categorical") {
+      anRaw["iv1",]<-anNormC["iv1",]
+    }
+    if (IV2$type!="Categorical") {
+      anRaw["iv2",]<-anNormC["iv2",]
+    }
+    # now we move cells around
+    newRow<-nrow(anRaw)+1
+    anRaw[newRow,]<-c(NA,anRaw$Df.res[2],0,NA)
+    rownames(anRaw)[newRow]<-"Error"
+    anRaw["Df.res"]<-NA
+    anRaw<-anRaw[,c(3,2,1,4)]
+    # ssqE<-sum(result$rawModel@resp$wtres^2)
+    # ssqIV<-sum((result$rawModel@resp$mu)^2)
+    # anova[,1]<-c(0,ssqIV,ssqE)
+    colnames(anRaw)[1]<-""
+    anRaw[,1]<-NA
+    anRaw[1,2]<-0 # intercept df
+    if ((IV$deploy=="Within") && (!is.null(IV2) && IV2$deploy=="Within")) {
+      z1<-summary(aov(dv~iv1*iv2+Error(participant/(iv1*iv2)),resultRawData))
+      F<-c(0,
+           z1$'Error: participant:iv1'[[1]]$'F value'[1],
+           z1$'Error: participant:iv2'[[1]]$'F value'[1],
+           z1$'Error: participant:iv1:iv2'[[1]]$'F value'[1],
+           NA
+           )
+      p<-c(0,
+           z1$'Error: participant:iv1'[[1]]$'Pr(>F)'[1],
+           z1$'Error: participant:iv2'[[1]]$'Pr(>F)'[1],
+           z1$'Error: participant:iv1:iv2'[[1]]$'Pr(>F)'[1],
+           NA
+      )
+      anRaw[,3]<-F
+      anRaw[,4]<-p
+    }
+    
+  }
 
   switch (no_ivs,
           { result$rpIV<-result$effectRho
-            result$rIV<-model2directeffect(lmNorm)
+            result$rIV<-model2directeffect(lmNormC)
             result$pIV<-r2p(result$rIV,n)
-            rCI<-r2ci(result$rIV,n)
+            result$rCI<-r2ci(result$rIV,n)
+            result$pCI<-r2p(result$rCI,n)
+            if (result$rIV>0 && result$rCI[1]<0 && result$rCI[2]>0) result$pCI[1]<-1
+            if (result$rIV<0 && result$rCI[1]<0 && result$rCI[2]>0) result$pCI[2]<-1
             # overall model effect-size
             result$rFull<-result$rIV
             result$rFullse<-r2se(result$rFull,n)
@@ -442,10 +514,10 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
           # 2 ivs
           { if (doingWithin) {
             # overall model effect-size
-            result$rFull<-r.squaredGLMM(lmNorm)[[1]]
+            result$rFull<-r.squaredGLMM(lmNormC)[[1]]
             result$rFullse<-r2se(result$rFull,n)
             
-            directEffects<-model2directeffect(lmNorm)
+            directEffects<-model2directeffect(lmNormC)
             result$rIV<-directEffects[1]
             result$pIV<-r2p(result$rIV,n)
             #  IV2 next    
@@ -482,7 +554,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
             
             # 1. direct effect sizes for individual IVs
             #  IV first
-            directEffects<-model2directeffect(lmNorm)
+            directEffects<-model2directeffect(lmNormC)
             if (any(abs(directEffects)>1)) {print("direct")}
             result$rIV<-directEffects[1]
             result$pIV<-r2p(result$rIV,n)
@@ -500,13 +572,13 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
             #  find the covariation
             r12<-result
             r12$dv<-result$iv2
-            r12<-analyseSample(IV,NULL,IV2,design,evidence,r12)
+            r12<-analyseSample(IV,NULL,IV2,effect,design,evidence,r12)
             result$rIVIV2<-r12$rIV
             
             # 2. find the unique and total effects
             # total model: with the single term
             # plain model: no interaction
-            totalSD<-sd(lmNorm$fitted.values+lmNorm$residuals)
+            totalSD<-sd(lmNormC$fitted.values+lmNormC$residuals)
             switch (DV$type,
                     "Interval"={
                       # total effect sizes
@@ -562,13 +634,13 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
               if (IV$ncats==2){
                 if (IV$type=="Categorical" && design$sIV1Use=="Within"){
                   an_name<-"t-test: Paired Samples"
-                  df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")")
                   tv<-t.test(dv~iv1,paired=TRUE,var.equal=!evidence$Welch)
                   tval<-tv$statistic
+                  df<-paste("(",format(anRaw$Df.res[2]),")",sep="")
                   result$pIV<-tv$p.value
                 } else {
                   an_name<-"t-test: Independent Samples"
-                  df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")")
+                  df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")",sep="")
                   if (any(c(sum(iv1==levels(iv1)[1]),sum(iv1==levels(iv1)[2]))<3))
                   {             
                     tval<-0
@@ -588,7 +660,7 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
                   an_name<-"One-Way ANOVA: Independent Measures"
                 }
                 t_name<-"F"
-                df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df[nrow(anRaw)]),")",sep="")
+                df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df.res[2]),")",sep="")
                 tval<-anRaw$`F value`[2]
               }
             },
@@ -657,19 +729,19 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
             "Interval Categorical"={
               an_name<-"Logistic Regression"
               t_name<-"chi2"
-              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")
+              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
               tval<-anRaw$Chisq[2]
             },
             "Ordinal Categorical"={
               an_name<-"Logistic Regression"
               t_name<-"chi2"
-              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")
+              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
               tval<-anRaw$Chisq[2]
             },
             "Categorical Categorical"={
               an_name<-"Chi-square test of independence"
               t_name<-"chi2"
-              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNorm$df.null+1),")",sep="")
+              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
               
               chiResult<-chisq.test(iv1,dv,correct = FALSE)
               result$rIV<-sqrt(chiResult$statistic/n)*sign(result$rIV)
@@ -718,18 +790,28 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   # adding fields to existing result
   result$rawModel<-lmRaw
   result$normModel<-lmNorm
+  result$rawModelC<-lmRawC
+  result$normModelC<-lmNormC
   result$rawAnova<-anRaw
   result$normAnova<-anNorm
+  result$rawAnovaC<-anRawC
+  result$normAnovaC<-anNormC
   result$nval<-n
   
   result$model<-result$rawModel
-  result$anova<-result$rawAnova
+  result$anova<-result$rawAnovaC
   
   result$an_name<-an_name
   result$test_name<-t_name
   result$df<-df
   result$test_val<-tval
-
+  
+  result$effect<-effect
+  result$design<-design
+  result$evidence<-evidence
+  
+  result$ResultHistory<-ResultHistory
+  
   result$showType<-evidence$showType
   result$Heteroscedasticity<-0
   # result$wval<-rn2w(result$rIV,result$nval)
@@ -737,3 +819,28 @@ analyseSample<-function(IV,IV2,DV,design,evidence,result){
   result
   
 }
+
+runSimulation<-function(IV,IV2,DV,effect,design,evidence,sig_only=FALSE) {
+  if (evidence$longHand) {
+    sample<-makeSample(IV,IV2,DV,effect,design)
+    res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
+  } else {
+    res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,FALSE)
+  }
+  # sig only
+  while (sig_only && res$pIV>alpha) {
+    if (evidence$longHand) {
+      sample<-makeSample(IV,IV2,DV,effect,design)
+      res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
+    } else {
+      res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,FALSE)
+    }
+  }
+  # Cheating ?
+  res<-cheatSample(IV,IV2,DV,effect,design,evidence,sample,res)
+  # Replication?
+  res<-replicateSample(IV,IV2,DV,effect,design,evidence,sample,res)
+  res
+  
+}
+

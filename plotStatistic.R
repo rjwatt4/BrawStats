@@ -294,7 +294,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
           },
           "log(lr)"={
             ylim<-c(0, max_s)
-            ylabel<-"S"
+            ylabel<-"log(lr)"
             },
           "w"={
             ylim<-c(0.01, 1)
@@ -350,7 +350,7 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
             "r1"={data$rs<-data$ro},
             "p"={data$rs<-data$ps},
             "p1"={data$rs<-data$po},
-            "log(lr)"={data$rs<-r2llr(data$rs,data$ns)},
+            "log(lr)"={data$rs<-r2llr(data$rs,data$ns,result$evidence$llr)},
             "n"={data$rs<-data$ns},
             "w"={data$rs<-rn2w(data$rs,data$ns)},
             "wp"={data$rs<-rn2w(data$rp,data$ns)},
@@ -509,7 +509,10 @@ rp_plot<-function(result,IV,IV2=NULL,DV,r=0){
 }
 
 llr_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"log(lr)")
+  g<-r_plot(result,IV,IV2,DV,r,"log(lr)")
+  sAlpha<-log(dnorm(0)/dnorm(qnorm(1-alpha/2)))
+  g<-g+geom_hline(yintercept=sAlpha, linetype="dotted", color="#44FF22", size=0.5)
+  g
 }
 
 p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){

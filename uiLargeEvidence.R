@@ -1,4 +1,4 @@
-source("uiEffectPart.R")
+source("uiHypothesisPart.R")
 source("uiDesignPart.R")
 
 LGmodalEvidence <-
@@ -8,6 +8,9 @@ LGmodalEvidence <-
             fluidRow(
               style=paste0("height: ",LGPanelHeight),
               column(offset=0,width=3, 
+                     hypothesisPanel("LGEvidence"),
+                     designPanel("LGEvidence"),
+                     
                      wellPanel(
                        style = paste("background: ",subpanelcolours$simulateC,";"),
                        tabsetPanel(id="LGEvidenceShow", type="tabs",
@@ -40,7 +43,7 @@ LGmodalEvidence <-
                                                       style = paste("background: ",subpanelcolours$simulateC,";"),
                                                       tags$table(width = "100%",class="myTable",
                                                        tags$tr(
-                                                         tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
+                                                         tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
                                                          tags$td(width = "40%", 
                                                                  selectInput("LGEvidenceExpected_type",label=NULL,
                                                                              c("Basic" = "EffectSize",
@@ -52,19 +55,28 @@ LGmodalEvidence <-
                                                                              ),
                                                                              selectize=FALSE),
                                                          ),
-                                                         tags$td(width = "15%",
-                                                                 conditionalPanel(condition="input.LGEvidenceExpected_type=='2D'",
+                                                         tags$td(width = "25%",
                                                                                   selectInput("LGEvidenceExpected_par1", label=NULL, 
-                                                                                              c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
-                                                                                              selected="p", selectize=FALSE)),
+                                                                                              list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
+                                                                                                   "Power"=list("w"="w","nw"="nw"),
+                                                                                                   "World"=list("n"="n","rp"="rp","wp"="wp"),
+                                                                                                   "Replication"=list("r1"="r1","p1"="p1")
+                                                                                              ),
+                                                                                              selected="p", selectize=FALSE),
                                                          ),
-                                                         tags$td(width = "15%",
-                                                                 conditionalPanel(condition="input.LGEvidenceExpected_type=='2D'",
+                                                         tags$td(width = "25%",
                                                                                   selectInput("LGEvidenceExpected_par2", label=NULL, 
-                                                                                              c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
-                                                                                              selected="r", selectize=FALSE)),
-                                                         ),
-                                                         tags$td(width = "35%", 
+                                                                                              list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
+                                                                                                   "Power"=list("w"="w","nw"="nw"),
+                                                                                                   "World"=list("n"="n","rp"="rp","wp"="wp"),
+                                                                                                   "Replication"=list("r1"="r1","p1"="p1")
+                                                                                              ),
+                                                                                              selected="r", selectize=FALSE),
+                                                         )
+                                                       ),
+                                                       tags$tr(
+                                                         tags$td(width = "10%", tags$div(style = localStyle, "")),
+                                                         tags$td(width = "40%", 
                                                                  conditionalPanel(condition="input.IV2choice != 'none'",
                                                                                   selectInput("LGEvidenceEffect_type",label=NULL,
                                                                                               c("direct" = "direct",
@@ -74,8 +86,13 @@ LGmodalEvidence <-
                                                                                                 "coefficients" = "coefficients"),
                                                                                               selectize=FALSE)
                                                                  )
-                                                         )),
-                                                       tags$tr(
+                                                         ),
+                                                         tags$td(width = "25%", tags$div(style = localStyle, "")),
+                                                         tags$td(width = "25%", tags$div(style = localStyle, "")),
+                                                       )
+                                                       ),
+                                                      tags$table(width = "100%",class="myTable",
+                                                                 tags$tr(
                                                          tags$td(width = "15%", tags$div(style = localStyle, "Runs:")),
                                                          tags$td(width = "50%", 
                                                                  selectInput("LGEvidenceExpected_length",label=NULL,
@@ -125,21 +142,6 @@ LGmodalEvidence <-
                                    )                       
                                    )
                      ),
-                     wellPanel(
-                       style = paste("background: ",subpanelcolours$hypothesisC,";"),
-                       tabsetPanel(id="LGHypothesisPart", type="tabs",
-                                   tabPanel("Hypothesis:",value="Hypothesis",
-                                   ),
-                                   # single tab
-                                   tabPanel("Effect",value="Effect",id="uiLGEffect",
-                                            effectPanel("LGEvidence",asTable = TRUE),
-                                   ),
-                                   tabPanel("World",value="World",id="uiLGWorld",
-                                            worldPanel("LGEvidence",asTable = TRUE),
-                                   )
-                       )
-                     ),
-                     designPanel("LGEvidence"),
                      wellPanel(
                        style = paste("background: ",subpanelcolours$simulateC,";"),
                        tags$table(width = "100%",class="myTable",

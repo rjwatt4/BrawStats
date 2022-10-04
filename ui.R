@@ -66,7 +66,9 @@ source("uiLargeMeta.R")
 source("uiLargeExplore.R")
 source("uiLargeLikelihood.R")
 
+source("uiHypothesisPart.R")
 source("uiEffectPart.R")
+source("uiVariablesPart.R")
 
 gH="25vw"
 rH="17vw"
