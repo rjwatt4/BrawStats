@@ -47,6 +47,7 @@ source("wsRead.R")
 source("typeCombinations.R")
 
 source("drawInspect.R")
+source("isSignificant.R")
 
 graphicSource="Main"
 
@@ -57,7 +58,7 @@ graphicSource="Main"
 shinyServer(function(input, output, session) {
   
   source("myGlobal.R")
-  source("testDebug.R")
+  source("runDebug.R")
   
 ####################################
 # BASIC SET UP that cannot be done inside ui.R  
@@ -157,6 +158,45 @@ shinyServer(function(input, output, session) {
   }
   )
   
+  observeEvent(input$STMethod, {
+    STMethod<<-input$STMethod
+    switch (STMethod,
+            "NHST"={
+              updateNumericInput(session,"alpha",value=alpha)
+              shinyjs::hideElement("evidencePrior")
+              shinyjs::hideElement("STPrior")
+              shinyjs::hideElement("evidenceLLR1")
+              shinyjs::hideElement("evidenceLLR2")
+              shinyjs::hideElement("llr1")
+              shinyjs::hideElement("llr2")
+            },
+            "sLLR"={
+              updateNumericInput(session,"alpha",value=alphaLLR)
+              shinyjs::hideElement("evidencePrior")
+              shinyjs::hideElement("STPrior")
+              shinyjs::showElement("evidenceLLR1")
+              shinyjs::showElement("evidenceLLR2")
+              shinyjs::showElement("llr1")
+              shinyjs::showElement("llr2")
+              },
+            "dLLR"={
+              updateNumericInput(session,"alpha",value=alphaLLR)
+              shinyjs::showElement("evidencePrior")
+              shinyjs::showElement("STPrior")
+              shinyjs::hideElement("evidenceLLR1")
+              shinyjs::hideElement("evidenceLLR2")
+              shinyjs::hideElement("llr1")
+              shinyjs::hideElement("llr2")
+            }
+    )
+  })
+  observeEvent(input$alpha, {
+    switch (STMethod,
+            "NHST"={alpha<<-input$alpha},
+            "sLLR"={alphaLLR<<-input$alpha},
+            "dLLR"={alphaLLR<<-input$alpha}
+    )
+  })
 ####################################
 # generic warning dialogue
   
@@ -1390,19 +1430,12 @@ inspectHistory<-c()
                      world=list(worldOn=FALSE,populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA)
         )
       } else {
-      if (switches$doWorlds) {
-      effect<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                       Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
-                   world=list(worldOn=input$world_on,populationPDF=input$world_distr,
-                              populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
-                              populationNullp=input$world_distr_Nullp)
-                       )
-      } else {
         effect<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
-                         Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
-                     world=list(worldOn=FALSE,populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA)
+                     Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
+                     world=list(worldOn=input$world_on,populationPDF=input$world_distr,
+                                populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
+                                populationNullp=input$world_distr_Nullp)
         )
-      }
       }
       if (effect$world$worldOn==FALSE) {
         effect$world$populationPDF<-"Single"
@@ -1451,7 +1484,7 @@ inspectHistory<-c()
       if (variablesHeld=="Data" && !applyingAnalysis && switches$doBootstrap) {design$sMethod<-"Resample"}
       if (debug) print("     updateDesign - exit")
       design
-    } 
+    }
     
     updateEvidence<-function(){
       if (debug) print("     updateEvidence")
@@ -1465,8 +1498,29 @@ inspectHistory<-c()
                      llr=list(e1=input$llr1,e2=input$llr2),
                      evidenceCaseOrder=input$evidenceCaseOrder,Welch=input$Welch,
                      dataType=input$dataType,analysisType=input$analysisType,
-                     pScale=input$pScale,wScale=input$wScale,nScale=input$nScale
-                     )
+                     pScale=input$pScale,wScale=input$wScale,nScale=input$nScale,
+                     usePrior=input$STPrior,
+                     prior=list(worldOn=FALSE,populationPDF="",
+                                populationPDFk=0,populationRZ="r",
+                                populationNullp=0)
+      )
+      switch(input$STPrior,
+             "none"={
+               evidence$prior=list(worldOn=input$world_on,populationPDF="Uniform",
+                                   populationPDFk=0,populationRZ="z",
+                                   populationNullp=0.5)
+             },
+             "world"={
+               evidence$prior=list(worldOn=input$world_on,populationPDF=input$world_distr,
+                          populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
+                          populationNullp=input$world_distr_Nullp)
+             },
+             "prior"={
+               evidence$prior=list(worldOn=input$world_on,populationPDF=input$likelihoodPrior_distr,
+                          populationPDFk=input$likelihoodPrior_distr_k,populationRZ=input$likelihoodPrior_distr_rz,
+                          populationNullp=input$likelihoodPrior_Nullp)
+             }
+      )
       if (debug) print("     updateEvidence - exit")
       evidence
     }
@@ -1979,8 +2033,12 @@ inspectHistory<-c()
                   g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"w")
                   g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"nw")
                 },
-                "log(lr)"={
-                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lr)")
+                "log(lrs)"={
+                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lrs)")
+                  g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
+                },
+                "log(lrd)"={
+                  g1<-drawInference(IV,IV2,DV,effect,design,evidence,result,"log(lrd)")
                   g2<-drawInference(IV,IV2,DV,effect,design,evidence,result,"p")
                 }
         )
@@ -2063,7 +2121,6 @@ inspectHistory<-c()
         }
         
         result$showType<-evidence$showType
-        
         reportInference(IV,IV2,DV,effect,evidence,result)        
     })
     
@@ -2176,7 +2233,9 @@ inspectHistory<-c()
       #   result<-sampleShortCut(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only)
       # }
       metaResult$result<-result
-      metaResult<-runMetaAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis,metaResult)
+      metaResult<-runMetaAnalysis(metaAnalysis,metaResult)
+      metaResult$effect<-effect
+      metaResult$design<-design
       if (debug) {print("     doMetaAnalysis - end")}
       metaResult
     }
@@ -2359,7 +2418,7 @@ inspectHistory<-c()
   ,priority=100
   )
   observeEvent(input$EvidenceExpected_type,{
-    if (!is.element(input$EvidenceExpected_type,c("NHSTErrors","CILimits","2D"))) {
+    if (!is.element(input$EvidenceExpected_type,c("NHSTErrors","FDR","CILimits","2D"))) {
       switch(input$EvidenceExpected_type,
            "EffectSize"={
              updateSelectInput(session,"EvidenceExpected_par1",selected="r")
@@ -2369,11 +2428,15 @@ inspectHistory<-c()
              updateSelectInput(session,"EvidenceExpected_par1",selected="nw")
              updateSelectInput(session,"EvidenceExpected_par2",selected="w")
            },
-           "log(lr)" = {
+           "log(lrs)" = {
              updateSelectInput(session,"EvidenceExpected_par1",selected="p")
-             updateSelectInput(session,"EvidenceExpected_par2",selected="log(lr)")
+             updateSelectInput(session,"EvidenceExpected_par2",selected="log(lrs)")
+           },           
+           "log(lrd)" = {
+             updateSelectInput(session,"EvidenceExpected_par1",selected="p")
+             updateSelectInput(session,"EvidenceExpected_par2",selected="log(lrd)")
            }           
-           )
+      )
     }
   })
   
@@ -2407,6 +2470,7 @@ inspectHistory<-c()
     makeExpectedGraph <- function() {
       doit<-c(input$EvidenceExpected_type,input$EvidenceExpected_par1,input$EvidenceExpected_par2,input$EvidenceEffect_type,
               input$evidenceTheory,
+              input$STMethod,input$alpha,
               input$LGEvidenceExpected_type,input$LGEvidenceExpected_par1,input$LGEvidenceExpected_par2,input$LGEvidenceEffect_type,
               input$world_distr,input$world_distr_rz,input$world_distr_k,input$world_distr_Nullp,
               input$LGEvidenceworld_distr,input$LGEvidenceworld_distr_rz,input$LGEvidenceworld_distr_k,input$LGEvidenceworld_distr_Nullp,
@@ -2500,7 +2564,7 @@ inspectHistory<-c()
         expectedResult$count<<-length(expectedResult$result$rIV)
         expectedResult$nullcount<<-length(expectedResult$nullresult$rIV)
         
-        if (effect$world$worldOn && expected$type=="NHSTErrors"){
+        if (effect$world$worldOn && is.element(expected$type,c("NHSTErrors","FDR"))){
           nulls<-expectedResult$result$rpIV==0
           expectedResult$nullresult$rpIV<-expectedResult$result$rpIV[nulls]
           expectedResult$nullresult$roIV<-expectedResult$result$roIV[nulls]
@@ -2537,15 +2601,19 @@ inspectHistory<-c()
           g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=1,xmax=9,ymin=0,ymax=10)
         }
       } else {
-        if (is.element(expected$type,c("NHSTErrors","CILimits"))) {
+        if (is.element(expected$type,c("NHSTErrors","FDR","CILimits"))) {
                 switch (expected$type,
                         "NHSTErrors"={
-                          g1<-e1_plot(expectedResult$nullresult,r=0)
-                          g2<-e2_plot(expectedResult$result,r=effect$rIV)
+                          g1<-e1_plot(expectedResult$nullresult,effect=effect)
+                          g2<-e2_plot(expectedResult$result,effect=effect)
+                        },
+                        "FDR"={
+                          g1<-e1_plot(expectedResult$nullresult,effect=effect)
+                          g2<-e2_plot(expectedResult$result,effect=effect)
                         },
                         "CILimits"=  {
-                          g1<-ci1_plot(expectedResult$result,r=effect$rIV)
-                          g2<-ci2_plot(expectedResult$result,r=effect$rIV)
+                          g1<-ci1_plot(expectedResult$result,effect=effect)
+                          g2<-ci2_plot(expectedResult$result,effect=effect)
                         }
                 )
         } else {
@@ -2615,7 +2683,7 @@ inspectHistory<-c()
           expectedResult$nullcount<-length(expectedResult$nullresult$rIV)
         }
         
-        g<-reportExpected(IV,IV2,DV,evidence,expected,expectedResult$result,expectedResult$nullresult)
+        g<-reportExpected(IV,IV2,DV,effect,evidence,expected,expectedResult$result,expectedResult$nullresult)
       } else {
         g<-ggplot()+plotBlankTheme
       }
@@ -2643,7 +2711,7 @@ inspectHistory<-c()
     # outputs (graph and report)
 
 # local variables
-    lastExplore<-c()
+    lastExplore<-explore
     showProgress<-TRUE
     
     notRunningExplore<-TRUE
@@ -2705,19 +2773,23 @@ inspectHistory<-c()
                      if (switches$doMetaAnalysis) runPressed<-c(runPressed,input$exploreRunM,input$LGexploreRunM)
                      
                      if (notRunningExplore) {
-
+                        if (input$evidenceLongHand) {
+                          gain<-1
+                        } else {
+                          gain<-1
+                        }
                        switch (input$ExploreTab,
                              "Hypothesis"={
                                if (!input$ExploreAppendH) {resetExplore()}
-                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthH)
+                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthH)*gain
                                },
                              "Design"={
                                if (!input$ExploreAppendD) {resetExplore()}
-                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthD)
+                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthD)*gain
                              },
                              "MetaAnalysis"={
                                if (!input$ExploreAppendM) {resetExplore()}
-                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthM)
+                               exploreResult$nsims<<-exploreResult$result$count+as.numeric(input$Explore_lengthM)*gain
                              }
                      )
                        if (any(runPressed)) {
@@ -2746,6 +2818,7 @@ inspectHistory<-c()
     # update explore values    
     updateExplore<-function(){
         explore<-lastExplore
+        if (is.element(input$ExploreTab,c("Hypothesis","Design","MetaAnalysis"))) {
         switch (input$ExploreTab,
                 "Hypothesis"={
                   l<-list(Explore_type=input$Explore_typeH,
@@ -2766,8 +2839,8 @@ inspectHistory<-c()
                 "MetaAnalysis"={
                   l<-list(Explore_type=input$Explore_typeM,
                           Explore_show=input$Explore_showM, 
-                          Explore_typeShow=input$Explore_typeShowM, 
-                          Explore_whichShow=input$Explore_whichShowM, 
+                          Explore_typeShow=explore$Explore_typeShow, 
+                          Explore_whichShow=explore$Explore_whichShow, 
                           Explore_length=as.numeric(input$Explore_lengthM),
                           Append=input$ExploreAppendM)  
                 }
@@ -2783,6 +2856,10 @@ inspectHistory<-c()
         
         if (is.element(explore$Explore_type,c("IV","IV2","DV"))) {
           explore$Explore_type<-paste(explore$Explore_type,input$Explore_VtypeH,sep="")
+        }
+        }
+        if (!input$evidenceLongHand) {
+          explore$Explore_length<-explore$Explore_length*10
           }
         lastExplore<<-explore
         explore
@@ -2803,7 +2880,9 @@ inspectHistory<-c()
    # Explore outputs
    # show explore analysis        
    makeExploreGraph <- function() {
-     doit<-c(input$Explore_showH,input$Explore_showD,input$Explore_showM,input$LGExplore_showH,input$LGExplore_showD,input$LGExplore_showM)
+     doit<-c(input$Explore_showH,input$Explore_showD,input$Explore_showM,
+             input$LGExplore_showH,input$LGExplore_showD,input$LGExplore_showM,
+             input$STMethod,input$alpha,input$STPrior)
      if (exploreResult$result$count<2) {
        silentTime<<-0
        pauseWait<<-10
@@ -2833,14 +2912,21 @@ inspectHistory<-c()
      explore<-updateExplore()
      
      stopRunning<-TRUE
-     expectedResult$result$showType<<-input$EvidenceEffect_type
+     # expectedResult$result$showType<<-input$EvidenceEffect_type
      
-     if ((explore$Explore_family=="MetaAnalysis" || explore$ExploreLongHand) && switches$showAnimation) {
-       ns<-10^(min(2,floor(log10(max(1,exploreResult$result$count)))))
-       if (exploreResult$result$count+ns>exploreResult$nsims){
-         ns<-exploreResult$nsims-exploreResult$result$count
+     if (switches$showAnimation) {
+       if (explore$Explore_family!="MetaAnalysis" && !explore$ExploreLongHand) {
+         ns<-10^(min(3,floor(log10(max(100,exploreResult$result$count)))))
+       } else {
+         ns<-10^(min(2,floor(log10(max(1,exploreResult$result$count)))))
        }
      } else {
+       ns<-exploreResult$nsims-exploreResult$result$count
+     }
+     # if (explore$Explore_family!="MetaAnalysis" && !explore$ExploreLongHand) {
+     #   ns<-ns*100
+     # }
+     if (exploreResult$result$count+ns>exploreResult$nsims){
        ns<-exploreResult$nsims-exploreResult$result$count
      }
      if (ns>0) {
@@ -2852,7 +2938,7 @@ inspectHistory<-c()
        stopRunning<-FALSE
      }
      
-     if (explore$Explore_show=="NHSTErrors") {
+     if (!effect$world$worldOn  && (explore$Explore_show=="NHSTErrors" || explore$Explore_show=="FDR")) {
        if (switches$showAnimation) {
          ns<-10^(min(2,floor(log10(max(1,exploreResult$nullresult$count)))))
          if (exploreResult$nullresult$count+ns>exploreResult$nsims){
@@ -2869,25 +2955,20 @@ inspectHistory<-c()
      } else{
        exploreResult$nullresult<<-NULL
      }
-     exploreResult$Explore_type<-explore$Explore_type
+     exploreResult$Explore_type<<-explore$Explore_type
      exploreResult$Explore_show<<-explore$Explore_show
      exploreResult$Explore_typeShow<<-explore$Explore_typeShow
      exploreResult$Explore_family<<-explore$Explore_family
-     exploreResult$evidence<-evidence
+     exploreResult$evidence<<-evidence
      
      exploreResultHold<<-exploreResult
-
+     
      g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))
      g<-g+scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
+     g1<-drawExplore(IV,IV2,DV,effect,design,explore,exploreResult)
      
-     if ((explore$Explore_family=="MetaAnalysis" && exploreResult$result$Explore_family!="MetaAnalysis") ||
-         (explore$Explore_family!="MetaAnalysis" && exploreResult$result$Explore_family=="MetaAnalysis")) {
-       g1<-ggplot()+plotBlankTheme
-     } else {
-       g1<-drawExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
-     }
      g<-g+annotation_custom(grob=ggplotGrob(g1+gridTheme),xmin=0.5,xmax=9.5,ymin=0.5,ymax=9.5)
-
+     
      time2<<-Sys.time()
      if (!stopRunning) {
        if (doStop) {
@@ -2916,7 +2997,8 @@ inspectHistory<-c()
     
     # report explore analysis        
     output$ExploreReport <- renderPlot({
-      doIt<-c(input$exploreRunH,input$exploreRunD,input$exploreRunM)
+      doIt<-c(input$exploreRunH,input$exploreRunD,input$exploreRunM,
+              input$STMethod,input$alpha)
       if (exploreResult$result$count<exploreResult$nsims) {
         if (doStop) {
           invalidateLater(as.numeric(mean(silentTime)*1000)+pauseWait)
@@ -2937,12 +3019,7 @@ inspectHistory<-c()
       
       if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
       
-      if ((explore$Explore_family=="MetaAnalysis" && exploreResult$Explore_family!="MetaAnalysis") ||
-          (explore$Explore_family!="MetaAnalysis" && exploreResult$Explore_family=="MetaAnalysis")) {
-        return(ggplot()+plotBlankTheme)
-      } else {
-        reportExplore(Iv,IV2,DV,effect,design,explore,exploreResult)
-      }
+      reportExplore(IV,IV2,DV,effect,design,explore,exploreResult)
     })
 
 ##################################################################################    

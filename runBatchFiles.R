@@ -99,7 +99,7 @@ for (i in 1:nfiles) {
 
   sample<-makeSample(IV,IV2,DV,effect,design)
   if (is.null(sample)) return(NULL)
-  result<-analyseSample(IV,IV2,DV,design,evidence,sample)
+  result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
   if (is.null(result)) return(NULL)
 # print("OK2")
 

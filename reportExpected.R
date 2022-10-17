@@ -1,11 +1,11 @@
 
-reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
+reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   
   if (is.null(IV2) | is.null(result$rIVIV2DV)){nc=3}
   else{
     if (is.na(result$rIVIV2DV[1])) {nc=6} else {nc=9}
   }
-  if (expected$type=="NHSTErrors"){nc=3}
+  if (expected$type=="NHSTErrors" || expected$type=="FDR"){nc=4}
   
   # header
   outputText<-c("\bExpected",paste("nsims=",format(length(result$rIV)),sep=""),rep("",nc-2))
@@ -42,25 +42,38 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
   }
   
   # column labels
-  if (expected$type=="NHSTErrors") {outputText1<-c("   ","I","II")}
+  if (expected$type=="NHSTErrors" || expected$type=="FDR") {outputText1<-c("   ","\bI","\bII","All")}
   else {
     if(expected$type=="CILimits") {outputText1<-c("   ","lower","upper")}
     else {
-      outputText1<-c("   ",expected$Expected_par1,expected$Expected_par2)
+      outputText1<-c("   ",paste0("\b",expected$Expected_par1),paste0("\b",expected$Expected_par2))
     }
   }
   outputText<-c(outputText,rep(outputText1,nc/3))
 
-  if (expected$type=="NHSTErrors"){
-    if (result$effect$world$worldOn) {
-      e1=paste(format(sum(nullresult$pIV<alpha)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      e2=paste(format(sum(result$pIV>=alpha)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+  if (expected$type=="NHSTErrors" || expected$type=="FDR"){
+    nullSig<-isSignificant(STMethod,nullresult$pIV,nullresult$rIV,nullresult$nval,nullresult$evidence)
+    resSig<-isSignificant(STMethod,result$pIV,result$rIV,result$nval,result$evidence)
+    if (!result$effect$world$worldOn || expected$type=="NHSTErrors") {
+      e1=paste(format(mean(nullSig)*100,digits=report_precision),"%")
+      e2=paste(format(mean(!resSig)*100,digits=report_precision),"%")
+      outputText<-c(outputText,"All:",e1,e2,"")
     } else {
-      e1=paste(format(mean(nullresult$pIV<alpha)*100,digits=report_precision),"%")
-      e2=paste(format(mean(result$pIV>=alpha)*100,digits=report_precision),"%")
-    }
-    outputText<-c(outputText,"",e1,e2)
-    
+      e1=paste0(format(sum(nullSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      e2=paste0(format(sum(!resSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      outputText<-c(outputText,"\bAll:",e1,e2,"")
+      
+      e1n=paste0("\b",format(sum(nullSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
+      e1=paste0(format(sum(resSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
+      e1a=paste0(format((sum(nullSig)+sum(resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      outputText<-c(outputText,"\bSig:",e1n,e1,e1a)
+      
+      e2n=paste0(format(sum(!nullSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
+      e2=paste0("\b",format(sum(!resSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
+      e2a=paste0(format((sum(!nullSig)+sum(!resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      outputText<-c(outputText,"\bNot Sig:",e2n,e2,e2a)
+    } 
+      
   }else{
     
     ot1<-c()
@@ -72,6 +85,7 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
     for (i in 1:(nc/3)) {
       r<-rs[,i]
       p<-ps[,i]
+
       if (expected$type=="CILimits"){
         a<-r2ci(r,result$nval[1],-1)
         b<-r2ci(r,result$nval[1],+1)
@@ -79,7 +93,8 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
         switch (expected$Expected_par1,
                 "r"={a<-r},
                 "p"={a<-p},
-                "log(lr)"={a<-r2llr(r,result$nval,result$evidence$llr)},
+                "log(lrs)"={a<-res2llr(result,"sLLR")},
+                "log(lrd)"={a<-res2llr(result,"dLLR")},
                 "n"={a<-result$nval},
                 "w"={a<-rn2w(r,result$nval)},
                 "nw"={a<-rw2n(r,0.8,result$design$sReplTails)},
@@ -91,7 +106,8 @@ reportExpected<-function(IV,IV2,DV,evidence,expected,result,nullresult){
         switch (expected$Expected_par2,
                 "r"={b<-r},
                 "p"={b<-p},
-                "log(lr)"={b<-r2llr(r,result$nval,result$evidence$llr)},
+                "log(lrs)"={b<-res2llr(result,"sLLR")},
+                "log(lrd)"={b<-res2llr(result,"dLLR")},
                 "n"={b<-result$nval},
                 "w"={b<-rn2w(r,result$nval)},
                 "nw"={b<-rw2n(r,0.8,result$design$sReplTails)},

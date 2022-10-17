@@ -38,17 +38,17 @@ reportMetaAnalysis<-function(result){
     outputText<-c(outputText,"\bEstimated","Single",format(n1),
                   paste0(format(mean(result$single$kmax),digits=3),"\u00B1",format(std(result$single$kmax),digits=2)),
                   paste0(format(mean(result$single$nullMax),digits=3),"\u00B1",format(std(result$single$nullMax),digits=2)),
-                  paste0(format(mean(result$single$Smax),digits=3))
+                  paste0(format(mean(result$single$Smax),digits=3),"\u00B1",format(std(result$single$Smax),digits=2))
                   )
     outputText<-c(outputText," ","Gauss",format(n2),
                   paste0(format(mean(result$gauss$kmax),digits=3),"\u00B1",format(std(result$gauss$kmax),digits=2)),
                   paste0(format(mean(result$gauss$nullMax),digits=3),"\u00B1",format(std(result$gauss$nullMax),digits=2)),
-                  paste0(format(mean(result$gauss$Smax),digits=3))
+                  paste0(format(mean(result$gauss$Smax),digits=3),"\u00B1",format(std(result$gauss$Smax),digits=2))
                   )
     outputText<-c(outputText," ","Exp",format(n3),
                   paste0(format(mean(result$exp$kmax),digits=3),"\u00B1",format(std(result$gauss$kmax),digits=2)),
                   paste0(format(mean(result$exp$nullMax),digits=3),"\u00B1",format(std(result$gauss$nullMax),digits=2)),
-                  paste0(format(mean(result$exp$Smax),digits=3))
+                  paste0(format(mean(result$exp$Smax),digits=3),"\u00B1",format(std(result$exp$Smax),digits=2))
                   )
   }
 

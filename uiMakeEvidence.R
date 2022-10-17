@@ -23,7 +23,9 @@ EvidenceTab <-
                                                                 selectInput(paste0(prefix,"EvidenceInfer_type"),label=NULL,
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
-                                                                              "log(lr)" = "log(lr)"),
+                                                                              "log(lrs)" = "log(lrs)",
+                                                                              "log(lrd)" = "log(lrd)"
+                                                                            ),
                                                                             selectize=FALSE)
                                                         ),
                                                         # tags$td(width = "10%", tags$div(style = localStyle, "")),
@@ -46,8 +48,10 @@ EvidenceTab <-
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
                                                                               "NHST errors" = "NHSTErrors",
+                                                                              "False Discovery" = "FDR",
                                                                               "CI limits" = "CILimits",
-                                                                              "log(lr)" = "log(lr)",
+                                                                              "log(lrs)" = "log(lrs)",
+                                                                              "log(lrd)" = "log(lrd)",
                                                                               "2D" = "2D"
                                                                             ),
                                                                             selected="Basic",
@@ -56,14 +60,14 @@ EvidenceTab <-
                                                         tags$td(width = "15%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
                                                                                  selectInput(paste0(prefix,"EvidenceExpected_par1"), label=NULL, 
-                                                                                             c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
+                                                                                             c("r"="r","p"="p","llrs"="log(lrs)","llrd"="log(lrd)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
                                                                                              selected="r", selectize=FALSE)
                                                                                  # ),
                                                         ),
                                                         tags$td(width = "15%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
                                                                                  selectInput(paste0(prefix,"EvidenceExpected_par2"), label=NULL, 
-                                                                                             c("r"="r","p"="p","s"="log(lr)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
+                                                                                             c("r"="r","p"="p","llrs"="log(lrs)","llrd"="log(lrd)","w"="w","nw"="nw","n"="n","r1"="r1","p1"="p1","rp"="rp","wp"="wp"), 
                                                                                              selected="p", selectize=FALSE)
                                                                                  # ),
                                                         ),

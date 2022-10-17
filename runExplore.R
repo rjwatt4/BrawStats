@@ -9,6 +9,7 @@ quants=0.25
 
 exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explore,exploreResult,nsim,doingNull=FALSE,showProgress=FALSE){
   
+  localAlpha<-alpha
   npoints<-explore$Explore_npoints
   quants<-explore$Explore_quants
   max_n<-explore$Explore_nRange
@@ -74,6 +75,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
           },
           "Method"={vals<-c("Random","Stratified","Cluster","Convenience","Snowball")},
           "Usage"={vals<-c("Between","Within")},
+          "Alpha"={vals<-c(0.001,0.0025,0.005,0.01,0.025,0.05,0.1,0.25,0.5)},
           "Dependence"={vals<-seq(0,anomaliesRange,length.out=npoints)},
           "Outliers"={vals<-seq(0,anomaliesRange,length.out=npoints)},
           "Heteroscedasticity"={vals<-seq(0,1,length.out=npoints)},
@@ -108,7 +110,6 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
   }
   
   for (ni in 1:n_sims){
-    
     main_res<-list(rval=c(),pval=c(),nval=c(),
                    r1=list(direct=c(),unique=c(),total=c()),
                    r2=list(direct=c(),unique=c(),total=c()),
@@ -379,6 +380,10 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
             "SampleSize"={design$sN<-round(vals[i])},
             "Method"={design$sMethod<-vals[i]},
             "Usage"={design$sIV1Use<-vals[i]},
+            "Alpha"={
+              alpha<<-vals[i]
+              alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+            },
             "Dependence"={design$sDependence<-vals[i]},
             "Outliers"={design$sOutliers<-vals[i]},
             "IVRange"={
@@ -429,7 +434,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
         #   result<-sampleShortCut(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only)
         # }
         metaResult$result<-result
-        metaResult<-runMetaAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis,metaResult)
+        metaResult<-runMetaAnalysis(metaAnalysis,metaResult)
         main_res$ks<-cbind(main_res$ks,metaResult$bestK)
         main_res$pnulls<-cbind(main_res$pnulls,metaResult$bestNull)
         main_res$Ss<-cbind(main_res$Ss,metaResult$bestS)
@@ -442,6 +447,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
         #   res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,appendData=FALSE,sigOnly=FALSE)
         # }
         main_res$rval<-cbind(main_res$rval,res$rIV)
+        main_res$rpval<-cbind(main_res$rpval,res$rpIV)
         main_res$pval<-cbind(main_res$pval,res$pIV)
         main_res$nval<-cbind(main_res$nval,res$nval)
         
@@ -482,8 +488,9 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
       exploreResult$dists<-rbind(exploreResult$dists,main_res$dists)
       
     } else {
-        exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
-        exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
+      exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
+      exploreResult$rpIVs<-rbind(exploreResult$rpIVs,main_res$rpval)
+      exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
         exploreResult$nvals<-rbind(exploreResult$nvals,main_res$nval)
         
         exploreResult$r1$direct<-rbind(exploreResult$r1$direct,main_res$r1$direct)
@@ -511,15 +518,18 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
         exploreResult$p3$total<-rbind(exploreResult$p3$total,main_res$p3$total)
         
         exploreResult$wIVs<-rn2w(exploreResult$rIVs,exploreResult$nvals)
-        for (i in 1:length(vals)) {
-          p<-mean(exploreResult$pIVs[,i]<alpha)
-          exploreResult$psig[i]<-p
-          exploreResult$psig25[i]<-p-sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
-          exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
-        }
+        # for (i in 1:length(vals)) {
+        #   p<-mean(isSignificant(STMethod,exploreResult$pIVs[,i],exploreResult$rIVs[,i],exploreResult$nvals[,i],evidence))
+        #   exploreResult$psig[i]<-p
+        #   exploreResult$psig25[i]<-p-sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
+        #   exploreResult$psig75[i]<-p+sqrt(p*(1-p)/length(exploreResult$pIVs[,i]))
+        # }
       }
     }
   removeNotification(id = "counting")
+  
+  alpha<<-localAlpha
+  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
   
   exploreResult$vals<-vals
   exploreResult$Explore_type<-explore$Explore_type

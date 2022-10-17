@@ -41,7 +41,8 @@ variableChoices=list("& type"="Type",
 
 designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                                    "Sampling Method" = "Method",
-                                   "Sample Usage" = "Usage"),
+                                   "Sample Usage" = "Usage",
+                                   "Alpha" = "Alpha"),
                    "Anomalies"=list("Dependence" = "Dependence",
                                     "Outliers" = "Outliers",
                                     "IV Range" = "IVRange",
@@ -49,8 +50,8 @@ designChoices=list("Sampling"=list("Sample Size" = "SampleSize",
                    "Cheating"=list("Method" = "Cheating",
                                    "Cheating amount" = "CheatingK"),
                    "Replications"=list("SigOnly"="SigOnly",
-                                       "Power"="Power",
-                                       "Repeats" = "Repeats")
+                                       "Repl Power"="Power",
+                                       "Repl Repeats" = "Repeats")
 )
 
 designChoicesPlain=list("Sampling"=list("Sample Size" = "SampleSize",
@@ -71,8 +72,11 @@ showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
                              "p(sig)" = "p(sig)",
                              "Power" = "w",
                              "NHST errors" = "NHSTErrors",
-                             "log(lr)" = "log(lr)",
-                             "p(str)" = "p(str)"
+                             "False Discovery" = "FDR",
+                             "log(lrs)" = "log(lrs)",
+                             "log(lrd)" = "log(lrd)",
+                             "p(llrs)" = "p(llrs)",
+                             "p(llrd)" = "p(llrd)"
               )
 )
 extraShowChoices=c("direct"="direct",
@@ -90,7 +94,8 @@ exploreLengthChoices=c("10" = "10",
                        "50" = "50",
                        "100" = "100",
                        "500" = "500",
-                       "1000" = "1000"
+                       "1000" = "1000",
+                       "10000"="10000"
                        )
 
 ExploreTab <-

@@ -55,7 +55,11 @@ r2ci<-function(r,n,s=0){
   }
 }
 
-r2llr<-function(r,n,llr=list(e1=c(),e2=0)) {
+res2llr<-function(result,method=STMethod) {
+  r2llr(result$rIV,result$nval,method,result$evidence$llr,result$evidence$prior)
+}
+
+r2llr<-function(r,n,method=STMethod,llr=list(e1=c(),e2=0),world=NULL) {
   if (any(abs(r)>1)) {
     print(paste("r2llr r-exception",format(max(abs(r)),digits=3)))
     r[abs(r)>1]<-1
@@ -65,9 +69,33 @@ r2llr<-function(r,n,llr=list(e1=c(),e2=0)) {
     n[n<3]<-4
   }
   z<-atanh(r)
-  if (isempty(llr$e1) || is.na(llr$e1)) { llr1=z }
-  else {llr1=llr$e1}
-  showVals<-log(dnorm(llr1,mean=z,sd=1/sqrt(n-3))/dnorm(llr$e2,mean=z,sd=1/sqrt(n-3)))
+  if (method=="dLLR") {
+    if (!is.matrix(z)) {
+      z<-matrix(z,ncol=1)
+    }
+    if (!is.matrix(n)) {
+      n<-matrix(n,ncol=1)
+    }
+    if (!world$worldOn) {
+      world$populationPDF<-"Single"
+      world$populationNullp<-0.5
+    }
+    llk<-matrix(nrow=nrow(z),ncol=ncol(z))
+    for (i1 in 1:nrow(z)) {
+      for (i2 in 1:ncol(z)) {
+        lk1<-getLikelihood(z[i1,i2],n[i1,i2],world$populationPDF,world$populationPDFk,FALSE,0)
+        lk2<-getLikelihood(z[i1,i2],n[i1,i2],world$populationPDF,world$populationPDFk,FALSE,1)
+        llk[i1,i2]<-lk1-lk2+log(world$populationNullp/(1-world$populationNullp))
+      }
+    }
+  } else {
+    if (isempty(llr$e1) || is.na(llr$e1)) { llr1=z }
+    else {llr1=llr$e1}
+    lk1<-dnorm(llr1,mean=z,sd=1/sqrt(n-3))
+    lk2<-dnorm(llr$e2,mean=z,sd=1/sqrt(n-3))
+    llk<-log(lk1/lk2)
+  }
+  llk
   # for llr1=0 this can be simplified to just this: z^2*(n-3)/2
 }
 
@@ -828,7 +856,7 @@ runSimulation<-function(IV,IV2,DV,effect,design,evidence,sig_only=FALSE) {
     res<-sampleShortCut(IV,IV2,DV,effect,design,evidence,1,FALSE)
   }
   # sig only
-  while (sig_only && res$pIV>alpha) {
+  while (sig_only && !isSignificant(STMethod,res$pIV,res$rIV,res$nval,evidence)) {
     if (evidence$longHand) {
       sample<-makeSample(IV,IV2,DV,effect,design)
       res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
@@ -840,6 +868,7 @@ runSimulation<-function(IV,IV2,DV,effect,design,evidence,sig_only=FALSE) {
   res<-cheatSample(IV,IV2,DV,effect,design,evidence,sample,res)
   # Replication?
   res<-replicateSample(IV,IV2,DV,effect,design,evidence,sample,res)
+  
   res
   
 }

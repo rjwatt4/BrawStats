@@ -43,8 +43,9 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
       tval<-result$test_val
       
       n<-result$nval
-      s<-r2llr(result$rIV,n,result$evidence$llr)
-      sText<-paste("S = ",format(s,digits=report_precision),sep="")
+      result$sIV<-res2llr(result,"sLLR")
+      result$dIV<-res2llr(result,"dLLR")
+      sText<-paste("s=",format(result$sIV,digits=report_precision),"; d=",format(result$dIV,digits=report_precision),sep="")
       outputText<-c(outputText,t_name,df,format(tval,digits=report_precision),pvalText,sText,rep("",nc-5))
     }
     

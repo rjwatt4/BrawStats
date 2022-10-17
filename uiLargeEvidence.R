@@ -28,7 +28,8 @@ LGmodalEvidence <-
                                                                            selectInput("LGEvidenceInfer_type",label=NULL,
                                                                                        c("Basic" = "EffectSize",
                                                                                          "Power" = "Power",
-                                                                                         "log(lr)" = "log(lr)"),
+                                                                                         "log(lrs)" = "log(lrs)",
+                                                                                         "log(lrd)" = "log(lrd)"),
                                                                                        selectize=FALSE)
                                                                    ),
                                                                    tags$td(width = "25%"), # actionButton("LGEvidenceEvidenceHypothesisApply", "Analyze")),
@@ -49,15 +50,17 @@ LGmodalEvidence <-
                                                                              c("Basic" = "EffectSize",
                                                                                "Power" = "Power",
                                                                                "NHST errors" = "NHSTErrors",
+                                                                               "False Discovery" = "FDR",
                                                                                "CI limits" = "CILimits",
-                                                                               "log(lr)" = "log(lr)",
+                                                                               "log(lrs)" = "log(lrd)",
+                                                                               "log(lrd)" = "log(lrs)",
                                                                                "2D"="2D"
                                                                              ),
                                                                              selectize=FALSE),
                                                          ),
                                                          tags$td(width = "25%",
                                                                                   selectInput("LGEvidenceExpected_par1", label=NULL, 
-                                                                                              list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
+                                                                                              list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
                                                                                                    "Power"=list("w"="w","nw"="nw"),
                                                                                                    "World"=list("n"="n","rp"="rp","wp"="wp"),
                                                                                                    "Replication"=list("r1"="r1","p1"="p1")
@@ -66,7 +69,7 @@ LGmodalEvidence <-
                                                          ),
                                                          tags$td(width = "25%",
                                                                                   selectInput("LGEvidenceExpected_par2", label=NULL, 
-                                                                                              list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
+                                                                                              list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
                                                                                                    "Power"=list("w"="w","nw"="nw"),
                                                                                                    "World"=list("n"="n","rp"="rp","wp"="wp"),
                                                                                                    "Replication"=list("r1"="r1","p1"="p1")

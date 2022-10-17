@@ -35,6 +35,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
     )
   }
+  nVals<-exploreResult$result$nvals
 
   switch (explore$Explore_show,
           "EffectSize"={
@@ -51,36 +52,137 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             y50<-c()
             y25<-c()
             for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(pVals[,i]<alpha,na.rm=TRUE)
+              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
               y50[i]<-p
               y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
               y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
             }
           },
           "NHSTErrors"={
-            extra_y_label<-"Type II errors:"
+            extra_y_label<-"Type II errors"
             y50<-c()
             y25<-c()
             y75<-c()
-            for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(pVals[,i]>alpha,na.rm=TRUE)
-              y50[i]<-p
-              y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
-              y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+            y50e<-c()
+            y25e<-c()
+            y75e<-c()
+            if (effect$world$worldOn) {
+              for (i in 1:length(exploreResult$result$vals)){
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                sigs<-isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence)
+                nulls<-exploreResult$result$rpIVs[,i]==0
+                p<-sum(!sigs & !nulls,na.rm=TRUE)/length(sigs)
+                y50[i]<-p
+                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                p<-sum(sigs & nulls,na.rm=TRUE)/length(sigs)
+                y50e[i]<-p
+                y75e[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25e[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+              }
+            } else {
+              for (i in 1:length(exploreResult$result$vals)){
+                p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
+                y50[i]<-p
+                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+              }
+              
+              peVals<-exploreResult$nullresult$pIVs
+              reVals<-exploreResult$nullresult$rIVs
+              neVals<-exploreResult$nullresult$nvals
+              for (i in 1:length(exploreResult$result$vals)){
+                p<-mean(isSignificant(STMethod,peVals[,i],reVals[,i],neVals[,i],exploreResult$evidence),na.rm=TRUE)
+                y50e[i]<-p
+                y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
+                y25e[i]<-p-sqrt(p*(1-p)/length(peVals[,i]))
+              }
             }
           },
-          "log(lr)"={
-            ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
+          "FDR"={
+            extra_y_label<-"Type II errors"
+            y50<-c()
+            y25<-c()
+            y75<-c()
+            y50e<-c()
+            y25e<-c()
+            y75e<-c()
+            if (effect$world$worldOn) {
+              for (i in 1:length(exploreResult$result$vals)){
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                sigs<-isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence)
+                nulls<-exploreResult$result$rpIVs[,i]==0
+                p<-sum(!sigs & !nulls,na.rm=TRUE)/sum(!nulls)
+                y50[i]<-p
+                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                p<-sum(sigs & nulls,na.rm=TRUE)/sum(sigs)
+                y50e[i]<-p
+                y75e[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25e[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+              }
+            } else {
+              for (i in 1:length(exploreResult$result$vals)){
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
+                y50[i]<-p
+                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+              }
+              
+              peVals<-exploreResult$nullresult$pIVs
+              reVals<-exploreResult$nullresult$rIVs
+              neVals<-exploreResult$nullresult$nvals
+              for (i in 1:length(exploreResult$result$vals)){
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                p<-mean(isSignificant(STMethod,peVals[,i],reVals[,i],neVals[,i],exploreResult$evidence),na.rm=TRUE)
+                y50e[i]<-p
+                y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
+                y25e[i]<-p-sqrt(p*(1-p)/length(peVals[,i]))
+              }
+            }
           },
-          "p(str)"={
+          "log(lrs)"={
+            ns<-exploreResult$result$nvals
+            showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+          },
+          "log(lrd)"={
+            ns<-exploreResult$result$nvals
+            showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+          },
+          "p(llrs)"={
             y75<-c()
             y50<-c()
             y25<-c()
             ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
+            showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
             for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
+              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
+              y50[i]<-p
+              y75[i]<-p+sqrt(p*(1-p)/length(showVals[,i]))
+              y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
+            }
+          },
+          "p(llrd)"={
+            y75<-c()
+            y50<-c()
+            y25<-c()
+            ns<-exploreResult$result$nvals
+            showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+            for (i in 1:length(exploreResult$result$vals)){
+              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
               y50[i]<-p
               y75[i]<-p+sqrt(p*(1-p)/length(showVals[,i]))
               y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
@@ -110,7 +212,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
           }
   )
 
-  if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)","k","pNull","S"))) {
+  if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lrs)","log(lrd)","k","pNull","S"))) {
     y75<-c()
     y50<-c()
     y25<-c()
@@ -123,29 +225,40 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   
   outputText<-rep("",nc+1)
   outputText[1]<-"\bExplore:"
-  outputText[2]<-exploreResult$Explore_type
+  outputText[2]<-explore$Explore_type
   outputText[3]<-paste("nsims=",format(nrow(exploreResult$result$rIVs)),sep="")
   outputText<-c(outputText,rep("",nc+1))
+  
+  if (explore$Explore_show=="NHSTErrors" || explore$Explore_show=="FDR") {
+    switch (STMethod,
+            "NHST"={outputText<-c(outputText,"NHST")},
+            "sLLR"={outputText<-c(outputText,"sLLR")},
+            "dLLR"={
+              outputText<-c(outputText,paste0("dLLR",": ","prior=",exploreResult$evidence$usePrior,"(",exploreResult$evidence$prior$populationPDF,")" ))
+            }
+            )
+    outputText<-c(outputText,rep("",nc))
+  }
   
   outputText<-c(outputText,paste("\b", extra_y_label,":  "))
   for (i in 1:nc) {
     outputText<-c(outputText,paste("\b",format(vals[use[i]],digits=report_precision),sep=""))
   }
-  outputText<-c(outputText,"lower 25%")
+  outputText<-c(outputText,"!jlower 25%")
   for (i in 1:nc) {
     outputText<-c(outputText,format(y25[use[i]],digits=report_precision))
   }
-  outputText<-c(outputText,"\bmedian")
+  outputText<-c(outputText,"!j\bmedian")
   for (i in 1:nc) {
     outputText<-c(outputText,format(y50[use[i]],digits=report_precision))
   }
-  outputText<-c(outputText,"upper 25%")
+  outputText<-c(outputText,"!jupper 25%")
   for (i in 1:nc) {
     outputText<-c(outputText,format(y75[use[i]],digits=report_precision))
   }
   
-  if (explore$Explore_show=="NHSTErrors") {
-    extra_y_label<-"Type I errors:"
+  if (explore$Explore_show=="NHSTErrors" || explore$Explore_show=="FDR") {
+    extra_y_label<-"Type I errors"
     if (is.null(IV2)){
       rVals<-exploreResult$nullresult$rIVs
       pVals<-exploreResult$nullresult$pIVs
@@ -170,32 +283,22 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               }
       )
     }
-    y50<-c()
-    y25<-c()
-    y75<-c()
-    for (i in 1:length(exploreResult$nullresult$vals)){
-      p<-mean(pVals[,i]<alpha,na.rm=TRUE)
-      y50[i]<-p
-      y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
-      y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
-    }
 
-    outputText<-c(outputText,rep("",nc+1))
     outputText<-c(outputText,paste("\b", extra_y_label,":  "))
     for (i in 1:nc) {
       outputText<-c(outputText,paste("\b",format(vals[use[i]],digits=report_precision),sep=""))
     }
-    outputText<-c(outputText,"lower 25%")
+    outputText<-c(outputText,"!jlower 25%")
     for (i in 1:nc) {
-      outputText<-c(outputText,format(y25[use[i]],digits=report_precision))
+      outputText<-c(outputText,format(y25e[use[i]],digits=report_precision))
     }
-    outputText<-c(outputText,"\bmedian")
+    outputText<-c(outputText,"!j\bmedian")
     for (i in 1:nc) {
-      outputText<-c(outputText,format(y50[use[i]],digits=report_precision))
+      outputText<-c(outputText,format(y50e[use[i]],digits=report_precision))
     }
-    outputText<-c(outputText,"upper 25%")
+    outputText<-c(outputText,"!jupper 25%")
     for (i in 1:nc) {
-      outputText<-c(outputText,format(y75[use[i]],digits=report_precision))
+      outputText<-c(outputText,format(y75e[use[i]],digits=report_precision))
     }
   }
   

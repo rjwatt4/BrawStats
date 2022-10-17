@@ -3,26 +3,22 @@ maxnPlot=200
 
 drawInference<-function(IV,IV2,DV,effect,design,evidence,result,disp){
   
-  r<-effect$rIV
-  if (!is.null(IV2)){
-    r<-c(r,effect$rIV2,effect$rIVIV2DV)
-  }
-
   switch (disp,
-          "p"={g<-p_plot(result,IV,IV2,DV,r)},
-          "r"={g<-r_plot(result,IV,IV2,DV,r)},
-          "r1"={g<-r1_plot(result,IV,IV2,DV,r)},
-          "p1"={g<-p1_plot(result,IV,IV2,DV,r)},
-          "log(lr)"={g<-llr_plot(result,IV,IV2,DV,r)},
-          "w"={g<-w_plot(result,IV,IV2,DV,r)},
-          "wp"={g<-wp_plot(result,IV,IV2,DV,r)},
-          "nw"={g<-nw_plot(result,IV,IV2,DV,r)},
-          "rp"={g<-rp_plot(result,IV,IV2,DV,r)},
-          "n"={g<-n_plot(result,IV,IV2,DV,r)},
-          "e1"={g<-e1_plot(result,IV,IV2,DV,r)},
-          "e2"={g<-e2_plot(result,IV,IV2,DV,r)},
-          "ci1"={g<-ci1_plot(result,IV,IV2,DV,r)},
-          "ci2"={g<-ci2_plot(result,IV,IV2,DV,r)}
+          "p"={g<-p_plot(result,IV,IV2,DV,effect)},
+          "r"={g<-r_plot(result,IV,IV2,DV,effect)},
+          "r1"={g<-r1_plot(result,IV,IV2,DV,effect)},
+          "p1"={g<-p1_plot(result,IV,IV2,DV,effect)},
+          "log(lrs)"={g<-llrs_plot(result,IV,IV2,DV,effect)},
+          "log(lrd)"={g<-llrd_plot(result,IV,IV2,DV,effect)},
+          "w"={g<-w_plot(result,IV,IV2,DV,effect)},
+          "wp"={g<-wp_plot(result,IV,IV2,DV,effect)},
+          "nw"={g<-nw_plot(result,IV,IV2,DV,effect)},
+          "rp"={g<-rp_plot(result,IV,IV2,DV,effect)},
+          "n"={g<-n_plot(result,IV,IV2,DV,effect)},
+          "e1"={g<-e1_plot(result,IV,IV2,DV,effect)},
+          "e2"={g<-e2_plot(result,IV,IV2,DV,effect)},
+          "ci1"={g<-ci1_plot(result,IV,IV2,DV,effect)},
+          "ci2"={g<-ci2_plot(result,IV,IV2,DV,effect)}
   )
   g+ggtitle(result$an_name)
 }
@@ -35,6 +31,8 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
     r<-c(r,effect$rIV2,effect$rIVIV2DV)
   }
   pvals<-result$pIV
+  rvals<-result$rIV
+  nvals<-result$nval
   
   xsc<-0
   switch (disp1,
@@ -47,10 +45,15 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
             d1<-result$rIV
             xlim<-c(-1, 1)
           },
-          "log(lr)"={
-            d1<-r2llr(result$rIV,result$nval,result$evidence$llr)
+          "log(lrs)"={
+            d1<-res2llr(result,"sLLR")
             xlim<-c(-0.1, 10)
-            disp1<-bquote(log[e](lr))
+            disp1<-bquote(log[e](lr[s]))
+          },
+          "log(lrd)"={
+            d1<-res2llr(result,"dLLR")
+            xlim<-c(-0.1, 10)
+            disp1<-bquote(log[e](lr[d]))
           },
           "w"={
             d1<-result$rIV
@@ -137,14 +140,23 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
             if (wPlotScale=="log10"){ ysc<-1}
             ylim<-c(0,1)
           },
-          "log(lr)"={
-            d2<-r2llr(result$rIV,result$nval,result$evidence$llr)
+          "log(lrs)"={
+            d2<-res2llr(result,"sLLR")
             if (any(d2<0)) {
               ylim<-c(-10, 10)
             } else {
               ylim<-c(-0.1, 10)
             }
-            disp2<-bquote(log[e](lr))
+            disp2<-bquote(log[e](lr[s]))
+          },
+          "log(lrd)"={
+            d2<-res2llr(result,"dLLR")
+            if (any(d2<0)) {
+              ylim<-c(-10, 10)
+            } else {
+              ylim<-c(-0.1, 10)
+            }
+            disp2<-bquote(log[e](lr[d]))
           },
           "nw"={
             d2<-rw2n(result$rIV,0.8,result$design$sReplTails)
@@ -185,14 +197,14 @@ draw2Inference<-function(IV,IV2,DV,effect,design,evidence,result,disp1,disp2,met
     c2=plotcolours$descriptionC
   }
   if (length(d1)<200) {
-    use<-(pvals>=alpha)
+    use<-!isSignificant(STMethod,pvals,rvals,nvals,result$evidence)
     pts1=pts[use,]
     g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=shapes$study, colour = "black", fill = c2, size = dotSize)
     pts2=pts[!use,]
     g<-g+geom_point(data=pts2,aes(x=x, y=y),shape=shapes$study, colour = "black", fill = c1, size = dotSize)
   } else {
     if (length(d1)<=10000) {
-      use<-(pvals>=alpha)
+      use<-!isSignificant(STMethod,pvals,rvals,nvals,result$evidence)
       pts1=pts[use,]
       g<-g+geom_point(data=pts1,aes(x=x, y=y),shape=shapes$study, colour = c2, fill = c2, size = dotSize/4)
       pts2=pts[!use,]

@@ -16,7 +16,7 @@ collectData<-function(result) {
   rp<-cbind(result$rpIV)
   ro<-cbind(result$roIV)
   po<-cbind(result$poIV)
-  
+
   if (all(is.na(result$rIV2))){
     rs<-cbind(result$rIV)
     ps<-cbind(result$pIV)
@@ -156,7 +156,12 @@ expected_hist<-function(vals,nsvals,valType){
             bins<-getBins(vals,nsvals,target,log10(min_p),NULL)
           },
             
-          "log(lr)"={
+          "log(lrs)"={
+            target<-3
+            bins<-getBins(vals,nsvals,target,0,5)
+          },
+          
+          "log(lrd)"={
             target<-3
             bins<-getBins(vals,nsvals,target,0,5)
           },
@@ -232,12 +237,12 @@ expected_plot<-function(g,pts,result,IV,DV,expType,single=FALSE){
     
     if (expType=="r" && length(pts$y1)==1 && !is.null(result$rCI)){
       pts1se<-data.frame(x=pts$x,y=result$rCI)
-      if (result$pIV<alpha) {c<-c1} else (c<-c2)
+      if (isSignificant(STMethod,result$pIV,result$rIV,result$nval,result$evidence)) {c<-c1} else (c<-c2)
       g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=c,size=se_size)
     }
     if (expType=="p" && length(pts$y1)==1 && !is.null(result$pCI)){
       pts1se<-data.frame(x=pts$x,y=log10(result$pCI))
-      if (result$pIV<alpha) {c<-c1} else (c<-c2)
+      if (isSignificant(STMethod,result$pIV,result$rIV,result$nval,result$evidence)) {c<-c1} else (c<-c2)
       g<-g+geom_line(data=pts1se,aes(x=x,y=y),arrow=arrow(length=unit(se_arrow,"cm"),ends="both"),colour=c,size=se_size)
     }
     
@@ -262,7 +267,12 @@ expected_plot<-function(g,pts,result,IV,DV,expType,single=FALSE){
 }
 
 
-r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
+r_plot<-function(result,IV,IV2=NULL,DV,effect,expType="r",logScale=FALSE){
+  r<-effect$rIV
+  if (!is.null(IV2)){
+    r<-c(r,effect$rIV2,effect$rIVIV2DV)
+  }
+  
   rActual<-r
   rActual[is.na(r)]<-0
 
@@ -292,10 +302,14 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
             ylim<-c(min_p, 1)
             ylabel<-bquote(p[1])
           },
-          "log(lr)"={
+          "log(lrs)"={
             ylim<-c(0, max_s)
-            ylabel<-"log(lr)"
-            },
+            ylabel<-bquote(log[e](lr[s]))
+          },
+          "log(lrd)"={
+            ylim<-c(0, max_s)
+            ylabel<-bquote(log[e](lr[d]))
+          },
           "w"={
             ylim<-c(0.01, 1)
             ylabel<-bquote(w)
@@ -345,23 +359,24 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
   if (!all(is.na(result$rIV))) {
     data<-collectData(result)
     switch (expType,
-            "r"={},
-            "rp"={data$rs<-data$rp},
-            "r1"={data$rs<-data$ro},
-            "p"={data$rs<-data$ps},
-            "p1"={data$rs<-data$po},
-            "log(lr)"={data$rs<-r2llr(data$rs,data$ns,result$evidence$llr)},
-            "n"={data$rs<-data$ns},
-            "w"={data$rs<-rn2w(data$rs,data$ns)},
-            "wp"={data$rs<-rn2w(data$rp,data$ns)},
-            "nw"={data$rs<-rw2n(data$rs,0.8,result$design$sReplTails)},
-            "ci1"={data$rs<-r2ci(data$rs,data$ns,-1)},
-            "ci2"={data$rs<-r2ci(data$rs,data$ns,+1)},
-            "e1"={data$rs<-data$ps},
-            "e2"={data$rs<-data$ps}
+            "r"={data$sh<-data$rs},
+            "rp"={data$sh<-data$rp},
+            "r1"={data$sh<-data$ro},
+            "p"={data$sh<-data$ps},
+            "p1"={data$sh<-data$po},
+            "log(lrs)"={data$sh<-res2llr(result,"sLLR")},
+            "log(lrd)"={data$sh<-res2llr(result,"dLLR")},
+            "n"={data$sh<-data$ns},
+            "w"={data$sh<-rn2w(data$rs,data$ns)},
+            "wp"={data$sh<-rn2w(data$rp,data$ns)},
+            "nw"={data$sh<-rw2n(data$rs,0.8,result$design$sReplTails)},
+            "ci1"={data$sh<-r2ci(data$rs,data$ns,-1)},
+            "ci2"={data$sh<-r2ci(data$rs,data$ns,+1)},
+            "e1"={data$sh<-data$ps},
+            "e2"={data$sh<-data$ps}
     )
     if (logScale) {
-      data$rs<-log10(data$rs)
+      data$sh<-log10(data$sh)
     }  
   }    
   g<-start_plot()
@@ -393,9 +408,13 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
                yv<-seq(alpha*1.01,1/1.01,length.out=npt)
                xd<-fullRSamplingDist(yv,result$effect$world,result$design,"w",logScale=logScale)
              },
-             "log(lr)"={
+             "log(lrs)"={
                yv<-seq(0,max_s,length.out=npt)
-               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"log(lr)",logScale=logScale)
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"log(lrs)",logScale=logScale)
+             },
+             "log(lrd)"={
+               yv<-seq(0,max_s,length.out=npt)
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"log(lrd)",logScale=logScale)
              },
              "nw"={
                if (logScale) {
@@ -438,13 +457,15 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
 
     # then the samples
   if (!all(is.na(result$rIV))) {
+      shvals<-data$sh[,i]
       rvals<-data$rs[,i]
-      pvals<-data$ps[,i]>=alpha
+      pvals<-data$ps[,i]
+      resSig<-isSignificant(STMethod,pvals,rvals,data$ns,result$evidence)
       if (result$showType=="all") {
         ysc<-1/3
         rvals<-(rvals+1)*ysc*0.9+rem(i-1,3)*ysc*2-1
       }
-      pts<-data.frame(x=rvals*0+xoff[i],y1=rvals,y2=pvals,n<-data$ns)
+      pts<-data.frame(x=rvals*0+xoff[i],y1=shvals,y2=!resSig,n<-data$ns)
       g<-expected_plot(g,pts,result,IV,DV,expType,single)
     
     if (is.element(expType,c("p","e1","e2"))) {
@@ -454,11 +475,11 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
               "e2"={labelPt1<-"p(Type II) = "}
       )
       if (expType=="e2") {
-        labelPt2<-paste0(labelPt1,format(mean(pvals>=alpha,na.rm=TRUE),digits=graph_precision))
-        labelPt3<-paste0(labelPt2,"  (",format(sum(pvals>=alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+        labelPt2<-paste0(labelPt1,format(mean(!resSig,na.rm=TRUE),digits=graph_precision))
+        labelPt3<-paste0(labelPt2,"  (",format(sum(!resSig,na.rm=TRUE)),"/",format(length(pvals)),")")
       } else {
-        labelPt2<-paste0(labelPt1,format(mean(pvals<alpha,na.rm=TRUE),digits=graph_precision))
-        labelPt3<-paste0(labelPt2,"  (",format(sum(pvals<alpha,na.rm=TRUE)),"/",format(length(pvals)),")")
+        labelPt2<-paste0(labelPt1,format(mean(resSig,na.rm=TRUE),digits=graph_precision))
+        labelPt3<-paste0(labelPt2,"  (",format(sum(resSig,na.rm=TRUE)),"/",format(length(pvals)),")")
       }
       if (length(xoff)>1) {
         lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt2)
@@ -500,23 +521,30 @@ r_plot<-function(result,IV,IV2=NULL,DV,r=0,expType="r",logScale=FALSE){
 }
 
 
-r1_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"r1")
+r1_plot<-function(result,IV,IV2=NULL,DV,effect){
+  r_plot(result,IV,IV2,DV,effect,"r1")
 }
 
-rp_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"rp")
+rp_plot<-function(result,IV,IV2=NULL,DV,effect){
+  r_plot(result,IV,IV2,DV,effect,"rp")
 }
 
-llr_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  g<-r_plot(result,IV,IV2,DV,r,"log(lr)")
+llrs_plot<-function(result,IV,IV2=NULL,DV,effect){
+  g<-r_plot(result,IV,IV2,DV,effect,"log(lrs)")
   sAlpha<-log(dnorm(0)/dnorm(qnorm(1-alpha/2)))
   g<-g+geom_hline(yintercept=sAlpha, linetype="dotted", color="#44FF22", size=0.5)
   g
 }
 
-p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){
-  g<-r_plot(result,IV,IV2,DV,r,ptype,pPlotScale=="log10")
+llrd_plot<-function(result,IV,IV2=NULL,DV,effect){
+  g<-r_plot(result,IV,IV2,DV,effect,"log(lrd)")
+  sAlpha<-log(dnorm(0)/dnorm(qnorm(1-alpha/2)))
+  g<-g+geom_hline(yintercept=sAlpha, linetype="dotted", color="#44FF22", size=0.5)
+  g
+}
+
+p_plot<-function(result,IV,IV2=NULL,DV,effect,ptype="p"){
+  g<-r_plot(result,IV,IV2,DV,effect,ptype,pPlotScale=="log10")
   
   if (pPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(1), linetype="dotted", color="#FF4422", size=0.5)+
@@ -532,8 +560,8 @@ p_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p"){
   g
 }
 
-p1_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p1"){
-  g<-r_plot(result,IV,IV2,DV,r,ptype,pPlotScale=="log10")
+p1_plot<-function(result,IV,IV2=NULL,DV,effect,ptype="p1"){
+  g<-r_plot(result,IV,IV2,DV,effect,ptype,pPlotScale=="log10")
   
   if (pPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(1), linetype="dotted", color="#FF4422", size=0.5)+
@@ -550,8 +578,8 @@ p1_plot<-function(result,IV,IV2=NULL,DV,r=0,ptype="p1"){
 }
 
 
-w_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  g<-r_plot(result,IV,IV2,DV,r,"w",wPlotScale=="log10")
+w_plot<-function(result,IV,IV2=NULL,DV,effect){
+  g<-r_plot(result,IV,IV2,DV,effect,"w",wPlotScale=="log10")
   
   if (wPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
@@ -565,8 +593,8 @@ w_plot<-function(result,IV,IV2=NULL,DV,r=0){
   g
 }
 
-wp_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  g<-r_plot(result,IV,IV2,DV,r,"wp",wPlotScale=="log10")
+wp_plot<-function(result,IV,IV2=NULL,DV,effect){
+  g<-r_plot(result,IV,IV2,DV,effect,"wp",wPlotScale=="log10")
   
   if (wPlotScale=="log10") {
     g<-g+geom_hline(yintercept=log10(alpha), linetype="dotted", color="#44FF22", size=0.5)+
@@ -580,28 +608,28 @@ wp_plot<-function(result,IV,IV2=NULL,DV,r=0){
   g
 }
 
-n_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"n",nPlotScale=="log10")
+n_plot<-function(result,IV,IV2=NULL,DV,effect){
+  r_plot(result,IV,IV2,DV,effect,"n",nPlotScale=="log10")
 }
 
-nw_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"nw",nPlotScale=="log10")
+nw_plot<-function(result,IV,IV2=NULL,DV,effect){
+  r_plot(result,IV,IV2,DV,effect,"nw",nPlotScale=="log10")
 }
 
-e2_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  p_plot(result,IV,IV2,DV,r,ptype="e2")
+e2_plot<-function(result,IV,IV2=NULL,DV,effect){
+  p_plot(result,IV,IV2,DV,effect,ptype="e2")
 }
 
-e1_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  p_plot(result,IV,IV2,DV,r,ptype="e1")
+e1_plot<-function(result,IV,IV2=NULL,DV,effect){
+  p_plot(result,IV,IV2,DV,effect,ptype="e1")
 }
 
-ci1_plot<-function(result,IV=NULL,IV2=NULL,DV=NULL,r=0){
-  r_plot(result,IV,IV2,DV,r,"ci1")
+ci1_plot<-function(result,IV=NULL,IV2=NULL,DV=NULL,effect){
+  r_plot(result,IV,IV2,DV,effect,"ci1")
 }
 
-ci2_plot<-function(result,IV,IV2=NULL,DV,r=0){
-  r_plot(result,IV,IV2,DV,r,"ci2")
+ci2_plot<-function(result,IV,IV2=NULL,DV,effect){
+  r_plot(result,IV,IV2,DV,effect,"ci2")
 }
 
 

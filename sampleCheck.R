@@ -1,12 +1,12 @@
 
 cheatSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
-  if (result$pIV<alpha) return(result)
   if (design$sCheating=="None") return(result)
+  if (isSignificant(STMethod,result$pIV,result$rIV,result$nval,evidence)) return(result)
   
   if (design$sCheating=="Retry") {
     ntrials<-0
-    while (result$pIV>alpha && ntrials<design$sCheatingK) {
+    while (!isSignificant(STMethod,result$pIV,result$rIV,result$nval,evidence) && ntrials<design$sCheatingK) {
       sample<-makeSample(IV,IV2,DV,effect,design)
       result<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
       ntrials<-ntrials+1
@@ -17,7 +17,7 @@ cheatSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
   if (design$sCheating=="Prune") {
     ntrials<-0
-    while (result$pIV>alpha && ntrials<design$sCheatingK) {
+    while (!isSignificant(STMethod,result$pIV,result$rIV,result$nval,evidence) && ntrials<design$sCheatingK) {
       ps<-c()
       for (i in 1:length(sample$iv)) {
         sample1<-sample
@@ -55,7 +55,7 @@ cheatSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
   if (design$sCheating=="Grow") {
     ntrials<-0
-    while (result$pIV>alpha && ntrials<design$sCheatingK) {
+    while (!isSignificant(STMethod,result$pIV,result$rIV,result$nval,evidence) && ntrials<design$sCheatingK) {
       sample$participant<-c(sample$participant,length(sample$participant)+1)
       sample$iv<-c(sample$iv,sample2$iv[ntrials+1])
       sample$dv<-c(sample$dv,sample2$dv[ntrials+1])
@@ -72,7 +72,7 @@ cheatSample<-function(IV,IV2,DV,effect,design,evidence,sample,result) {
   
   if (design$sCheating=="Replace") {
     ntrials<-0
-    while (result$pIV>alpha && ntrials<design$sCheatingK) {
+    while (!isSignificant(STMethod,result$pIV,result$rIV,result$nval,evidence) && ntrials<design$sCheatingK) {
       ps<-c()
       for (i in 1:length(sample$iv)) {
         sample1<-sample
@@ -104,7 +104,7 @@ replicateSample<-function(IV,IV2,DV,effect,design,evidence,sample,res) {
   ResultHistory<-list(n=res$nval,r=res$rIV,rp=res$rpIV)
   
   if (!isempty(design$sReplicationOn) && !is.na(design$sReplicationOn) && design$sReplicationOn) {
-    while (design$sReplSigOnly && res$pIV>alpha) {
+    while (design$sReplSigOnly && !isSignificant(STMethod,res$pIV,res$rIV,res$nval,evidence)) {
       if (evidence$longHand) {
         sample<-makeSample(IV,IV2,DV,effect,design)
         res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
@@ -149,6 +149,7 @@ replicateSample<-function(IV,IV2,DV,effect,design,evidence,sample,res) {
   }
   res$ResultHistory<-ResultHistory
   res$roIV<-res1$rIV
+  res$no<-res1$nval
   res$poIV<-res1$pIV
   
   res

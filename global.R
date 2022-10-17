@@ -123,18 +123,36 @@ evidence<-list(rInteractionOn=TRUE,
                Welch=FALSE,
                dataType="Raw",
                analysisType="Anova",
-               pScale="log10",wScale="linear",nScale="log10"
+               pScale="log10",wScale="linear",nScale="log10",
+               usePrior="none",
+               prior=list(worldOn=FALSE,populationPDF="",
+                          populationPDFk=0,populationRZ="r",
+                          populationNullp=0)
 )
 
-metaAnalysis<-list(
-  nstudies=100,
-  meta_fixedAnal="random",
-  sig_only=FALSE,
-  meta_psigAnal=FALSE,
-  meta_nullAnal=FALSE,
-  nsims=1,
-  showTheory=TRUE,
-  append=FALSE
+metaAnalysis<-list(nstudies=100,
+                   meta_fixedAnal="random",
+                   sig_only=FALSE,
+                   meta_psigAnal=FALSE,
+                   meta_nullAnal=FALSE,
+                   nsims=1,
+                   showTheory=TRUE,
+                   append=FALSE
+)
+
+explore<-list(Explore_type="IV",
+              Explore_show="EffectSize", 
+              Explore_typeShow="direct", 
+              Explore_whichShow="Main 1", 
+              Explore_length=10,
+              Append=FALSE,
+              Explore_npoints=13,Explore_xlog = FALSE,
+              Explore_quants=0.95,
+              Explore_esRange=0.8,Explore_nRange=250,
+              Explore_metaRange=10000,Explore_Mxlog = TRUE,Explore_nrRange=250,
+              ExploreFull_ylim=FALSE,
+              ExploreTheory=TRUE,ExploreLongHand=TRUE,
+              Explore_family="Hypothesis"  
 )
 
 likelihood<-
@@ -153,6 +171,10 @@ likelihood<-
        view="3D",azimuth=40,elevation=15,range=1000,
        textResult=FALSE
   )
+
+alpha<-0.05
+alphaLLR<-0.5*qnorm(1-alpha/2)^2
+STMethod<-"NHST"
 
 fullRange<-3
 allScatter<-"all"

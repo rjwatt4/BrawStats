@@ -62,7 +62,7 @@ sampleShortCut<-function(IV,IV2,DV,effect,design,evidence,nsims,appendData,oldRe
     ps<-(1-pnorm(atanh(abs(rs)),0,s1))*2
     
     if (sigOnly) {
-      keep<-ps<alpha
+      keep<-isSignificant(STMethod,ps,rs,ns,evidence)
       pops<-pops[keep]
       rs<-rs[keep]
       ps<-ps[keep]

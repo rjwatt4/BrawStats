@@ -40,6 +40,9 @@ reportPlot<-function(outputText,nc,nr,rd=1){
 
   boldlabels<-grepl("\b",outputText)
   outputText<-sub("\b","",outputText)
+  rightlabels<-grepl("!j",outputText)
+  outputText<-sub("!j","",outputText)
+  
   redlabels<-grepl("\r",outputText)
   outputText<-sub("\r","",outputText)
   greenlabels<-grepl("!g",outputText)
@@ -48,9 +51,21 @@ reportPlot<-function(outputText,nc,nr,rd=1){
   g<-ggplot()
   # print(c(sum(boldlabels),sum(!boldlabels)))
   
-  if (any(boldlabels)){
-    pts1<-data.frame(x=x_gap1[boldlabels],y=d$y[boldlabels],labels=outputText[boldlabels])
+  if (any(boldlabels & !rightlabels)){
+    pts1<-data.frame(x=x_gap1[boldlabels & !rightlabels],y=d$y[boldlabels & !rightlabels],labels=outputText[boldlabels & !rightlabels])
     g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size+font_size_extra, fill=bg,fontface="bold",
+                    label.size=NA,label.padding=unit(0,"lines"))
+  }
+  if (any(boldlabels & rightlabels)) {
+    use<-which(boldlabels & rightlabels)+1
+    pts1<-data.frame(x=x_gap1[use],y=d$y[boldlabels & rightlabels],labels=outputText[boldlabels & rightlabels])
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1.25, vjust=0, size=font_size+font_size_extra, fill=bg,fontface="bold",
+                    label.size=NA,label.padding=unit(0,"lines"))
+  }
+  if (any(rightlabels & !boldlabels)){
+    use<-which(!boldlabels & rightlabels)+1
+    pts1<-data.frame(x=x_gap1[use],y=d$y[rightlabels & !boldlabels],labels=outputText[rightlabels & !boldlabels])
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1.25, vjust=0, size=font_size+font_size_extra, fill=bg,
                     label.size=NA,label.padding=unit(0,"lines"))
   }
   if (any(redlabels)) {
@@ -64,9 +79,9 @@ reportPlot<-function(outputText,nc,nr,rd=1){
                     label.size = NA,label.padding=unit(0,"lines"))
   }
   if (any(!boldlabels)) {
-    x1<-x_gap1[!boldlabels & !redlabels & !greenlabels]
-    y1<-d$y[!boldlabels & !redlabels & !greenlabels]
-    t1<-outputText[!boldlabels & !redlabels & !greenlabels]
+    x1<-x_gap1[!boldlabels & !redlabels & !greenlabels & !rightlabels]
+    y1<-d$y[!boldlabels & !redlabels & !greenlabels & !rightlabels]
+    t1<-outputText[!boldlabels & !redlabels & !greenlabels & !rightlabels]
     mathlabels<-grepl("['^']{1}[0-9.{}]",t1)
     pts<-data.frame(x=x1[!mathlabels],y=y1[!mathlabels],labels=t1[!mathlabels])
     g<-g+geom_label(data=pts,aes(x=x+1, y=top+1-y, label=labels), hjust=0, vjust=0, size=font_size, fill=bg,

@@ -239,7 +239,17 @@ fullRSamplingDist<-function(vals,world,design,doStat="r",logScale=FALSE) {
                   addition[1]<-a
                   if (logScale) addition<-addition*vals
                 },
-                "log(lr)"={
+                "log(lrs)"={
+                  # z^2*(n-3)/2
+                  rp<-tanh(sqrt(vals*2/(n[ni]-3)))
+                  addition<-rSamplingDistr(rp,pR$pRho[ei],n[ni])+rSamplingDistr(-rp,pR$pRho[ei],n[ni])
+                  dzs<-vals*(n[ni]-3)
+                  a<-addition[1]
+                  addition<-addition/dzs*(1-rp^2)
+                  addition[1]<-a
+                  if (logScale) addition<-addition*vals
+                },
+                "log(lrd)"={ #XXXXXXXX
                   # z^2*(n-3)/2
                   rp<-tanh(sqrt(vals*2/(n[ni]-3)))
                   addition<-rSamplingDistr(rp,pR$pRho[ei],n[ni])+rSamplingDistr(-rp,pR$pRho[ei],n[ni])
@@ -291,7 +301,6 @@ fullRSamplingDist<-function(vals,world,design,doStat="r",logScale=FALSE) {
     d<-d/sum(d,na.rm=TRUE)
     sDens_r<-rbind(sDens_r,d*pR$pRhogain[ei])
   }
-  
   dr_gain<-max(sDens_r,na.rm=TRUE)
   sDens_r<-sDens_r/dr_gain
   sDens_r_sum<-colMeans(sDens_r)

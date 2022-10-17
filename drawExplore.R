@@ -53,14 +53,30 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             g<-g+scale_y_continuous(limits=ylim,sec.axis=sec_axis(~ 1-.,name="Type II"))
             g<-g+theme(axis.title.y.left = element_text(color="darkgreen"),axis.title.y.right = element_text(color="darkred"))
           },
-          "log(lr)"={
+          "FDR"={
+            ylim<-c(0,1)
+            ylabel<-"False Discovery"
+            g<-g+scale_y_continuous(limits=ylim,sec.axis=sec_axis(~ 1-.,name="Misses"))
+            g<-g+theme(axis.title.y.left = element_text(color="darkgreen"),axis.title.y.right = element_text(color="darkred"))
+          },
+          "log(lrs)"={
             ylim<-c(-0.1,10)
-            ylabel<-bquote(log[e](lr))
+            ylabel<-bquote(log[e](lr[s]))
             g<-g+scale_y_continuous(limits=ylim)
           },
-          "p(str)"={
+          "log(lrd)"={
+            ylim<-c(-10,10)
+            ylabel<-bquote(log[e](lr[d]))
+            g<-g+scale_y_continuous(limits=ylim)
+          },
+          "p(llrs)"={
             ylim<-c(0,1)
-            ylabel<-"p(str)"
+            ylabel<-bquote(p(lr[s]))
+            g<-g+scale_y_continuous(limits=ylim)
+          },
+          "p(llrd)"={
+            ylim<-c(0,1)
+            ylabel<-bquote(p(lr[d]))
             g<-g+scale_y_continuous(limits=ylim)
           },
           "k"={
@@ -91,7 +107,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             "p"=         {use_cols<-c(hsv(0,1,1),hsv(0+0.075,1,1),hsv(0+0.15,1,1))},
             "w"=         {use_cols<-c(hsv(0.65,1,1),hsv(0.65+0.075,1,1),hsv(0.65+0.15,1,1))},
             "p(sig)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
-            "p(str)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
+            "p(llrs)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
+            "p(llrd)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
     )
     names(use_cols)<-c("direct","unique","total")
     all_cols<<-use_cols
@@ -161,7 +178,8 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               }
       )
     }
-
+    nVals<-exploreResult$result$nvals
+    
     extra_x_label<-""
     switch (explore$Explore_show,
             "EffectSize"={
@@ -223,7 +241,11 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y62<-c()
               y38<-c()
               for (i in 1:length(exploreResult$result$vals)){
-                p<-mean(pVals[,i]<alpha,na.rm=TRUE)
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
                 p_se<-sqrt(p*(1-p)/length(pVals[,i]))
                 y50[i]<-p
                 y75[i]<-p+p_se*qnorm(0.75)
@@ -244,32 +266,116 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y50<-c()
               y25<-c()
               y75<-c()
-              for (i in 1:length(exploreResult$result$vals)){
-                p<-mean(pVals[,i]<alpha,na.rm=TRUE)
-                y50[i]<-p
-                y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
-                y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
-              }
-
               y50e<-c()
               y25e<-c()
               y75e<-c()
-              peVals<-exploreResult$nullresult$pIVs
-              for (i in 1:length(exploreResult$result$vals)){
-                p<-mean(peVals[,i]<alpha,na.rm=TRUE)
-                y50e[i]<-p
-                y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
-                y25e[i]<-p-sqrt(p*(1-p)/length(peVals[,i]))
+              if (effect$world$worldOn) {
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  sigs<-isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence)
+                  nulls<-exploreResult$result$rpIVs[,i]==0
+                  p<-sum(!sigs & !nulls,na.rm=TRUE)/length(sigs) 
+                  # NB because we plot this upside down 
+                  y50[i]<-p
+                  y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                  p<-sum(sigs[nulls],na.rm=TRUE)/length(sigs)
+                  y50e[i]<-p
+                  y75e[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25e[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                }
+              } else {
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
+                  y50[i]<-p
+                  y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                }
+                
+                peVals<-exploreResult$nullresult$pIVs
+                reVals<-exploreResult$nullresult$rIVs
+                neVals<-exploreResult$nullresult$nvals
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  p<-mean(isSignificant(STMethod,peVals[,i],reVals[,i],neVals[,i],exploreResult$evidence),na.rm=TRUE)
+                  y50e[i]<-p
+                  y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
+                  y25e[i]<-p-sqrt(p*(1-p)/length(peVals[,i]))
+                }
               }
               col<-"red"
               cole<-"green"
               colFill<-col
               lines<-c(0.05)
             },
-            "log(lr)"={
+            "FDR"={
+              y50<-c()
+              y25<-c()
+              y75<-c()
+              y50e<-c()
+              y25e<-c()
+              y75e<-c()
+              if (effect$world$worldOn) {
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  sigs<-isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence)
+                  nulls<-exploreResult$result$rpIVs[,i]==0
+                  p<-sum(!sigs & !nulls,na.rm=TRUE)/sum(!nulls)
+                  y50[i]<-p
+                  y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                  p<-sum(sigs & nulls,na.rm=TRUE)/sum(sigs)
+                  y50e[i]<-p
+                  y75e[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25e[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                }
+              } else {
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
+                  y50[i]<-p
+                  y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
+                  y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
+                }
+                
+                peVals<-exploreResult$nullresult$pIVs
+                reVals<-exploreResult$nullresult$rIVs
+                neVals<-exploreResult$nullresult$nvals
+                for (i in 1:length(exploreResult$result$vals)){
+                  if (explore$Explore_type=="Alpha") {
+                    alpha<<-exploreResult$result$vals[i]
+                    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                  }
+                  p<-mean(isSignificant(STMethod,peVals[,i],reVals[,i],neVals[,i],exploreResult$evidence),na.rm=TRUE)
+                  y50e[i]<-p
+                  y75e[i]<-p+sqrt(p*(1-p)/length(peVals[,i]))
+                  y25e[i]<-p-sqrt(p*(1-p)/length(peVals[,i]))
+                }
+              }
+              col<-"#FF8600"
+              cole<-"#33FF99"
+              colFill<-col
+              lines<-c(0.05)
+            },            "log(lrs)"={
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
-
+              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              
               if (is.null(IV2)){
                 col<-"yellow"
                 colFill<-col
@@ -290,16 +396,74 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
                 colFill<-names(all_cols[explore$Explore_typeShow])
               }
             },
-            "p(str)"={
+            "log(lrd)"={
+              ns<-exploreResult$result$nvals
+              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              
+              if (is.null(IV2)){
+                col<-"yellow"
+                colFill<-col
+                lines<-c(0,effect$rIV)
+              } else {
+                switch (explore$Explore_whichShow,
+                        "Main 1"={
+                          lines<-c(0,effect$rIV)
+                        },
+                        "Main 2"={
+                          lines<-c(0,effect$rIV2)
+                        },
+                        "Interaction"={
+                          lines<-c(0,effect$rIVIV2DV)
+                        }
+                )
+                col<-all_cols[[explore$Explore_typeShow]]
+                colFill<-names(all_cols[explore$Explore_typeShow])
+              }
+            },
+            "p(llrs)"={
               y50<-c()
               y25<-c()
               y75<-c()
               y62<-c()
               y38<-c()
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,exploreResult$evidence$llr)
+              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
               for (i in 1:length(exploreResult$result$vals)){
-                p<-mean(showVals[,i]>alphaLLR,na.rm=TRUE)
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
+                p_se<-sqrt(p*(1-p)/length(pVals[,i]))
+                y50[i]<-p
+                y75[i]<-p+p_se*qnorm(0.75)
+                y25[i]<-p+p_se*qnorm(0.25)
+                y62[i]<-p+p_se*qnorm(0.625)
+                y38[i]<-p+p_se*qnorm(0.375)
+              }
+              lines<-c(0.05,0.8)
+              if (is.null(IV2)){
+                col<-"white"
+                colFill<-col
+              } else {
+                col<-all_cols[[explore$Explore_typeShow]]
+                colFill<-names(all_cols[explore$Explore_typeShow])
+              }
+            },
+            "p(llrd)"={
+              y50<-c()
+              y25<-c()
+              y75<-c()
+              y62<-c()
+              y38<-c()
+              ns<-exploreResult$result$nvals
+              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              for (i in 1:length(exploreResult$result$vals)){
+                if (explore$Explore_type=="Alpha") {
+                  alpha<<-exploreResult$result$vals[i]
+                  alphaLLR<<-0.5*qnorm(1-alpha/2)^2
+                }
+                p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
                 p_se<-sqrt(p*(1-p)/length(pVals[,i]))
                 y50[i]<-p
                 y75[i]<-p+p_se*qnorm(0.75)
@@ -356,7 +520,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
     )
   
-    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lr)","k","S","pNull"))) {
+    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lrs)","log(lrd)","k","S","pNull"))) {
       quants<-explore$Explore_quants/2
       y75<-c()
       y62<-c()
@@ -393,14 +557,14 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     }
     pts1<-data.frame(vals=vals+vals_offset,y50=y50,y25=y25,y75=y75)
     
-    if (explore$Explore_show=="NHSTErrors") {
+    if (explore$Explore_show=="NHSTErrors" || explore$Explore_show=="FDR") {
       pts2<-data.frame(vals=vals+vals_offset,y50e=y50e,y25e=y25e,y75e=y75e)
       
       if (doLine) {
         # shaded fills
         areaVals<-c(vals[1],vals,vals[length(vals)])
         # type 2 errors
-        areaData<-c(1,y50,1)
+        areaData<-1-c(0,y50,0)
         ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
         g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=col,alpha=0.5)
         # type 1 errors
@@ -408,9 +572,9 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
         ptsNHST<-data.frame(x=areaVals+vals_offset,y=areaData)
         g<-g+geom_polygon(data=ptsNHST,aes(x=x,y=y),fill=cole,alpha=0.5)
         # lines & points        
-        g<-g+geom_line(data=pts1,aes(x=vals,y=y50),color=col)
+        g<-g+geom_line(data=pts1,aes(x=vals,y=1-y50),color=col)
         g<-g+geom_line(data=pts2,aes(x=vals,y=y50e),color=cole)
-        g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=shapes$parameter, colour = "black", fill = col, size = 7)
+        g<-g+geom_point(data=pts1,aes(x=vals,y=1-y50),shape=shapes$parameter, colour = "black", fill = col, size = 7)
         g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=shapes$parameter, colour = "black", fill = cole, size = 7)
       } else {
         # shaded fills
@@ -426,6 +590,9 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
         # points        
         g<-g+geom_point(data=pts1,aes(x=vals,y=y50),shape=shapes$parameter, colour = "black", fill = col, size = 7)
         g<-g+geom_point(data=pts2,aes(x=vals,y=y50e),shape=shapes$parameter, colour = "black", fill = cole, size = 7)
+      }
+      if (explore$Explore_show=="NHSTErrors" && effect$world$worldOn) {
+        g<-g+geom_hline(yintercept=effect$world$populationNullp,colour="white")
       }
     } else {
       if (doLine) {
@@ -454,7 +621,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="yellow", linetype="dotted")
     }
     
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && exploreResult$Explore_type=="SampleSize" && effect$world$populationPDF=="Single"){
+    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(llrs)" || explore$Explore_show=="p(llrd)") && exploreResult$Explore_type=="SampleSize" && effect$world$populationPDF=="Single"){
       w<-y50
       n<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -480,7 +647,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       lpts<-data.frame(x=min(n)+vals_offset,y=0.8+(ni_max2-1)/10,label=label)
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3.5)
     }
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(str)") && exploreResult$Explore_type=="EffectSize"){
+    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(llrs)" || explore$Explore_show=="p(llrd)") && exploreResult$Explore_type=="EffectSize"){
       w<-y50
       r<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -548,6 +715,9 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
     g<-g+scale_x_continuous(breaks=vals,labels=exploreResult$result$vals)
   }
   if ((exploreResult$Explore_type=="SampleSize") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
+    g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
+  }
+  if ((exploreResult$Explore_type=="Alpha") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {
     g<-g+scale_x_log10(limits=c(min(vals)/2,max(vals)*2))
   }
   if ((exploreResult$Explore_type=="NoStudies") && (vals[2]-vals[1])!=(vals[3]-vals[2])) {

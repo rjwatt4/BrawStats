@@ -21,7 +21,9 @@ EvidenceTab <-
                                                                 selectInput("EvidenceInfer_type",label=NULL,
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
-                                                                              "log(lr)" = "log(lr)"),
+                                                                              "log(lrs)" = "log(lrs)",
+                                                                              "log(lrd)" = "log(lrd)"
+                                                                            ),
                                                                             selectize=FALSE)
                                                         ),
                                                         # tags$td(width = "10%", tags$div(style = localStyle, "")),
@@ -44,8 +46,10 @@ EvidenceTab <-
                                                                             c("Basic" = "EffectSize",
                                                                               "Power" = "Power",
                                                                               "NHST errors" = "NHSTErrors",
+                                                                              "False Discovery" = "FDR",
                                                                               "CI limits" = "CILimits",
-                                                                              "log(lr)" = "log(lr)",
+                                                                              "log(lrs)" = "log(lrs)",
+                                                                              "log(lrd)" = "log(lrd)",
                                                                               "2D" = "2D"
                                                                             ),
                                                                             selected="Basic",
@@ -53,27 +57,27 @@ EvidenceTab <-
                                                         ),
                                                         tags$td(width = "25%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
-                                                                                 selectInput("EvidenceExpected_par1", label=NULL, 
-                                                                                             list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
-                                                                                               "Power"=list("w"="w","nw"="nw"),
-                                                                                               "World"=list("n"="n","rp"="rp","wp"="wp"),
-                                                                                               "Replication"=list("r1"="r1","p1"="p1")
-                                                                                             ),
-                                                                                             selected="r", selectize=FALSE)
-                                                                                 # ),
+                                                                selectInput("EvidenceExpected_par1", label=NULL, 
+                                                                            list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
+                                                                                 "Power"=list("w"="w","nw"="nw"),
+                                                                                 "World"=list("n"="n","rp"="rp","wp"="wp"),
+                                                                                 "Replication"=list("r1"="r1","p1"="p1")
+                                                                            ),
+                                                                            selected="r", selectize=FALSE)
+                                                                # ),
                                                         ),
                                                         tags$td(width = "25%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
-                                                                                 selectInput("EvidenceExpected_par2", label=NULL, 
-                                                                                             list("Basic"=list("r"="r","p"="p","log(lr)"="log(lr)"),
-                                                                                                  "Power"=list("w"="w","nw"="nw"),
-                                                                                                  "World"=list("n"="n","rp"="rp","wp"="wp"),
-                                                                                                  "Replication"=list("r1"="r1","p1"="p1")
-                                                                                             ),
-                                                                                             selected="p", selectize=FALSE)
-                                                                                 # ),
+                                                                selectInput("EvidenceExpected_par2", label=NULL, 
+                                                                            list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
+                                                                                 "Power"=list("w"="w","nw"="nw"),
+                                                                                 "World"=list("n"="n","rp"="rp","wp"="wp"),
+                                                                                 "Replication"=list("r1"="r1","p1"="p1")
+                                                                            ),
+                                                                            selected="p", selectize=FALSE)
+                                                                # ),
                                                         )
-                                                        ),
+                                                      ),
                                                       tags$tr(
                                                         tags$td(width = "10%", tags$div(style = localStyle, "")),
                                                         tags$td(width = "40%", 
@@ -93,21 +97,21 @@ EvidenceTab <-
                                            ),
                                            tags$table(width = "100%",class="myTable",
                                                       tags$tr(
-                                                          tags$td(width = "10%", tags$div(style = localStyle, "Runs:")),
-                                                          tags$td(width = "55%", 
-                                                                  selectInput("EvidenceExpected_length",label=NULL,
-                                                                              c("10" = "10",
-                                                                                "50" = "50",
-                                                                                "100" = "100",
-                                                                                "250" = "250",
-                                                                                "500" = "500",
-                                                                                "1000" = "1000"),
-                                                                              selected = "10",
-                                                                              selectize=FALSE)
-                                                          ),
-                                                          tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
-                                                          tags$td(width = "5%", checkboxInput("EvidenceExpected_append", label=NULL)),
-                                                          tags$td(width = "20%",actionButton("EvidenceExpectedRun", "Run"))
+                                                        tags$td(width = "10%", tags$div(style = localStyle, "Runs:")),
+                                                        tags$td(width = "55%", 
+                                                                selectInput("EvidenceExpected_length",label=NULL,
+                                                                            c("10" = "10",
+                                                                              "50" = "50",
+                                                                              "100" = "100",
+                                                                              "250" = "250",
+                                                                              "500" = "500",
+                                                                              "1000" = "1000"),
+                                                                            selected = "10",
+                                                                            selectize=FALSE)
+                                                        ),
+                                                        tags$td(width = "10%", tags$div(style = localStyle, "Append:")),
+                                                        tags$td(width = "5%", checkboxInput("EvidenceExpected_append", label=NULL)),
+                                                        tags$td(width = "20%",actionButton("EvidenceExpectedRun", "Run"))
                                                       )
                                            )
                                  )
@@ -126,23 +130,49 @@ EvidenceTab <-
                                                  tags$td(width = "25%", 
                                                          # actionButton("LGEvidenceStart","i")
                                                  )
-                                               ),
+                                               )
+                                    ),
+                                    tags$table(width = "100%",class="myTable",
                                                tags$tr(
-                                                 tags$td(width = "25%", tags$div(style = localPlainStyle, "Welch")),
+                                                 tags$td(width = "15%", tags$div(style = localPlainStyle, "Welch")),
                                                  tags$td(width = "25%", 
                                                          checkboxInput("Welch",label=NULL,value=evidence$Welch),
                                                  ),
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
                                                  tags$td(width = "25%", tags$div(style = localPlainStyle, " ")),
+                                               )
+                                    ),
+                                    tags$table(width = "100%",class="myTable",
+                                               tags$tr(
+                                                 tags$td(width="25%", 
+                                                         selectInput("STMethod",label=NULL,
+                                                                     choices=c("NHST","sLLR","dLLR"),
+                                                                     selected="NHST",
+                                                                     selectize=FALSE
+                                                         )
+                                                 ),
+                                                 tags$td(width = "15%",tags$div(style = localPlainStyle, "alpha")),
+                                                 tags$td(width = "15%",
+                                                         numericInput("alpha",label=NULL,value=alpha,step=0.01)
+                                                         ),
+                                                 tags$td(width = "15%",id="evidencePrior",tags$div(style = localPlainStyle, "prior:")),
+                                                 tags$td(width = "30%",
+                                                         selectInput("STPrior",label=NULL,
+                                                                     choices=c("none","world","prior"),
+                                                                     selected="none",
+                                                                     selectize=FALSE
+                                                         )
+                                                 ),
                                                ),
                                                tags$tr(
-                                                 tags$td(width = "25%", tags$div(style = localPlainStyle, "llr(0)")),
-                                                 tags$td(width = "25%", 
+                                                 tags$td(width="25%"),
+                                                 tags$td(width = "15%", id="evidenceLLR1",tags$div(style = localPlainStyle, "llr(0)")),
+                                                 tags$td(width = "15%", 
                                                          numericInput("llr2",label=NULL,value=evidence$llr$e2,step = 0.1)),
-                                                 tags$td(width = "25%", tags$div(style = localPlainStyle, "llr(A)")),
-                                                 tags$td(width = "25%", 
+                                                 tags$td(width = "15%", id="evidenceLLR2",tags$div(style = localPlainStyle, "llr(A)")),
+                                                 tags$td(width = "15%", 
                                                          numericInput("llr1",label=NULL,value=evidence$llr$e1,step = 0.1)),
-                                               )
+                                                 )
                                     ),
                                     conditionalPanel(condition="input.IV2choice != 'none'",
                                                      tags$table(width = "100%",class="myTable",

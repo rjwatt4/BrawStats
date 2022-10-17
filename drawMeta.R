@@ -42,6 +42,12 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
     ptsn<-data.frame(x=d1[usen],y=d2[usen])
     
     g<-ggplot(pts,aes(x=x, y=y))
+    if (length(d1)>1200) {
+      nbins<-diff(ylim)/(2*IQR(d2[use])*length(d2[use])^(-0.33))
+      nbins<-min(nbins,51)
+      g<-g+stat_bin2d(data=pts,aes(x=x,y=y),bins=nbins)+scale_fill_gradientn(colours=c("#666666",plotcolours$descriptionC))
+    }
+    
     g<-drawWorld(metaResult$design,metaResult$effect,metaResult,g,plotcolours$descriptionC,metaAnalysis$showTheory)
     
     dotSize<-(plotTheme$axis.title$size)/3
@@ -52,10 +58,6 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
         cl<-"black"
         g<-g+geom_point(data=pts,aes(x=x, y=y),shape=shapes$study, colour = cl, fill = plotcolours$descriptionC, size = dotSize)
         g<-g+geom_point(data=ptsn,aes(x=x, y=y),shape=shapes$study, colour = cl, fill = plotcolours$infer_nsigC, size = dotSize)
-    } else {
-      nbins<-diff(ylim)/(2*IQR(d2[use])*length(d2[use])^(-0.33))
-      nbins<-min(nbins,31)
-      g<-g+stat_bin2d(data=pts,aes(x=x,y=y),bins=nbins)+scale_fill_gradientn(colours=c("#666666",plotcolours$descriptionC))
     }
     g<-g+theme(legend.position = "none")+plotTheme
     g<-g+scale_x_continuous(limits = xlim)

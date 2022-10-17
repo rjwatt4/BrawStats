@@ -49,8 +49,6 @@ wPlotScale="log10"
 pPlotScale="log10"
 nPlotScale="log10"
 
-alpha<-0.05
-alphaLLR<-3
 anovaSSQType<-2
 
 makeVar<-function(name,type="Interval",

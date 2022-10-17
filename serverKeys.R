@@ -73,6 +73,19 @@ if (switches$doKeys) {
       write_clip(data,allow_non_interactive = TRUE)
     }
     
+    # control-alt-p set world to model psych
+    if (input$keypress==ascii("p") && controlKeyOn && altKeyOn){
+      updateCheckboxInput(session,"world_on",value=TRUE)
+      updateSelectInput(session,"world_distr",selected="Exp")
+      updateSelectInput(session,"world_distr_rz",selected="z")
+      updateNumericInput(session,"world_distr_k",value=0.325)
+      updateNumericInput(session,"world_distr_Nullp",value=0.74)
+      updateCheckboxInput(session,"sNRand",value=TRUE)
+      updateNumericInput(session,"sNRandK",value=1.76)
+      updateNumericInput(session,"sN",value=72)
+      updateTabsetPanel(session,"HypothesisDiagram",selected="World")
+    }
+    
     # control-alt-e set world to exp(0.2)
     if (input$keypress==ascii("e") && controlKeyOn && altKeyOn){
       updateCheckboxInput(session,"world_on",value=TRUE)
@@ -170,16 +183,16 @@ if (switches$doKeys) {
         result<-doSampleAnalysis(IV,IV2,DV,effect,design,evidence)
       }
       doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-      op<-testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult)
+      op<-runDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult)
       
       if (!is.null(IV2)) {
         effect$rIVIV2=0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
+        op<-c(op,runDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
         
         effect$rIVIV2=-0.25
         doExpectedAnalysis(IV,IV2,DV,effect,design,evidence,expected)
-        op<-c(op,testDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
+        op<-c(op,runDebug(IV,IV2,DV,effect,design,evidence,expected,result,expectedResult))
       }
       
       output$plotPopUp<-renderPlot(reportPlot(op,nc,length(op)/nc,2))
