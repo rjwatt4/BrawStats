@@ -400,7 +400,15 @@ r_plot<-function(result,IV,IV2=NULL,DV,effect,expType="r",logScale=FALSE){
                yv<-seq(-1,1,length.out=npt)*0.99
                xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
              },
-             "r1"={
+             "r"={
+               yv<-seq(-1,1,length.out=npt)*0.99
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
+             },
+             "ci1"={
+               yv<-seq(-1,1,length.out=npt)*0.99
+               xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
+             },
+             "ci2"={
                yv<-seq(-1,1,length.out=npt)*0.99
                xd<-fullRSamplingDist(yv,result$effect$world,result$design,"r",logScale=logScale)
              },

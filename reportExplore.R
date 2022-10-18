@@ -52,7 +52,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             y50<-c()
             y25<-c()
             for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
+              p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
               y50[i]<-p
               y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
               y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
