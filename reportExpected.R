@@ -42,7 +42,7 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   }
   
   # column labels
-  if (expected$type=="NHSTErrors" || expected$type=="FDR") {outputText1<-c("   ","\bI","\bII","All")}
+  if (expected$type=="NHSTErrors") {outputText1<-c("\bErrors:","\bI","\bII","All")}
   else {
     if(expected$type=="CILimits") {outputText1<-c("   ","lower","upper")}
     else {
@@ -51,27 +51,27 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   }
   outputText<-c(outputText,rep(outputText1,nc/3))
 
-  if (expected$type=="NHSTErrors" || expected$type=="FDR"){
+  if (expected$type=="NHSTErrors"){
     nullSig<-isSignificant(STMethod,nullresult$pIV,nullresult$rIV,nullresult$nval,nullresult$evidence)
     resSig<-isSignificant(STMethod,result$pIV,result$rIV,result$nval,result$evidence)
-    if (!result$effect$world$worldOn || expected$type=="NHSTErrors") {
       e1=paste(format(mean(nullSig)*100,digits=report_precision),"%")
       e2=paste(format(mean(!resSig)*100,digits=report_precision),"%")
-      outputText<-c(outputText,"All:",e1,e2,"")
-    } else {
-      e1=paste0(format(sum(nullSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
+      outputText<-c(outputText," ",e1,e2,"")
+      if (result$effect$world$worldOn) {
+        outputText<-c(outputText,"\bFalse Discovery:","","","")
+        e1=paste0(format(sum(nullSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
       e2=paste0(format(sum(!resSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"\bAll:",e1,e2,"")
+      outputText<-c(outputText,"All:",e1,e2,"")
       
       e1n=paste0("\b",format(sum(nullSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
       e1=paste0(format(sum(resSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
       e1a=paste0(format((sum(nullSig)+sum(resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"\bSig:",e1n,e1,e1a)
+      outputText<-c(outputText,"Sig:",e1n,e1,e1a)
       
       e2n=paste0(format(sum(!nullSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
       e2=paste0("\b",format(sum(!resSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
       e2a=paste0(format((sum(!nullSig)+sum(!resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"\bNot Sig:",e2n,e2,e2a)
+      outputText<-c(outputText,"Not Sig:",e2n,e2,e2a)
     } 
       
   }else{

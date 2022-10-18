@@ -50,7 +50,6 @@ LGmodalEvidence <-
                                                                              c("Basic" = "EffectSize",
                                                                                "Power" = "Power",
                                                                                "NHST errors" = "NHSTErrors",
-                                                                               "False Discovery" = "FDR",
                                                                                "CI limits" = "CILimits",
                                                                                "log(lrs)" = "log(lrd)",
                                                                                "log(lrd)" = "log(lrs)",
