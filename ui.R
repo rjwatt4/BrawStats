@@ -59,10 +59,11 @@ source("uiPopulationDiagram.R")
 source("uiMainGraph.R")
 source("uiMainReport.R")
 source("uiMetaGraph.R")
+source("uiPossibleGraph.R")
 
 source("uiInspectDiagram.R")
 source("uiLargeEvidence.R")
-if (switches$doMetaAnalysis) {source("uiLargeMeta.R")}
+source("uiLargeMeta.R")
 source("uiLargeExplore.R")
 source("uiLargeLikelihood.R")
 

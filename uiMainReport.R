@@ -12,17 +12,15 @@ MainReports <-
                          style =paste("background:", maincolours$graphC, ";")),
                 tabPanel("Infer",      
                          plotOutput("InferentialReport",height=reportHeight,width="100%"),
-                         style =paste("background:", maincolours$graphC, ";")),
-                metaReportPanel,
-                tabPanel("Expect",value="Expect",   
+                         style =paste("background:", maincolours$graphC, ";"))
+                ,metaReportPanel
+                ,tabPanel("Expect",value="Expect",   
                          plotOutput("ExpectedReport",height=reportHeight,width="100%"),
                          style =paste("background:", maincolours$graphC, ";"))
                 ,tabPanel("Explore",value="Explore",
                           plotOutput("ExploreReport",height=reportHeight,width="100%"),
                           style =paste("background:", maincolours$graphC, ";"))
-                ,tabPanel("Possible",value="Possible",
-                          plotOutput("LikelihoodReport",height=reportHeight,width="100%"),
-                          style =paste("background:", maincolours$graphC, ";"))
+                ,possibleReportPanel
     ),
     width=fullPanelWidth
   )

@@ -104,7 +104,7 @@ get_lowerEdge<-function(nsvals,vals) {
 getBins<-function(vals,nsvals,target,minVal,maxVal,fixed=FALSE) {
   nv=max(length(nsvals),length(vals))
   nb<-round(sqrt(nv)*0.75)
-  nb<-51
+  # nb<-51
   
   high_p<-max(vals,na.rm=TRUE)+0.001
   low_p<-min(vals,na.rm=TRUE)-0.001
@@ -114,7 +114,7 @@ getBins<-function(vals,nsvals,target,minVal,maxVal,fixed=FALSE) {
   if (!is.null(maxVal)) {
     high_p<-min(maxVal,high_p,na.rm=TRUE)
   }
-  if (all(is.na(nsvals)) || all(!is.na(nsvals))){
+  if ((length(nsvals)==0) || (length(nsvals)==length(vals))){
     bins<-seq(low_p,high_p,length.out=nb)
   } else {
     if (fixed) {

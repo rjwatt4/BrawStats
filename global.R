@@ -1,8 +1,7 @@
-switches<-list(doLikelihood=TRUE,
-               doWorlds=TRUE,doCheating=TRUE,
-               doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
-               doReplications=FALSE,doMetaAnalysis=FALSE,
-               startBlank=FALSE,doBootstrap=TRUE,
+switches<-list(doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
+               doWorlds=FALSE,doReplications=FALSE,doMetaAnalysis=FALSE,doLikelihood=FALSE,
+               hideWorlds=TRUE,hideReplications=TRUE,hideMetaAnalysis=TRUE,hideLikelihood=TRUE,
+               startBlank=FALSE,doBootstrap=TRUE,doCheating=TRUE,
                showAnimation=TRUE,
                importOrdinals=TRUE,
                rigidWithin=TRUE)
@@ -114,7 +113,7 @@ design<-list(sN=42, sNRand=FALSE,sNRandK=2,
 evidence<-list(rInteractionOn=TRUE,
                rInteractionOnly=TRUE,
                showType="EffectSize",
-               showTheory=TRUE,
+               showTheory=FALSE,
                longHand=TRUE,
                ssqType="Type3",
                llr=list(e1=c(),e2=0),
@@ -198,6 +197,7 @@ stopLabel<-"Stop"
 pauseWait<-200
 cycles2observe<-5
 
+
 if (is_local) {
   switches$doClipboard<-TRUE
 
@@ -205,5 +205,9 @@ if (is_local) {
     switches$doBatchFiles<-TRUE
     switches$doReplications<-TRUE
     switches$doMetaAnalysis<-TRUE
+    switches$doLikelihood<-TRUE
+    switches$doWorlds<-TRUE
+    
+    # evidence$showTheory<-TRUE
   } 
 }

@@ -1,4 +1,5 @@
 source("uiMetaGraph.R")
+source("uiPossibleGraph.R")
 
 
 MainGraphs <-
@@ -43,8 +44,8 @@ MainGraphs <-
                                     )
                          ),
                          style =paste("background:", maincolours$graphC, ";")
-                ),
-                metaGraphPanel
+                )
+                ,metaGraphPanel
                 ,tabPanel("Explore",value="Explore",
                           tags$table(width = "100%",class="myTable",
                                      tags$tr(
@@ -54,15 +55,7 @@ MainGraphs <-
                           ),
                          style =paste("background:", maincolours$graphC, ";")
                 )
-                ,tabPanel("Possible",value="Possible",
-                          tags$table(width = "100%",class="myTable",
-                                     tags$tr(
-                                       tags$td(width = "97%",plotOutput("LikelihoodPlot",height=graphHeight,width="100%")),
-                                       tags$td(width = "3%",valign="top",actionButton("LGPossibleStart",label=expandLabel)),
-                                     )
-                          ),
-                         style =paste("background:", maincolours$graphC, ";")
-                )
+                ,possibleGraphPanel
     ),
     width=fullPanelWidth
   )

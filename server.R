@@ -82,13 +82,38 @@ shinyServer(function(input, output, session) {
   
   if (switches$doReplications) {
     exploreDesignChoices<<-c(exploreDesignChoices,"Replications")
+    # if (switches$hideReplications) {
+    #   removeTab("Design","Replicate",session)    
+    # }
   }
-  updateSelectInput(session,"Explore_typeD",choices=designChoices[exploreDesignChoices])
-  updateSelectInput(session,"LGExplore_typeD",choices=designChoices[exploreDesignChoices])
   
   if (switches$doWorlds) {
     exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
+    # if (switches$hideWorlds) {
+    #   removeTab("Hypothesis","World",session)
+    #   removeTab("HypothesisDiagram","World",session)
+    # }
   }
+  
+  # if (switches$doMetaAnalysis) {
+  #   if (switches$hideMetaAnalysis) {
+  #     removeTab("Evidence","MetaAnalysis",session)    
+  #     removeTab("ExploreTab","MetaAnalysis",session)    
+  #     removeTab("Graphs","MetaAnalysis",session)    
+  #     removeTab("Reports","MetaAnalysis",session)    
+  #   }
+  # }
+  
+  # if (switches$doLikelihood) {
+  #   if (switches$hideLikelihood) {
+  #     shinyjs::hideElement(id="MainLikelihood")
+  #     removeTab("Graphs","Possible",session)    
+  #     removeTab("Reports","Possible",session)    
+  #   }
+  # }
+  
+  updateSelectInput(session,"Explore_typeD",choices=designChoices[exploreDesignChoices])
+  updateSelectInput(session,"LGExplore_typeD",choices=designChoices[exploreDesignChoices])
   updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2[exploreHypothesisChoices])
   updateSelectInput(session,"LGExplore_typeH",choices=hypothesisChoices2[exploreHypothesisChoices])
   
@@ -1420,17 +1445,22 @@ inspectHistory<-c()
     # PREDICTION & DESIGN & EVIDENCE
     updateEffect<-function(type=0){
       if (debug) print("     updateEffect")
+      if (switches$doWorlds) {
+        world<-list(worldOn=input$world_on,populationPDF=input$world_distr,
+                    populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
+                    populationNullp=input$world_distr_Nullp)
+      } else {
+        world<-list(worldOn=FALSE,populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA)
+      }
       if (is.null(type)) {
         effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,
                      Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
-                     world=list(worldOn=FALSE,populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA)
+                     world=world
         )
       } else {
         effect<-list(rIV=input$rIV,rIV2=input$rIV2,rIVIV2=input$rIVIV2,rIVIV2DV=input$rIVIV2DV,
                      Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
-                     world=list(worldOn=input$world_on,populationPDF=input$world_distr,
-                                populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
-                                populationNullp=input$world_distr_Nullp)
+                     world=world
         )
       }
       if (effect$world$worldOn==FALSE) {
@@ -3094,6 +3124,18 @@ inspectHistory<-c()
       DV<-updateDV()
       effect<-updateEffect()
       
+      if (switches$doWorlds) {
+        world<-list(worldOn=input$world_on,populationPDF=input$world_distr,populationRZ=input$world_distr_rz, 
+                    populationPDFk=input$world_distr_k,
+                    populationNullp=input$world_distr_Nullp
+        )
+      } else {
+        world<-list(worldOn=FALSE,populationPDF="Single",populationRZ="R", 
+                    populationPDFk=effect$rIV,
+                    populationNullp=0
+        )     
+      }
+      
       # if (graphicSource=="Modal") {
       #           switch (showPossible,
       #                   "Populations"={
@@ -3151,10 +3193,7 @@ inspectHistory<-c()
                                             populationPDFk=input$likelihoodPrior_distr_k,
                                             populationNullp=input$likelihoodPrior_Nullp
                                             ),
-                                 world=list(worldOn=input$world_on,populationPDF=input$world_distr,populationRZ=input$world_distr_rz, 
-                                            populationPDFk=input$world_distr_k,
-                                            populationNullp=input$world_distr_Nullp
-                                            ),
+                                 world=world,
                                  design=list(sampleN=input$sN,sampleNRand=input$sNRand,sampleNRandK=input$sNRandK),
                                targetSample=input$likelihoodPSampRho,targetPopulation=effect$rIV,
                                ResultHistory=ResultHistory,
@@ -3172,8 +3211,7 @@ inspectHistory<-c()
                                  UseSource=input$likelihoodUseSource,
                                  prior=list(populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, populationPDFk=input$likelihoodPrior_distr_k,
                                             populationNullp=input$likelihoodPrior_Nullp),
-                                 world=list(worldOn=input$world_on,populationPDF=input$world_distr,populationRZ=input$world_distr_rz, populationPDFk=input$world_distr_k,
-                                            populationNullp=input$world_distr_Nullp),
+                                 world=world,
                                  design=list(sampleN=input$sN,sampleNRand=input$sNRand,sampleNRandK=input$sNRandK),
                                  targetSample=input$likelihoodSampRho,targetPopulation=effect$world$populationPDFk,
                                  cutaway=input$likelihood_cutaway,
@@ -3186,7 +3224,7 @@ inspectHistory<-c()
                         }
                 )
               # }
-      if (input$world_on==FALSE) {
+      if (likelihood$world$worldOn==FALSE) {
         likelihood$world$populationPDF<-"Single"
         likelihood$world$populationRZ<-"r"
         likelihood$world$populationPDFk<-effect$rIV
