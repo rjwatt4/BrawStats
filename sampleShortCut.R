@@ -9,6 +9,12 @@ sampleShortCut<-function(IV,IV2,DV,effect,design,evidence,nsims,appendData,oldRe
   
   while (length(r_effects)<nsims) {
     sample_increase<-min(nsims-length(r_effects),nsims)
+    if (!effect$world$worldOn) {
+      effect$world$populationPDF<-"Single"
+      effect$world$populationRZ<-"r"
+      effect$world$populationPDFk<-effect$rIV
+      effect$world$populationNullp<-0
+    }
     switch (paste0(effect$world$populationPDF,"_",effect$world$populationRZ),
             "Single_r"={
               pops<-rep(effect$world$populationPDFk,sample_increase)

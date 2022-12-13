@@ -23,10 +23,13 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
                           paste("[", format(likelihoodResult$Sims$rsSim_ci[1],digits=report_precision), ",", format(likelihoodResult$Sims$rsSim_ci[2],digits=report_precision), "]")
             )
             outputText<-c(outputText,rep(" ",nc))
+            if (length(likelihoodResult$Sims$sSims)==0){
+              outputText[seq(3,length(outputText),3)]<-" "
+            }
             if (!is.na(likelihood$targetSample)) {
               xi<-likelihoodResult$Theory$rs
-              yi<-cumsum(likelihoodResult$Theory$sDens_r_sum)
-              yi<-yi/sum(likelihoodResult$Theory$sDens_r_sum)
+              yi<-cumsum(likelihoodResult$Theory$sDens_r_plus)
+              yi<-yi/sum(likelihoodResult$Theory$sDens_r_plus)
               theory<-1-approx(xi,yi,likelihood$targetSample)$y+approx(xi,yi,-likelihood$targetSample)$y
               if (length(likelihoodResult$Sims$sSims)>0) {
                 sims<-mean(abs(likelihoodResult$Sims$sSims)>abs(likelihood$targetSample))
@@ -50,7 +53,7 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
             }
             outputText<-c(outputText,rep("",nc))
             outputText<-c(outputText," ","Theory","Simulation")
-            outputText<-c(outputText,"max(populations)",format(likelihoodResult$Theory$rp_peakC,digits=report_precision),
+            outputText<-c(outputText,"max(populations)",format(likelihoodResult$Theory$rp_peak,digits=report_precision),
                           format(likelihoodResult$Sims$rpSim_peak,digits=report_precision))
             outputText<-c(outputText,"sd(populations)",format(likelihoodResult$Theory$rp_sd,digits=report_precision),format(likelihoodResult$Sims$rpSim_sd,digits=report_precision))
             outputText<-c(outputText,"CI(samples)",

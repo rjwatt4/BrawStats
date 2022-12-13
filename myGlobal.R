@@ -185,7 +185,7 @@ oldWorld_distr_k<-0.2
 
 expectedRunning<-FALSE
 
-exploreResultHold<-c()
+exploreResultHold<-list(Hypothesis=c(),Design=c(),MetaAnalysis=c())
 likelihood_P_ResultHold<-c()
 likelihood_S_ResultHold<-c()
 

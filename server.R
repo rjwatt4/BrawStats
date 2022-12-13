@@ -18,7 +18,7 @@ source("drawPrediction.R")
 source("drawSample.R")
 source("drawDescription.R")
 source("drawInference.R")
-source("drawMeta.R")
+if (switches$doMetaAnalysis) {source("drawMeta.R")}
 source("drawExplore.R")
 source("drawLikelihood.R")
 
@@ -34,11 +34,11 @@ source("reportSample.R")
 source("reportDescription.R")
 source("reportInference.R")
 source("reportExpected.R")
-source("reportMetaAnalysis.R")
+if (switches$doMetaAnalysis) {source("reportMetaAnalysis.R")}
 source("reportExplore.R")
 source("reportLikelihood.R")
 
-source("runMetaAnalysis.R")
+if (switches$doMetaAnalysis) {source("runMetaAnalysis.R")}
 source("runExplore.R")
 source("runLikelihood.R")
 source("runBatchFiles.R")
@@ -171,7 +171,6 @@ shinyServer(function(input, output, session) {
               shinyjs::hideElement("llr2")
             },
             "sLLR"={
-              updateNumericInput(session,"alpha",value=alphaLLR)
               shinyjs::hideElement("evidencePrior")
               shinyjs::hideElement("STPrior")
               shinyjs::showElement("evidenceLLR1")
@@ -180,7 +179,6 @@ shinyServer(function(input, output, session) {
               shinyjs::showElement("llr2")
               },
             "dLLR"={
-              updateNumericInput(session,"alpha",value=alphaLLR)
               shinyjs::showElement("evidencePrior")
               shinyjs::showElement("STPrior")
               shinyjs::hideElement("evidenceLLR1")
@@ -191,11 +189,8 @@ shinyServer(function(input, output, session) {
     )
   })
   observeEvent(input$alpha, {
-    switch (STMethod,
-            "NHST"={alpha<<-input$alpha},
-            "sLLR"={alphaLLR<<-input$alpha},
-            "dLLR"={alphaLLR<<-input$alpha}
-    )
+    alpha<<-input$alpha
+    alphaLLR<<-0.5*qnorm(1-alpha/2)^2
   })
 ####################################
 # generic warning dialogue
@@ -987,8 +982,9 @@ inspectHistory<-c()
                       number=c("Explore_nRange","Explore_npoints","Explore_esRange","Explore_quants","ExploreFull_ylim","Explore_anomRange","Explore_metaRange"),
                       check=c("ExploreAppendH","ExploreAppendD","ExploreAppendM","Explore_xlog")
   )
-  possibleFields<-list(select=c("likelihoodP_length","likelihood_length","likelihoodPrior_distr","likelihoodPrior_distr_rz","likelihoodUsePrior"),
-                       number=c("likelihoodSampRho","likelihoodSimSlice","likelihoodPSampRho","likelihoodPrior_distr_k","likelihoodPrior_distr_Nullp"),
+  possibleFields<-list(select=c("likelihoodP_length","likelihood_length","likelihoodViewRZ","likelihoodPrior_distr","likelihoodPrior_distr_rz","likelihoodUsePrior","likelihoodUseSource"),
+                       number=c("likelihoodSampRho","likelihoodSimSlice","likelihoodPSampRho","likelihoodPrior_distr_k","likelihoodPrior_distr_Nullp",
+                                "LikelihoodAzimuth","LikelihoodElevation","likelihoodRange"),
                        check=c("likelihood_cutaway","likelihoodTheory","likelihoodLongHand","likelihoodCorrection","likelihoodP_append","likelihood_append")
                        )
 
@@ -1382,7 +1378,7 @@ inspectHistory<-c()
       validExplore<<-FALSE
       
       # expectedResult<-c()
-      exploreResultHold<-c()
+      exploreResultHold<-list(Hypothesis=c(),Design=c(),MetaAnalysis=c())
       likelihood_P_ResultHold<-c()
       likelihood_S_ResultHold<-c()
       
@@ -2282,7 +2278,7 @@ inspectHistory<-c()
         metaAnalysis$append<-TRUE
         ns<-10^(min(2,floor(log10(max(1,metaResult$count)))))
         if (showProgress) {
-          showNotification(paste0("MetaAnalysis: ",metaResult$count,"/",metaResult$nsims),id="counting",duration=Inf,closeButton=FALSE,type="message")
+          showNotification(paste0("A MetaAnalysis: ",metaResult$count,"/",metaResult$nsims),id="counting",duration=Inf,closeButton=FALSE,type="message")
         }
         for (i in 1:ns) {
         metaResult<<-doMetaAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis,metaResult)
@@ -2883,6 +2879,14 @@ inspectHistory<-c()
      doit<-c(input$Explore_showH,input$Explore_showD,input$Explore_showM,
              input$LGExplore_showH,input$LGExplore_showD,input$LGExplore_showM,
              input$STMethod,input$alpha,input$STPrior)
+     
+     if (!is.null(exploreResult$Explore_family) && exploreResult$Explore_family!=input$ExploreTab) {
+       if (is.null(exploreResultHold[[input$ExploreTab]])) {
+         return(ggplot()+plotBlankTheme)
+       }
+       exploreResult<<-exploreResultHold[[input$ExploreTab]]
+       }
+     
      if (exploreResult$result$count<2) {
        silentTime<<-0
        pauseWait<<-10
@@ -2947,8 +2951,11 @@ inspectHistory<-c()
        } else {
          ns<-exploreResult$nsims-exploreResult$nullresult$count
        }
+       if (ns>0) {
+       showNotification(paste0("Explore(null) ",explore$Explore_family," : starting"),id="counting",duration=Inf,closeButton=FALSE,type="message")
        exploreResult$nullresult<<-doExploreAnalysis(IV,IV2,DV,updateEffect(NULL),design,evidence,metaAnalysis,explore,exploreResult$nullresult,ns,doingNull=TRUE)
        exploreResult$nullresult$count<<-nrow(exploreResult$nullresult$rIVs)
+       }
        if (exploreResult$nullresult$count<exploreResult$nsims) {
          stopRunning<-FALSE
        }
@@ -2961,7 +2968,12 @@ inspectHistory<-c()
      exploreResult$Explore_family<<-explore$Explore_family
      exploreResult$evidence<<-evidence
      
-     exploreResultHold<<-exploreResult
+     switch (explore$Explore_family,
+             "Hypothesis"={exploreResultHold$Hypothesis<<-exploreResult},
+             "Design"={exploreResultHold$Design<<-exploreResult},
+             "MetaAnalysis"={exploreResultHold$MetaAnalysis<<-exploreResult}
+             )
+     
      
      g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))
      g<-g+scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
@@ -2999,6 +3011,14 @@ inspectHistory<-c()
     output$ExploreReport <- renderPlot({
       doIt<-c(input$exploreRunH,input$exploreRunD,input$exploreRunM,
               input$STMethod,input$alpha)
+      
+      if (!is.null(exploreResult$Explore_family) && exploreResult$Explore_family!=input$ExploreTab) {
+        if (is.null(exploreResultHold[[input$ExploreTab]])) {
+          return(ggplot()+plotBlankTheme)
+        }
+        exploreResult<<-exploreResultHold[[input$ExploreTab]]
+      }
+      
       if (exploreResult$result$count<exploreResult$nsims) {
         if (doStop) {
           invalidateLater(as.numeric(mean(silentTime)*1000)+pauseWait)
@@ -3125,12 +3145,13 @@ inspectHistory<-c()
                         "Populations"={
                           likelihood<-
                             list(type=showPossible,
-                                 Use=input$likelihoodUsePrior,
+                                 UsePrior=input$likelihoodUsePrior,
+                                 UseSource=input$likelihoodUseSource,
                                  prior=list(populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, 
                                             populationPDFk=input$likelihoodPrior_distr_k,
                                             populationNullp=input$likelihoodPrior_Nullp
                                             ),
-                                 world=list(populationPDF=input$world_distr,populationRZ=input$world_distr_rz, 
+                                 world=list(worldOn=input$world_on,populationPDF=input$world_distr,populationRZ=input$world_distr_rz, 
                                             populationPDFk=input$world_distr_k,
                                             populationNullp=input$world_distr_Nullp
                                             ),
@@ -3140,17 +3161,18 @@ inspectHistory<-c()
                                likelihoodTheory=input$likelihoodTheory,likelihoodLongHand=input$likelihoodLongHand,
                                likelihoodSimSlice=input$likelihoodSimSlice,likelihoodCorrection=input$likelihoodCorrection,
                                appendSim=input$likelihoodP_append,Likelihood_length=as.numeric(input$likelihoodP_length),
-                               view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange,
+                               view=input$LikelihoodView,viewRZ=input$likelihoodViewRZ,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange,
                                textResult=FALSE
                           )
                         },
                         "Samples"={
                           likelihood<-
                             list(type=showPossible,
-                                 Use=input$likelihoodUsePrior,
+                                 UsePrior=input$likelihoodUsePrior,
+                                 UseSource=input$likelihoodUseSource,
                                  prior=list(populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, populationPDFk=input$likelihoodPrior_distr_k,
                                             populationNullp=input$likelihoodPrior_Nullp),
-                                 world=list(populationPDF=input$world_distr,populationRZ=input$world_distr_rz, populationPDFk=input$world_distr_k,
+                                 world=list(worldOn=input$world_on,populationPDF=input$world_distr,populationRZ=input$world_distr_rz, populationPDFk=input$world_distr_k,
                                             populationNullp=input$world_distr_Nullp),
                                  design=list(sampleN=input$sN,sampleNRand=input$sNRand,sampleNRandK=input$sNRandK),
                                  targetSample=input$likelihoodSampRho,targetPopulation=effect$world$populationPDFk,
@@ -3158,7 +3180,7 @@ inspectHistory<-c()
                                  ResultHistory=ResultHistory,
                                  likelihoodTheory=input$likelihoodTheory,likelihoodLongHand=input$likelihoodLongHand,likelihoodSimSlice=input$likelihoodSimSlice,likelihoodCorrection=input$likelihoodCorrection,
                                appendSim=input$likelihood_append,Likelihood_length=as.numeric(input$likelihood_length),
-                               view=input$LikelihoodView,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange,
+                               view=input$LikelihoodView,viewRZ=input$likelihoodViewRZ,azimuth=input$LikelihoodAzimuth,elevation=input$LikelihoodElevation,range=input$LikelihoodRange,
                                textResult=FALSE
                           )
                         }
@@ -3190,11 +3212,12 @@ inspectHistory<-c()
     }
     
 # main likelihood calcuations    
-    likelihoodReset<-observeEvent(c(input$likelihoodPrior_Nullp,input$likelihoodSampRho,
-                                        input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,input$likelihoodUsePrior,
+    likelihoodReset<-observeEvent(c(input$likelihoodPrior_Nullp,
+                                        input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,
+                                        input$likelihoodUsePrior,
                                         input$sN,
                                         input$likelihoodLongHand,
-                                        input$LGlikelihoodPrior_Nullp,input$LGlikelihoodSampRho,
+                                        input$LGlikelihoodPrior_Nullp,
                                         input$LGlikelihoodPrior_distr,input$LGlikelihoodPrior_distr_rz,input$LGlikelihoodPrior_distr_k,input$LGlikelihoodUsePrior,
                                         input$LGlikelihoodsN,
                                         input$LGlikelihoodLongHand
@@ -3206,16 +3229,20 @@ inspectHistory<-c()
     likelihoodAnalysis<-eventReactive(c(input$Likelihood,
                                         input$likelihood_run,input$likelihoodP_run,
                                         input$likelihoodPSampRho,
-                                        input$likelihoodUsePrior,input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,input$likelihoodPrior_Nullp,
+                                        input$likelihoodUsePrior,input$likelihoodUseSource,
+                                        input$likelihoodPrior_distr,input$likelihoodPrior_distr_rz,input$likelihoodPrior_distr_k,input$likelihoodPrior_Nullp,
+                                        input$rIV,
                                         input$world_on,input$world_distr,input$world_distr_rz,input$world_distr_k,input$world_distr_Nullp,
                                         input$sN,input$sNRand,input$sNRandK,
                                         input$EvidencenewSample,
                                         input$likelihoodTheory,
                                         input$likelihoodLongHand,input$likelihoodSimSlice,input$likelihoodCorrection,
+                                        input$likelihoodViewRZ,
                                         input$LGshowPossible,
                                         input$LGlikelihood_run,input$LGlikelihoodP_run,
                                         input$LGlikelihoodSampRho,input$LGlikelihoodPSampRho,
-                                        input$LGlikelihoodUsePrior,input$LGlikelihoodPrior_distr,input$LGlikelihoodPrior_distr_rz,input$LGlikelihoodPrior_distr_k,input$LGlikelihoodPrior_Nullp,
+                                        input$LGlikelihoodUsePrior,input$LGlikelihoodUseSource,
+                                        input$LGlikelihoodPrior_distr,input$LGlikelihoodPrior_distr_rz,input$LGlikelihoodPrior_distr_k,input$LGlikelihoodPrior_Nullp,
                                         input$LGlikelihoodworld_on,input$LGlikelihoodworld_distr,input$LGlikelihoodworld_distr_rz,input$LGlikelihoodworld_distr_k,input$LGlikelihoodworld_distr_Nullp,
                                         input$LGlikelihoodsN,input$LGlikelihoodsNRand,input$LGlikelihoodsNRandK,
                                         input$LGlikelihoodTheory,
@@ -3267,18 +3294,18 @@ inspectHistory<-c()
         
         switch (showPossible,
                 "Samples"={          
-                  if (keepSamples && !is.null(likelihoodResult$samples$Sims$sSims)) {
-                    likelihoodRes$Sims<-likelihoodResult$samples$Sims
-                  }
+                  # if (keepSamples && !is.null(likelihoodResult$samples$Sims$sSims)) {
+                    # likelihoodRes$Sims<-likelihoodResult$samples$Sims
+                  # }
                   likelihoodResult$samples<<-likelihoodRes
                   likelihood_S_ResultHold<<-list(sSims=likelihoodResult$samples$Sims$sSims,sSimBins=likelihoodResult$samples$Sims$sSimBins,sSimDens=likelihoodResult$samples$Sims$sSimDens)
                 },
                 "Populations"={
-                  if (keepSamples && !is.null(likelihoodResult$populations$Sims$pSims)) {
-                    likelihoodRes$Sims<-likelihoodResult$populations$Sims
-                  }
+                  # if (keepSamples && !is.null(likelihoodResult$populations$Sims$pSims)) {
+                  #   likelihoodRes$Sims<-likelihoodResult$populations$Sims
+                  # }
                   likelihoodResult$populations<<-likelihoodRes
-                  likelihood_P_ResultHold<<-list(pSims=likelihoodResult$populations$Sims$pSimsP,sSims=likelihoodResult$populations$Sims$pSims)
+                  # likelihood_P_ResultHold<<-list(pSims=likelihoodResult$populations$Sims$pSimsP,sSims=likelihoodResult$populations$Sims$pSims)
                 }
         )
         likelihoodResult
@@ -3300,7 +3327,7 @@ inspectHistory<-c()
       
       likelihoodResult<-likelihoodAnalysis()
 
-      drawLikelihood(Iv,DV,effect,design,likelihood,likelihoodResult)
+      drawLikelihood(IV,DV,effect,design,likelihood,likelihoodResult)
     }
 
 # likelihood outputs    

@@ -101,13 +101,6 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
   n_sims<-nsim
   if (is.null(exploreResult$rIVs)) {nc<-0}
   else {nc<-exploreResult$count}
-  if (showProgress) {
-    if (doingNull) {
-      showNotification(paste("Explore/Null:  n=",format(nc),"/",format(exploreResult$nsims),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
-    } else {
-      showNotification(paste("Explore:  n=",format(nc),"/",format(exploreResult$nsims),sep=""),id="counting",duration=Inf,closeButton = FALSE,type = "message")
-    }
-  }
   
   for (ni in 1:n_sims){
     main_res<-list(rval=c(),pval=c(),nval=c(),
@@ -117,6 +110,16 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
                    )
   
     for (i in 1:length(vals)){
+      if (showProgress) {
+        if (doingNull) {
+          label<-paste("Explore/Null(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims)," [",format(i),"]",sep="")
+          showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
+        } else {
+          label<-paste("Explore(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims)," [",format(i),"]",sep="")
+          showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
+        }
+      }
+      
     switch (explore$Explore_type,
             "IVType"={
               switch (vals[i],
@@ -429,7 +432,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
       if (explore$Explore_family=="MetaAnalysis") {
         # if (explore$ExploreLongHand) {
           result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only,
-                                   showProgress=showProgress,progressPrefix=paste0("MetaAnalysis: ",metaResult$count+1,":"))
+                                   showProgress=FALSE,progressPrefix=paste0("MetaAnalysis: ",metaResult$count+1,":"))
         # } else {
         #   result<-sampleShortCut(IV,IV2,DV,effect,design,evidence,metaAnalysis$nstudies,FALSE,metaResult$result,sigOnly=metaAnalysis$sig_only)
         # }
@@ -450,7 +453,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
         main_res$rpval<-cbind(main_res$rpval,res$rpIV)
         main_res$pval<-cbind(main_res$pval,res$pIV)
         main_res$nval<-cbind(main_res$nval,res$nval)
-        
+
         if (!is.null(IV2)){
           main_res$r1$direct<-cbind(main_res$r1$direct,res$r$direct[,1])
           main_res$r1$unique<-cbind(main_res$r1$unique,res$r$unique[,1])

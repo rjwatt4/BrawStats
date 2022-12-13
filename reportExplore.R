@@ -156,37 +156,11 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
           },
           "log(lrs)"={
             ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+            showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
           },
           "log(lrd)"={
             ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
-          },
-          "p(llrs)"={
-            y75<-c()
-            y50<-c()
-            y25<-c()
-            ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
-            for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
-              y50[i]<-p
-              y75[i]<-p+sqrt(p*(1-p)/length(showVals[,i]))
-              y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
-            }
-          },
-          "p(llrd)"={
-            y75<-c()
-            y50<-c()
-            y25<-c()
-            ns<-exploreResult$result$nvals
-            showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
-            for (i in 1:length(exploreResult$result$vals)){
-              p<-mean(isSignificant(STMethod,pvals[,i],rvals[,i],nvals[,i],exploreResult$evidence),na.rm=TRUE)
-              y50[i]<-p
-              y75[i]<-p+sqrt(p*(1-p)/length(showVals[,i]))
-              y25[i]<-p-sqrt(p*(1-p)/length(showVals[,i]))
-            }
+            showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
           },
           "k"={
             showVals<-exploreResult$result$ks

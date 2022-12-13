@@ -50,7 +50,7 @@ source("uiLikelihood.R")
 source("uiFiles.R")
 
 source("uiWorld.R")
-source("uiMetaAnalysis.R")
+if (switches$doMetaAnalysis) {source("uiMetaAnalysis.R")}
 source("uiPrior.R")
 
 
@@ -62,7 +62,7 @@ source("uiMetaGraph.R")
 
 source("uiInspectDiagram.R")
 source("uiLargeEvidence.R")
-source("uiLargeMeta.R")
+if (switches$doMetaAnalysis) {source("uiLargeMeta.R")}
 source("uiLargeExplore.R")
 source("uiLargeLikelihood.R")
 
@@ -207,7 +207,7 @@ shinyUI(fluidPage(
             paste0(".nav-tabs {font-size: ",format(8*fontScale) ,"pt; padding:0px; margin-bottom:0px;} "),
         )),
         tags$style(HTML( # well panels
-                ".well {padding:8px; margin:0px;margin-bottom:8px;margin-left:0px;margin-right:0px;} ",
+                ".well {padding:5px; margin:0px;margin-bottom:8px;margin-left:0px;margin-right:0px;} ",
         )),
         tags$style(HTML(paste(".help-block b {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:",format(12*fontScale) ,"pt; font-weight:bold;}"))),
         tags$style(HTML(paste(".help-block a {color:", maincolours$panelC,  "!important;margin:0px;padding:0px;margin-bottom:8px;font-size:",format(8*fontScale) ,"pt; font-weight:normal;font-style: italic;}"))),
@@ -292,7 +292,7 @@ shinyUI(fluidPage(
     # basic controls
     sidebarLayout(
                  sidebarPanel(
-                     style = paste("background: ",maincolours$panelC,"; margin-right:-12px;"), 
+                     style = paste("background: ",maincolours$panelC,";margin-left: -10px;margin-right: -21px;padding-right: -21px;margin-top:5px;"),
                      verticalLayout(
                          # Help panel                
                          HelpTab,
@@ -314,12 +314,14 @@ shinyUI(fluidPage(
                  # 
                  # results
                  mainPanel(
-                     style = paste("background: ",maincolours$windowC), 
+                     style = paste("background: ",maincolours$windowC,";margin-left: 10px;padding-left: 0px;margin-right: -10px;padding-right: -10px;margin-top:5px;"), 
                      column(width=4,
+                            style = paste("margin-left: 4px;padding-left: 0px;margin-right: -10px;padding-right: -10px;"),
                             HypothesisDiagram,
                             PopulationDiagram
                      ),
                      column(width=8,
+                            style = paste("margin-left: 4px;padding-left: 0px;margin-right: -10px;padding-right: -10px;"),
                             MainGraphs,
                             MainReports
                      ),

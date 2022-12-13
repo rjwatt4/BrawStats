@@ -1,10 +1,12 @@
-max_bins=51
-max_range=0.975
-npops=79
-use_prior=FALSE
+npops=73 # 2*3*4*n+1
+npoints=501
 
 zdens2rdens<-function(zdens,rvals){
   zdens/(1-rvals^2)
+}
+
+rdens2zdens<-function(rdens,rvals){
+  rdens*(1-rvals^2)
 }
 
 zSamplingDistr<-function(zvals,zmu,n){
@@ -35,14 +37,14 @@ zpriorDistr<-function(zvals,Population_distr,PopulationRZ,k){
           },
           "Exp_r"={
             rvals<-tanh(zvals)
-            exp(-abs(rvals)/k)
+            exp(-abs(rvals)/k)*(1-rvals^2)
           },
           "Exp_z"={
             zdens<-exp(-abs(zvals)/k)
           },
           "Gauss_r"={
             rvals<-tanh(zvals)
-            exp(-0.5*(abs(rvals)/k)^2)
+            exp(-0.5*(abs(rvals)/k)^2)*(1-rvals^2)
           },
           "Gauss_z"={
             zdens<-exp(-0.5*(abs(zvals)/k)^2)
@@ -58,6 +60,41 @@ rSamplingDistr<-function(rvals,rmu,n){
   zdens2rdens(zdens,rvals)
 }
 
+
+zpopDistr<-function(zvals,Population_distr,PopulationRZ,k){
+  switch (paste0(Population_distr,"_",PopulationRZ),
+          "Single_z"={
+            zdens<-zvals*0
+            zdens[which.min(abs(atanh(k)-zvals))]<-1
+            zdens
+          },
+          "Single_z"={
+            zdens<-zvals*0
+            zdens[which.min(abs(k-zvals))]=1
+            zdens
+          },
+          "Uniform_r"={
+            zdens<-atanh(zvals)*0+1*0.2
+            rdens2zdens(zdens,zvals)
+          },
+          "Uniform_z"={
+            zdens<-zvals*0+1
+            zdens/5
+          },
+          "Exp_r"={
+            exp(-abs(tanh(zvals)/k))
+          },
+          "Exp_z"={
+            zdens<-exp(-abs(zvals)/k)
+          },
+          "Gauss_r"={
+            exp(-0.5*(abs(atanh(zvals))/k)^2)
+          },
+          "Gauss_z"={
+            zdens<-exp(-0.5*(abs(zvals)/k)^2)
+          }
+  )
+}
 rpopDistr<-function(rvals,Population_distr,PopulationRZ,k){
   switch (paste0(Population_distr,"_",PopulationRZ),
           "Single_r"={
@@ -104,6 +141,7 @@ rSamp2Pop<-function(r_s,n,world=NULL) {
   if (is.null(world)) {world<-list(populationPDF="Uniform",populationRZ="r",populationPDFk<-0)}
   k<-world$populationPDFk
   z_s<-atanh(r_s)
+  if (is.na(z_s)) {return(NA)}
   switch(world$populationPDF,
          "Uniform"={mlEst<-z_s},
          "Single"={mlEst<-z_s},
@@ -122,8 +160,8 @@ rSamp2Pop<-function(r_s,n,world=NULL) {
   
 populationDensityFunction<-function(rpw,likelihood){
   if (likelihood$type=="Populations") {
-    switch (likelihood$Use,
-            "none" ={Prior<-list(populationPDF="Uniform",populationRZ="r",populationPDFk=0,populationNullp=0)},
+    switch (likelihood$UsePrior,
+            "none" ={Prior<-list(populationPDF="Uniform",populationRZ=likelihood$viewRZ,populationPDFk=0,populationNullp=0)},
             "world"={Prior<-likelihood$world},
             "prior"={Prior<-likelihood$prior}
             )
@@ -154,17 +192,21 @@ densityFunctionStats<-function(dens_r,rp){
       use2<-min(which(cum_dens_r==1))
     } else {use2<-length(cum_rp)}
     keep<-use1:use2
-    if (length(keep)>=2) {
-      ci<-approx(cum_dens_r[keep],cum_rp[keep]+(rp[2]-rp[1])/2,c(0.025,0.975))$y
+    use<-match(unique(cum_dens_r[keep]),cum_dens_r[keep])
+    if (length(keep[use])>=2) {
+      ci<-approx(cum_dens_r[keep[use]],cum_rp[keep[use]]+(rp[2]-rp[1])/2,c(0.025,0.975))$y
     } else {
       ci<-c(-1,1)
     }
   }
 
+  peak<-rp[which.max(dens_r)]
+  dens_at_peak<-max(dens_r)
   list(
-    peak=rp[which.max(dens_r)],
+    peak=peak,
     sd=sqrt(sum((rp)^2*dens_r,na.rm=TRUE)/sum(dens_r,na.rm=TRUE)),
-    ci=ci
+    ci=ci,
+    dens_at_peak=dens_at_peak
   )
 
 
@@ -187,7 +229,7 @@ get_pRho<-function(world) {
       pRhogain<-c(world$populationNullp,1-world$populationNullp)
     }
   } else {
-    pRho<-seq(-1,1,length.out=npops)*max_range
+    pRho<-seq(-1,1,length.out=npops)*r_range
     pRhogain<-zdens2rdens(zpriorDistr(atanh(pRho),world$populationPDF,world$populationRZ,world$populationPDFk),pRho)
   }
  list(pRho=pRho,pRhogain=pRhogain)  
@@ -303,166 +345,136 @@ fullRSamplingDist<-function(vals,world,design,doStat="r",logScale=FALSE) {
   }
   dr_gain<-max(sDens_r,na.rm=TRUE)
   sDens_r<-sDens_r/dr_gain
-  sDens_r_sum<-colMeans(sDens_r)
-  sDens_r_sum
+  sDens_r_plus<-colMeans(sDens_r)
+  sDens_r_plus
 }
 
 likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE){
   n<-likelihood$design$sampleN
   design$sN<-n
-
-  # make the theoretical distributions
-  # overall Sampling Distribution
-  if (likelihood$world$populationPDF=="Single") {
-    if (likelihood$world$populationRZ=="r") {
-      pRho<-likelihood$world$populationPDFk
+  
+  # note that we do everything in z and then, if required transform to r at the end
+  
+  switch(likelihood$UseSource,
+         "world"={source<-likelihood$world},
+         "prior"={source<-likelihood$prior}
+  )
+  
+  # what populations are we considering?
+  if (source$populationPDF=="Single") {
+    if (source$populationRZ=="r") {
+      pRho<-atanh(source$populationPDFk)
     } else {
-      pRho<-tanh(likelihood$world$populationPDFk)
+      pRho<-source$populationPDFk
     }
     pRhogain<-1
-    if (likelihood$world$populationNullp) {
+    if (source$populationNullp>0) {
       pRho<-c(0,pRho)
-      pRhogain<-c(likelihood$world$populationNullp,1-likelihood$world$populationNullp)
+      pRhogain<-c(source$populationNullp,1-source$populationNullp)
     }
   } else {
-    pRho<-seq(-1,1,length.out=npops)*max_range
-    pRhogain<-zdens2rdens(zpriorDistr(atanh(pRho),likelihood$world$populationPDF,likelihood$world$populationRZ,likelihood$world$populationPDFk),pRho)
+    switch (likelihood$viewRZ,
+            "r" ={
+              pRho<-atanh(seq(-1,1,length=npops)*r_range*0.9)
+              pRhogain<-zpriorDistr(pRho,source$populationPDF,source$populationRZ,source$populationPDFk)
+            },
+            "z" ={
+              pRho<-seq(-1,1,length=npops)*z_range
+              pRhogain<-zpriorDistr(pRho,source$populationPDF,source$populationRZ,source$populationPDFk)
+            }
+    )
   }
-  rs<-seq(-1,1,length=201)*max_range
-  
-  # sampling distribution from specified populations (pRho)
-  sDens_r<-c()
-  for (ei in 1:length(pRho)){
-    if (design$sNRand) {
-     d<-0
-     for (ni in 5+seq(0,5,1/n)*n) {
-       g<-dgamma(ni-5,shape=design$sNRandK,scale=(n-5)/design$sNRandK)
-       d<-d+rSamplingDistr(rs,pRho[ei],ni)*g
-     }
-    } else {
-      d<-rSamplingDistr(rs,pRho[ei],n)
-    }
-    d<-d/sum(d)
-    sDens_r<-rbind(sDens_r,d*pRhogain[ei])
-  }
-  
-  dr_gain<-max(sDens_r,na.rm=TRUE)
-  sDens_r<-sDens_r/dr_gain
-  sDens_r_sum<-colMeans(sDens_r)
-  if (length(pRho)>21) {
-    use<-seq(5,length(pRho)-4,3)
-    use<-seq(4,length(pRho)-3,4)
-    pRho<-pRho[use]
-    pRhogain<-pRhogain[use]
-    sDens_r<-sDens_r[use,]
-  }
-  sDens_r<-sDens_r/max(sDens_r)
-  
-  switch (likelihood$type,
-          "Samples"={
-            rs_stats<-densityFunctionStats(sDens_r_sum,rs)
-          },
-          "Populations"={
-            if (is.null(likelihood$ResultHistory)) {
-              sRho<-likelihood$targetSample
-              n<-likelihood$design$sampleN
-            } else {
-              sRho<-likelihood$ResultHistory$r
-              n<-likelihood$ResultHistory$n
-            }
-            if (likelihood$likelihoodCorrection) {
-              nout<-ceil(likelihood$likelihoodSimSlice*sqrt(likelihood$design$sampleN-3))*20+1
-              correction<-seq(-1,1,length.out=nout)*likelihood$likelihoodSimSlice
-            }  else {
-              correction<-0
-            }
-            rp<-seq(-1,1,length=201)*max_range
-            
-            # likelihood function for each sample (there's usually only 1)
-            pDens_z<-1
-            sDens_z<-c()
-            for (ei in 1:length(sRho)){
-              zDens<-0
-              for (ci in 1:length(correction)) {
-              zDens<-zDens+zSamplingDistr(atanh(rp),atanh(sRho[ei]+correction[ci]),n[ei])
-              }
-              sDens_z<-rbind(sDens_z,zDens/length(correction))
-              pDens_z <- pDens_z * zDens/length(correction)
-            }
-            pDens_z<-pDens_z
-            # times the a-priori distribution
-            switch(likelihood$Use,
-                   "none"={
-                     apDens_z<-zpriorDistr(atanh(rp),"Uniform","r",0)
-                     rMLE<-rSamp2Pop(sRho[1],n)
-                   },
-                   "world"={
-                     apDens_z<-zpriorDistr(atanh(rp),likelihood$world$populationPDF,likelihood$world$populationRZ,likelihood$world$populationPDFk)
-                     if (likelihood$world$populationNullp>0) {
-                       use1<-which(rp==0)
-                       gain<-sum(apDens_z)*likelihood$world$populationNullp
-                       apDens_z[use1]<-apDens_z[use1]+gain
-                     }
-                     rMLE<-rSamp2Pop(sRho[1],n, likelihood$world)
-                     # apDens_z<-zpriorDistr(atanh(rp),likelihood$prior$populationPDF,likelihood$prior$populationPDFk)
-                     # if (likelihood$prior$populationNullp>0) {
-                     #   use1<-which(rp==0)
-                     #   gain<-sum(apDens_z)*likelihood$prior$populationNullp
-                     #   apDens_z[use1]<-apDens_z[use1]+gain
-                     # }
-                   },
-                   "prior"={
-                     apDens_z<-zpriorDistr(atanh(rp),likelihood$prior$populationPDF,likelihood$prior$populationRZ,likelihood$prior$populationPDFk)
-                     if (likelihood$prior$populationNullp>0) {
-                       use1<-which(rp==0)
-                       gain<-sum(apDens_z)*likelihood$prior$populationNullp
-                       apDens_z[use1]<-apDens_z[use1]+gain
-                     }
-                     rMLE<-rSamp2Pop(sRho[1],n, likelihood$prior)
-                   }
-                   )
-            if (likelihood$Use!="none") {
-              # apDens_z<-zpriorDistr(atanh(rp),likelihood$prior$populationPDF,likelihood$prior$populationRZ,likelihood$prior$populationPDFk)
-              # if (likelihood$prior$populationNullp>0) {
-              #   use1<-which(rp==0)
-              #   gain<-sum(apDens_z)*likelihood$prior$populationNullp
-              #   apDens_z[use1]<-apDens_z[use1]+gain
-              # }
-              pDens_z<-pDens_z*apDens_z
-            } else {apDens_z<-1}
-            
-            # convert from z to r
-            spDens_r<-sDens_z
-            for (ei in 1:length(sRho)){
-              spDens_r[ei,]<-zdens2rdens(sDens_z[ei,]*apDens_z,rp)
-              spDens_r[ei,]<-spDens_r[ei,]/max(spDens_r[ei,])
-            }
-            pDens_r<-zdens2rdens(pDens_z,rp)
-            if (!is.na(sRho[1])) {
-              dr_gain<-max(pDens_r,na.rm=TRUE)
-              pDens_r<-pDens_r/dr_gain
-            }
-            rp_stats<-densityFunctionStats(pDens_r,rp) 
-            rp_stats$peakC<-rMLE
 
-            dens_at_peak=1
-            # dens_at_sample<-prod(rSamplingDistr(sRho,sRho,n))*rpopDistr(mean(sRho),likelihood$world$populationPDF,likelihood$world$populationRZ,likelihood$world$populationPDFk)/dr_gain
-            # if (likelihood$world$populationNullp>0) {
-            #   dens_at_sample<-dens_at_sample*(1-likelihood$world$populationNullp)
-            # }
-            if (is.na(sRho[1])) {
-              dens_at_sample<-NA
-              dens_at_population<-NA
-              dens_at_zero<-NA
-            } else {
-            dens_at_sample<-approx(rp,pDens_r,sRho[1])$y
-            dens_at_population<-approx(rp,pDens_r,ResultHistory$rp[1])$y
-            dens_at_zero<-approx(rp,pDens_r,0)$y
-            }
+  if (is.null(likelihood$ResultHistory)) {
+    sRho<-likelihood$targetSample
+    n<-likelihood$design$sampleN
+  } else {
+    sRho<-likelihood$ResultHistory$r
+    n<-likelihood$ResultHistory$n
+  }
+  sRho<-atanh(sRho)
+  
+  switch (likelihood$viewRZ,
+          "r" ={
+            rs<-atanh(seq(-1,1,length=npoints)*r_range)
+            rp<-atanh(seq(-1,1,length=npoints)*r_range)
+          },
+          "z" ={
+            rs<-seq(-1,1,length=npoints)*z_range
+            rp<-seq(-1,1,length=npoints)*z_range
           }
   )
   
+  # sampling distribution from specified populations (pRho)
+  sDens_z<-c()
+  for (ei in 1:length(pRho)){
+    if (design$sNRand) {
+     d<-0
+     for (ni in 5+seq(0,10,1/n)*n) {
+       g<-dgamma(ni-5,shape=design$sNRandK,scale=(n-5)/design$sNRandK)
+       d<-d+zSamplingDistr(rs,pRho[ei],ni)*g
+     }
+    } else {
+      d<-zSamplingDistr(rs,pRho[ei],n)
+    }
+    d<-d/sum(d)
+    sDens_z<-rbind(sDens_z,d*pRhogain[ei])
+  }
+  if (design$sNRand) {
+    d<-0
+    for (ni in 5+seq(0,10,1/n)*n) {
+      g<-dgamma(ni-5,shape=design$sNRandK,scale=(n-5)/design$sNRandK)
+      d<-d+zSamplingDistr(rs,0,ni)*g
+    }
+  } else {
+    d<-zSamplingDistr(rs,0,n)
+  }
+  sDens_z_null<-d/sum(d)
   
+  if (likelihood$likelihoodCorrection) {
+    nout<-ceil(likelihood$likelihoodSimSlice*sqrt(likelihood$design$sampleN-3))*20+1
+    correction<-seq(-1,1,length.out=nout)*likelihood$likelihoodSimSlice
+  }  else {
+    correction<-0
+  }
+  
+  # likelihood function for each sample (there's usually only 1)
+  pDens_z<-1
+  spDens_z<-c()
+  for (ei in 1:length(sRho)){
+    zDens<-0
+    for (ci in 1:length(correction)) {
+      if (design$sNRand) {
+        d<-0
+        for (ni in 5+seq(0,10,1/n[ei])*n[ei]) {
+          g<-dgamma(ni-5,shape=design$sNRandK,scale=(n[ei]-5)/design$sNRandK)
+          d<-d+zSamplingDistr(rp,sRho[ei]+correction[ci],ni)*g
+        }
+        d<-d/sum(d)
+        zDens<-zDens+d
+      } else {
+        zDens<-zDens+zSamplingDistr(rp,sRho[ei]+correction[ci],n[ei])
+      }
+    }
+    spDens_z<-rbind(spDens_z,zDens/length(correction))
+    pDens_z <- pDens_z * zDens/length(correction)
+  }
+  # times the a-priori distribution
+  switch(likelihood$UsePrior,
+         "none"={ prior<-list(worldOn=TRUE,
+                              populationPDF="Uniform",
+                              populationPDFk=rp,
+                              populationRZ=likelihood$viewRZ,
+                              populationNullp=0) },
+         "world"={ prior<-likelihood$world },
+         "prior"={ prior<-likelihood$prior }
+  )
+  apDens_z<-zpriorDistr(rp,prior$populationPDF,prior$populationRZ,prior$populationPDFk)
+    pDens_z<-pDens_z*apDens_z
+    for (ei in 1:length(sRho)){
+      spDens_z[ei,]<-spDens_z[ei,]*apDens_z
+    }
+
   # simulations
   sr_effects<-NULL
   sSimBins<-NULL
@@ -485,80 +497,91 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   nsims=likelihood$Likelihood_length
   
   s=1/sqrt(n-3)
-  
   switch (likelihood$type,
           "Samples"={
             if (doSample) {
               r_effects<-c()
-            for (i in 1:length(pRho)) {
-              if (likelihood$likelihoodLongHand){
-                effect1<-effect
-                effect1$rIV<-pRho[i]
-                effect1$populationPDF<-"Single"
-                res<-multipleAnalysis(IV,NULL,DV,effect1,design,evidence,nsims,appendData=FALSE, earlierResult=c(),sigOnly=FALSE,
-                                      showProgress=TRUE,progressPrefix=paste0("Possible Samples ",format(i),"/",format(length(pRho)),":"))
-                r_effects<-rbind(r_effects,t(res$rIV))
-              } else {
-                if (design$sNRand) {
-                  ns<-5+rgamma(nsims,shape=design$sNRandK,scale=(design$sN-5)/design$sNRandK)
-                  s1<-1/sqrt(ns-3)
-                  r_effects<-rbind(r_effects,tanh(rnorm(nsims,mean=atanh(pRho[i]),sd=s1)))
+              for (i in 1:length(pRho)) {
+                if (likelihood$likelihoodLongHand){
+                  effect1<-effect
+                  effect1$rIV<-tanh(pRho[i])
+                  effect1$populationPDF<-"Single"
+                  res<-multipleAnalysis(IV,NULL,DV,effect1,design,evidence,nsims,appendData=FALSE, earlierResult=c(),sigOnly=FALSE,
+                                        showProgress=TRUE,progressPrefix=paste0("Possible Samples ",format(i),"/",format(length(pRho)),":"))
+                  r_effects<-rbind(r_effects,t(res$rIV))
                 } else {
-                  r_effects<-rbind(r_effects,tanh(rnorm(nsims,mean=atanh(pRho[i]),sd=s)))
+                  if (design$sNRand) {
+                      ns<-5+rgamma(nsims,shape=design$sNRandK,scale=(design$sN-5)/design$sNRandK)
+                      ns<-floor(ns)
+                      s1<-1/sqrt(ns-3)
+                    r_effects<-rbind(r_effects,tanh(rnorm(nsims,mean=pRho[i],sd=s1)))
+                  } else {
+                    r_effects<-rbind(r_effects,tanh(rnorm(nsims,mean=pRho[i],sd=s)))
+                  }
                 }
               }
-            }
-            if (likelihood$appendSim){
-              sr_effects<-cbind(likelihood_S_ResultHold$sSims,r_effects)
-            } else {
-              sr_effects<-r_effects
-            }
-            binWidth<-2*IQR(sr_effects)/length(sr_effects)^(1/3)
-            nbins=round(2/binWidth)
-            sSimBins<-seq(-1,1,length.out=nbins+1)
-            sSimDens<-c()
-            for (i in 1:length(pRho)) {
-              h<-hist(sr_effects[i,],sSimBins,plot=FALSE)$counts
-            sSimDens<-rbind(sSimDens,h*pRhogain[i])
-            }
-            likelihood_S_ResultHold<<-list(sSims=sr_effects,sSimBins=sSimBins,sSimDens=sSimDens)
-            rsSim_ci=quantile(sr_effects,c(0.025,0.975))
-            rsSim_peak=sSimBins[which.max(sSimDens)]+sSimBins[2]-sSimBins[1]
-            rsSim_sd<-sd(sr_effects,na.rm=TRUE)
+              if (likelihood$appendSim){
+                sr_effects<-cbind(likelihood_S_ResultHold$sSims,r_effects)
+              } else {
+                sr_effects<-r_effects
+              }
             } else {
               sr_effects<-likelihood_S_ResultHold$sSims
               sSimBins<-likelihood_S_ResultHold$sSimBins
               sSimDens<-likelihood_S_ResultHold$sSimDens
             }
+
+            if (!isempty(sr_effects)) {
+              if (likelihood$viewRZ=="z") {
+                use_effects<-atanh(sr_effects)
+                hist_range<-z_range
+              } else {
+                use_effects<-sr_effects
+                hist_range<-1
+              }
+              binWidth<-2*IQR(use_effects)/length(use_effects)^(1/3)
+              nbins=round(2/binWidth)
+              sSimBins<-seq(-1,1,length.out=nbins+1)*hist_range
+              sSimDens<-c()
+              for (i in 1:length(pRho)) {
+                use_data<-abs(use_effects[i,])<=hist_range
+                h<-hist(use_effects[i,use_data],sSimBins,plot=FALSE)$counts
+                sSimDens<-rbind(sSimDens,h*pRhogain[i]/(1-tanh(pRho[i])^2))
+              }
+              likelihood_S_ResultHold<<-list(sSims=sr_effects,sSimBins=sSimBins,sSimDens=sSimDens)
+              rsSim_ci=quantile(sr_effects,c(0.025,0.975))
+              rsSim_peak=sSimBins[which.max(sSimDens)]+sSimBins[2]-sSimBins[1]
+              rsSim_sd<-sd(sr_effects,na.rm=TRUE)
+            }
           },
-          
+            
           "Populations"={
             if (doSample) {
-              sample_increase=1;
-              sRho<-likelihood$targetSample
-              
+              effect$world<-prior
               if (likelihood$likelihoodLongHand){
+                sample_increase=10
                 res<-multipleAnalysis(IV,NULL,DV,effect,design,evidence,nsims*sample_increase,appendData=FALSE, earlierResult=c(),sigOnly=FALSE,
                                       showProgress=TRUE,progressPrefix=paste0("Possible Populations :"))
                 r_effects<-res$rIV
                 pops<-res$rpIV
               } else {
+                sample_increase=1000
                 # make some population values according to the specified a priori distribution
-                switch (paste0(likelihood$world$populationPDF,"_",likelihood$world$populationRZ),
+                switch (paste0(prior$populationPDF,"_",prior$populationRZ),
                         "Single_r"={
-                          pops<-rep(likelihood$world$populationPDFk,nsims*sample_increase)
+                          pops<-rep(prior$populationPDFk,nsims*sample_increase)
                         },
                         "Single_z"={
-                          pops<-rep(likelihood$world$populationPDFk,nsims*sample_increase)
+                          pops<-rep(prior$populationPDFk,nsims*sample_increase)
                           pops<-tanh(pops)
                         },
                         "Exp_z"={
-                          pops<-rexp(nsims*sample_increase,rate=1/likelihood$world$populationPDFk)
+                          pops<-rexp(nsims*sample_increase,rate=1/prior$populationPDFk)
                           pops<-tanh(pops)
                           pops<-pops*sign(rnorm(length(pops)))
                         },
                         "Exp_r"={
-                          pops<-rexp(nsims*1.5*sample_increase,rate=1/likelihood$world$populationPDFk)
+                          pops<-rexp(nsims*1.5*sample_increase,rate=1/prior$populationPDFk)
                           pops<-pops[pops<1]
                           if (length(pops)>nsims*sample_increase) {
                             pops<-pops[1:(nsims*sample_increase)]
@@ -566,28 +589,29 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
                           pops<-pops*sign(rnorm(length(pops)))
                         },
                         "Gauss_z"={
-                          pops<-rnorm(nsims*sample_increase,sd=likelihood$world$populationPDFk)
+                          pops<-rnorm(nsims*sample_increase,sd=prior$populationPDFk)
                           pops<-tanh(pops)
                         },
                         "Gauss_r"={
-                          pops<-rnorm(nsims*sample_increase,sd=likelihood$world$populationPDFk)
+                          pops<-rnorm(nsims*sample_increase,sd=prior$populationPDFk)
                           pops<-pops[abs(pops)<1]
                         },
                         "Uniform_r"={
                           pops<-runif(nsims*sample_increase,min=-1,max=1)
                         },
                         "Uniform_z"={
-                          pops<-runif(nsims*sample_increase,min=-100,max=100)
+                          pops<-runif(nsims*sample_increase,min=-10,max=10)
                           pops<-tanh(pops)
                         }
                 )
-                if (likelihood$world$populationNullp>0) {
-                  change<-round(likelihood$world$populationNullp*length(pops))
-                  pops[1:change]<-0
-                }
+                # if (likelihood$world$populationNullp>0) {
+                #   change<-round(likelihood$world$populationNullp*length(pops))
+                #   pops[1:change]<-0
+                # }
                 # make some sample sizes
                 if (design$sNRand) {
                   ns<-5+rgamma(nsims*sample_increase,shape=design$sNRandK,scale=(design$sN-5)/design$sNRandK)
+                  ns<-round(ns)
                   s1<-1/sqrt(ns-3)
                   r_effects<-tanh(rnorm(nsims*sample_increase,mean=atanh(pops),sd=s1))
                 } else {
@@ -604,41 +628,123 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
               likelihood_P_ResultHold$pSims<<-pr_effectP
               likelihood_P_ResultHold$sSims<<-pr_effectS
             } else {
-              # pr_effectP<-likelihood_P_ResultHold$pSims
-              # pr_effectS<-likelihood_P_ResultHold$sSims
+              pr_effectP<-likelihood_P_ResultHold$pSims
+              pr_effectS<-likelihood_P_ResultHold$sSims
             }
+            
             if (!isempty(pr_effectS)) {
-              keep<-abs(pr_effectS-sRho)<likelihood$likelihoodSimSlice
+              # do this in z - for symmetry
+              keep<-abs(atanh(pr_effectS)-sRho[1])<likelihood$likelihoodSimSlice
               pr_effectP_use<-pr_effectP[keep]
-              if (likelihood$world$populationPDF=="Single") {
+
+              if (likelihood$viewRZ=="z") {
+                use_effects<-atanh(pr_effectP_use)
+                use_effectP<-atanh(pr_effectP)
+                use_effectS<-atanh(pr_effectS)
+                hist_range<-z_range
+              } else {
+                use_effects<-pr_effectP_use
+                use_effectP<-pr_effectP
+                use_effectS<-pr_effectS
+                hist_range<-1
+              }
+
+              if (prior$populationPDF=="Single") {
                 binWidth<-0.05
               } else {
-                binWidth<-2*IQR(pr_effectP_use)/length(pr_effectP_use)^(1/3)
+                binWidth<-2*IQR(use_effects)/length(use_effects)^(1/3)
               }
+              hist_use<-abs(use_effects)<hist_range
               nbins=max(10,round(2/binWidth))
-              pSimBins<-seq(-1,1,length.out=nbins+1)
-              pSimDens<-hist(pr_effectP_use,pSimBins,plot=FALSE)
-              rpSim_ci=quantile(pr_effectP_use,c(0.025,0.975))
+              pSimBins<-seq(-1,1,length.out=nbins+1)*hist_range
+              pSimDens<-hist(use_effects[hist_use],pSimBins,plot=FALSE)
+              rpSim_ci=quantile(use_effects,c(0.025,0.975))
               rpSim_peak=pSimBins[which.max(pSimDens$counts)]+pSimBins[2]-pSimBins[1]
-              rpSim_sd<-sd(pr_effectP_use,na.rm=TRUE)
+              rpSim_sd<-sd(use_effects,na.rm=TRUE)
               
-              pSimDensS<-hist(pr_effectS,pSimBins,plot=FALSE)
-              pSimDensP<-hist(pr_effectP,pSimBins,plot=FALSE)
+              pSimDensP<-hist(use_effectP[abs(use_effectP)<hist_range],pSimBins,plot=FALSE)
+              pSimDensS<-hist(use_effectS[abs(use_effectS)<hist_range],pSimBins,plot=FALSE)
             }
           }
   )
 
-  switch (likelihood$type,
+  # convert from z to r
+  sDens_r<-sDens_z
+  sDens_r_null<-sDens_z_null
+  pDens_r<-pDens_z
+  spDens_r<-spDens_z
+  apDens_r<-apDens_z
+  if (likelihood$viewRZ=="r") {
+    pRho<-tanh(pRho)
+    sRho<-tanh(sRho)
+    rp<-tanh(rp)
+    rs<-tanh(rs)
+    for (ei in 1:length(sRho)){
+      spDens_r[ei,]<-zdens2rdens(spDens_z[ei,],rp)
+    }
+    for (ei in 1:length(pRho)){
+      sDens_r[ei,]<-zdens2rdens(sDens_z[ei,],rp)
+    }
+    sDens_r_null<-zdens2rdens(sDens_z_null,rs)
+    pDens_r<-zdens2rdens(pDens_z,rp)
+    apDens_r<-zdens2rdens(apDens_z,rp)
+  }
+  
+  if (any(!is.na(spDens_r))) {
+    dr_gain<-max(spDens_r,na.rm=TRUE)
+    spDens_r<-spDens_r/dr_gain
+  }
+  pDens_r<-pDens_r/max(pDens_r)
+  
+  dr_gain<-max(sDens_r,na.rm=TRUE)
+  sDens_r<-sDens_r/dr_gain # *(1-likelihood$world$populationNullp)
+  sDens_r_plus<-colMeans(sDens_r)
+  sDens_r_plus<-sDens_r_plus/sum(sDens_r_plus)*(1-likelihood$world$populationNullp)
+  sDens_r_null<-sDens_r_null/sum(sDens_r_null)*(likelihood$world$populationNullp)
+  sDens_r_total<-sDens_r_plus+sDens_r_null
+  dr_gain<-max(sDens_r_total)
+  sDens_r_total<-sDens_r_total/dr_gain
+  sDens_r_null<-sDens_r_null/dr_gain
+  sDens_r_plus<-sDens_r_plus/dr_gain
+  rs_stats<-densityFunctionStats(sDens_r_total,rs)
+  
+  if (any(!is.na(pDens_r))) {
+    dr_gain<-max(pDens_r,na.rm=TRUE)
+    pDens_r<-pDens_r/dr_gain
+  }
+  # pDens_r<-pDens_r*(1-prior$populationNullp)
+  apDens_r<-apDens_r*(1-prior$populationNullp)
+  rp_stats<-densityFunctionStats(pDens_r,rp) 
+  
+  dens_at_peak=1
+  if (is.na(sRho[1])) {
+    dens_at_sample<-NA
+    dens_at_population<-NA
+    dens_at_zero<-NA
+  } else {
+    dens_at_sample<-approx(rp,pDens_r,sRho[1])$y
+    dens_at_population<-approx(rp,pDens_r,ResultHistory$rp[1])$y
+    dens_at_zero<-approx(rp,pDens_r,0)$y
+  }
+
+  if (length(pRho>300) && any(!is.na(sSimDens))) {
+    use<-seq(1,length(pRho),3)
+    pRho<-pRho[use]
+    sDens_r<-sDens_r[use,]
+    sSimDens<-sSimDens[use,]
+  }
+    switch (likelihood$type,
           "Samples"={
             likelihoodResult<-list(likelihood=likelihood,
                                    pRho=pRho,
                                    sRho=likelihood$targetSample,
                                    n=n,
                                    Theory=list(
-                                     rs=rs,sDens_r=sDens_r,sDens_r_sum=sDens_r_sum,
+                                     rs=rs,sDens_r=sDens_r,sDens_r_plus=sDens_r_plus,sDens_r_null=sDens_r_null,sDens_r_total=sDens_r_total,
+                                     rp=rp,pDens_r=sDens_r,spDens_r=sDens_r,apDens_r=apDens_r,
+                                     rs_peak=rs_stats$peak,
                                      rs_sd=rs_stats$sd,
-                                     rs_ci=rs_stats$ci,
-                                     rs_peak=rs_stats$peak
+                                     rs_ci=rs_stats$ci
                                    ),
                                    Sims=list(
                                      sSims=sr_effects,sSimBins=sSimBins,sSimDens=sSimDens,
@@ -654,12 +760,11 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
                                    sRho=sRho,
                                    n=n,
                                    Theory=list(
-                                     rs=rs,sDens_r=sDens_r,sDens_r_sum=sDens_r_sum,
-                                     rp=rp,pDens_r=pDens_r,spDens_r=spDens_r,
+                                     rs=rs,sDens_r=sDens_r,sDens_r_plus=sDens_r_plus,sDens_r_null=sDens_r_null,sDens_r_total=sDens_r_total,
+                                     rp=rp,pDens_r=pDens_r,spDens_r=spDens_r,apDens_r=apDens_r,
+                                     rp_peak=rp_stats$peak,
                                      rp_sd=rp_stats$sd,
                                      rp_ci=rp_stats$ci,
-                                     rp_peak=rp_stats$peak,
-                                     rp_peakC=rp_stats$peakC,
                                      dens_at_peak=dens_at_peak,dens_at_sample=dens_at_sample,
                                      dens_at_population=dens_at_population,dens_at_zero=dens_at_zero
                                    ),

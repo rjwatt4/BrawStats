@@ -1,7 +1,7 @@
 switches<-list(doLikelihood=TRUE,
-               doWorlds=TRUE,doReplications=TRUE,doCheating=TRUE,
+               doWorlds=TRUE,doCheating=TRUE,
                doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
-               doMetaAnalysis=FALSE,
+               doReplications=FALSE,doMetaAnalysis=FALSE,
                startBlank=FALSE,doBootstrap=TRUE,
                showAnimation=TRUE,
                importOrdinals=TRUE,
@@ -9,7 +9,7 @@ switches<-list(doLikelihood=TRUE,
 debug<-FALSE
 
 fontScale=0.85 # use with 400% zoom in Google Chrome
-fontScale=1.05
+fontScale=1.0
 
 fullPanelWidth="16cm"
 graphWidth="14.5cm"
@@ -157,8 +157,8 @@ explore<-list(Explore_type="IV",
 
 likelihood<-
   list(type=c(),
-       Use="none",
-       prior=effect$world,
+       UsePrior="none", UseSource="world",
+       prior=list(worldOn=FALSE,populationPDF="Uniform",populationPDFk=0.2,populationRZ="r",populationNullp=0),
        world=effect$world,
        design=list(sampleN=design$sN,sampleNRand=design$sNRand,sampleNRandK=design$sNRandK),
        targetSample=c(),targetPopulation=0,
@@ -168,7 +168,8 @@ likelihood<-
        likelihoodLongHand=FALSE,
        likelihoodSimSlice=0.1,likelihoodCorrection=TRUE,
        appendSim=FALSE,Likelihood_length="10",
-       view="3D",azimuth=40,elevation=15,range=1000,
+       viewRZ="r",
+       view="3D",azimuth=40,elevation=5,range=2,
        textResult=FALSE
   )
 
@@ -176,6 +177,8 @@ alpha<-0.05
 alphaLLR<-0.5*qnorm(1-alpha/2)^2
 STMethod<-"NHST"
 
+z_range<-1.75
+r_range<-0.975
 fullRange<-3
 allScatter<-"all"
 
@@ -200,9 +203,7 @@ if (is_local) {
 
   if (Sys.getenv("USERNAME")=="rjwatt42" || Sys.info()["user"]=="rogerwatt") {
     switches$doBatchFiles<-TRUE
-    switches$doWorlds<-TRUE
     switches$doReplications<-TRUE
-    switches$doCheating<-TRUE
     switches$doMetaAnalysis<-TRUE
   } 
 }

@@ -4,7 +4,7 @@ valsGap<-1.4
 
 all_cols<-c()
 
-drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
+drawExplore<-function(IV,IV2,DV,effect,design,explore,exploreResult){
   rho<-effect$rIV
   
   vals<-exploreResult$result$vals
@@ -43,9 +43,9 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
           },
           "p(sig)"={
-            ylim<-c(0,1)
+            # ylim<-c(0,1)
             ylabel<-"p(sig)"
-            g<-g+scale_y_continuous(limits=ylim)
+            # g<-g+scale_y_continuous(limits=ylim)
           },
           "NHSTErrors"={
             ylim<-c(0,1)
@@ -67,16 +67,6 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
           "log(lrd)"={
             ylim<-c(-10,10)
             ylabel<-bquote(log[e](lr[d]))
-            g<-g+scale_y_continuous(limits=ylim)
-          },
-          "p(llrs)"={
-            ylim<-c(0,1)
-            ylabel<-bquote(p(lr[s]))
-            g<-g+scale_y_continuous(limits=ylim)
-          },
-          "p(llrd)"={
-            ylim<-c(0,1)
-            ylabel<-bquote(p(lr[d]))
             g<-g+scale_y_continuous(limits=ylim)
           },
           "k"={
@@ -107,8 +97,6 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             "p"=         {use_cols<-c(hsv(0,1,1),hsv(0+0.075,1,1),hsv(0+0.15,1,1))},
             "w"=         {use_cols<-c(hsv(0.65,1,1),hsv(0.65+0.075,1,1),hsv(0.65+0.15,1,1))},
             "p(sig)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
-            "p(llrs)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
-            "p(llrd)"=    {use_cols<-c("#FFFFFF","#DDDDDD","#AAAAAA")},
     )
     names(use_cols)<-c("direct","unique","total")
     all_cols<<-use_cols
@@ -374,7 +362,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               lines<-c(0.05)
             },            "log(lrs)"={
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
               
               if (is.null(IV2)){
                 col<-"yellow"
@@ -398,7 +386,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             },
             "log(lrd)"={
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
               
               if (is.null(IV2)){
                 col<-"yellow"
@@ -427,7 +415,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y62<-c()
               y38<-c()
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              showVals<-r2llr(rVals,ns,"sLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
               for (i in 1:length(exploreResult$result$vals)){
                 if (explore$Explore_type=="Alpha") {
                   alpha<<-exploreResult$result$vals[i]
@@ -457,7 +445,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
               y62<-c()
               y38<-c()
               ns<-exploreResult$result$nvals
-              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$world)
+              showVals<-r2llr(rVals,ns,"dLLR",exploreResult$evidence$llr,exploreResult$evidence$prior)
               for (i in 1:length(exploreResult$result$vals)){
                 if (explore$Explore_type=="Alpha") {
                   alpha<<-exploreResult$result$vals[i]
@@ -621,7 +609,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       g<-g+geom_line(data=pts3,aes(x=x,y=y),colour="yellow", linetype="dotted")
     }
     
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(llrs)" || explore$Explore_show=="p(llrd)") && exploreResult$Explore_type=="SampleSize" && effect$world$populationPDF=="Single"){
+    if (explore$Explore_show=="p(sig)" && exploreResult$Explore_type=="SampleSize" && effect$world$populationPDF=="Single"){
       w<-y50
       n<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -647,7 +635,7 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
       lpts<-data.frame(x=min(n)+vals_offset,y=0.8+(ni_max2-1)/10,label=label)
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3.5)
     }
-    if ((explore$Explore_show=="p(sig)" || explore$Explore_show=="p(llrs)" || explore$Explore_show=="p(llrd)") && exploreResult$Explore_type=="EffectSize"){
+    if (explore$Explore_show=="p(sig)" && exploreResult$Explore_type=="EffectSize"){
       w<-y50
       r<-exploreResult$result$vals
       minrw<-function(r,w,n){sum(abs(w-rn2w(r,n)),na.rm=TRUE)}
@@ -748,6 +736,13 @@ drawExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             },
             g<-g+xlab(exploreResult$Explore_type)
     )
+    
+    if (explore$Explore_show=="p(sig)") {
+      top<-max(y75,na.rm=TRUE)
+      top<-ceil(top*10)/10
+      ylim<-c(0,top)
+      g<-g+scale_y_continuous(limits=ylim)
+    }
     
   g+plotTheme
 }

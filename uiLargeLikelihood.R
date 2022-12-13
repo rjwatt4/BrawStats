@@ -23,6 +23,16 @@ LGmodalPossible <-
                                                        tags$tr(
                                                          tags$td(width = "40%", tags$div(style = localStyle, "Target Sample:")),
                                                          tags$td(width = "20%", numericInput("LGlikelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=0)),
+                                                         tags$td(width = "15%",tags$div(style = localStyle, "source:")),
+                                                         tags$td(width = "20%",
+                                                                 selectInput("LGlikelihoodUseSource",label=NULL,
+                                                                             choices=c("world","prior"),selected=likelihood$UseSource,
+                                                                             selectize=FALSE)
+                                                         )
+                                                       )
+                                            ),
+                                            tags$table(width = "100%",class="myTable",style=paste("margin:0px;padding:0px;margin-left:-20px;margin-right:-20px;"),
+                                                       tags$tr(
                                                          tags$td(width = "15%",tags$div(style = localStyle, "cut:")
                                                          ),
                                                          tags$td(width = "5%",checkboxInput("LGlikelihood_cutaway",label=NULL,value=FALSE)
@@ -53,7 +63,7 @@ LGmodalPossible <-
                                                        tags$td(width = "15%",tags$div(style = localStyle, "prior:")),
                                                        tags$td(width = "20%",
                                                                selectInput("LGlikelihoodUsePrior",label=NULL,
-                                                                           choices=c("none","world","prior"),selected="none",
+                                                                           choices=c("none","world","prior"),selected=likelihood$UsePrior,
                                                                            selectize=FALSE)
                                                        )
                                                      )
@@ -92,7 +102,11 @@ LGmodalPossible <-
                                                          tags$td(width = "30%", tags$div(style = localStyle, "show theory:")),
                                                          tags$td(width = "30%", checkboxInput("LGlikelihoodTheory", value=FALSE, label=NULL)),
                                                          tags$td(width = "20%"),
-                                                         tags$td(width = "20%")
+                                                         tags$td(width = "20%", 
+                                                                 selectInput("LGlikelihoodViewRZ", label=NULL,
+                                                                             c("r" = "r",
+                                                                               "z" = "z"),selected=likelihood$viewRZ,selectize=FALSE)
+                                                         )
                                                        )
                                             ),
                                             tags$table(width = "100%",class="myTable",
@@ -118,7 +132,7 @@ LGmodalPossible <-
                                                                               min = -180,
                                                                               max = 180,
                                                                               step = 5,
-                                                                              value = 40)
+                                                                              value = likelihood$azimuth)
                                                          ),
                                                          tags$td(width = "5%", tags$div(style = localStyle, "elev:")),
                                                          tags$td(width = "15%", 
@@ -126,15 +140,15 @@ LGmodalPossible <-
                                                                               min = 0,
                                                                               max = 90,
                                                                               step = 5,
-                                                                              value = 15)
+                                                                              value = likelihood$elevation)
                                                          ),
                                                          tags$td(width = "5%", tags$div(style = localStyle, "r:")),
                                                          tags$td(width = "20%", 
                                                                  numericInput("LGlikelihoodRange",label=NULL,
                                                                               min = 0,
-                                                                              max = 10000,
-                                                                              step = 100,
-                                                                              value = 1000)
+                                                                              max = 100,
+                                                                              step = 1,
+                                                                              value = likelihood$range)
                                                          ),
                                                        )
                                             )

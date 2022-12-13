@@ -74,9 +74,7 @@ showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
                              "NHST errors" = "NHSTErrors",
                              "False Discovery" = "FDR",
                              "log(lrs)" = "log(lrs)",
-                             "log(lrd)" = "log(lrd)",
-                             "p(llrs)" = "p(llrs)",
-                             "p(llrd)" = "p(llrd)"
+                             "log(lrd)" = "log(lrd)"
               )
 )
 extraShowChoices=c("direct"="direct",

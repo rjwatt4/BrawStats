@@ -13,7 +13,7 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
   
   yall<-c(metaResult$single$Smax,metaResult$gauss$Smax,metaResult$exp$Smax)
   displayType<-"histograms"
-  
+
   n1<-sum(metaResult$bestDist=="Single")
   n2<-sum(metaResult$bestDist=="Gauss")
   n3<-sum(metaResult$bestDist=="Exp")
@@ -102,7 +102,12 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
     
     if (metaAnalysis$meta_nullAnal) {
       useBest<-y==best
+      # ylim<-c(-0.5,0.5)
+      # ylabel<-"S"
       y<-y1
+      ylim<-c(-0.02,1.1)
+      ylabel<-"p(0)"
+      
       pts<-data.frame(x=x,y=y)
       g<-ggplot(pts,aes(x=x, y=y))
       
@@ -116,9 +121,8 @@ drawMeta<-function(metaAnalysis,metaResult,metaWhich) {
       g<-g+theme(legend.position = "none")+plotTheme
       g<-g+scale_x_continuous(limits = c(min(x),max(x))+c(-1,1)*(max(x)-min(x))*0.2)
       
-      ylim<-c(-0.02,1.1)
       if (metaWhich=="Single") {
-        g<-g+scale_y_continuous(limits = ylim)+ylab("p(0)")
+        g<-g+scale_y_continuous(limits = ylim)+ylab(ylabel)
       } else {
         g<-g+scale_y_continuous(limits = ylim,breaks=c())+ylab("")
       }
