@@ -18,7 +18,7 @@ LGGraphHeight="15cm"
 LGGraphHeightTabs="14.5cm"
 LGPanelHeight="15.3cm"
 LGModalHeight="16.4cm"
-LGModalWidth="32cm"
+LGModalWidth="30cm"
 diagramPanelWidth="6.9cm"
 diagramPanelWidth="100%"
 diagramUpperPanelHeight=graphHeight
@@ -188,15 +188,22 @@ warn3Ord<-FALSE
 showPossible<-"Samples"
 is_local <- Sys.getenv('SHINY_PORT') == ""
 
-screen<-c(1220,520)
-screen<-c(100,100)
-graphAspect<-0.67
+# screen<-c(1220,520)
+# screen<-c(100,100)
+# graphAspect<-0.67
 
+# the stop running mechanism is complex
+# at its heart is a call to invalidate to trigger the next cycle
+# these stack up, so it is important not to invalidate before the current one is done
+#
+# so it times the first few runs (cycles2observe)
+# and uses that as a good guess for how long subsequent cycles will last
+# it then calls for the next cycle with an additional time of pauseWait ms
+# this guarantees a gap between cycles for the stop button to be registered
 doStop<-TRUE
 stopLabel<-"Stop"
-pauseWait<-200
+pauseWait<-300
 cycles2observe<-5
-
 
 if (is_local) {
   switches$doClipboard<-TRUE

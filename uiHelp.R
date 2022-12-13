@@ -97,7 +97,7 @@ wellPanel(id="HelpTabset",
                 ),
                 
                 # Files tab
-                tabPanel("Data",id="Data",
+                tabPanel("More",id="More",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$filesC,";"),
@@ -108,24 +108,25 @@ wellPanel(id="HelpTabset",
                                                  tags$br(HTML('&emsp;'), '1. Export data to a file or clipboard'),
                                                  tags$br(HTML('&emsp;'), '2. Import data from a file or the clipboard'),
                                         )
-                                      )
-                           )
-                         )
-                ),
-                tabPanel("Web",id="Web",
-                         style = paste("background: ",maincolours$graphC),
-                         wellPanel(
-                           style = paste("background: ",maincolours$graphC,";"),
-                           tags$table(width = "100%",class="myTable",
+                                      ),
                                       tags$tr(
                                         tags$div(style = helpStyle,
-                                                 tags$br(HTML("<b>"),"More information:",HTML("</b>")),
+                                                 tags$br(HTML("<b>"),"  ",HTML("</b>"))
+                                        )
+                                      ),
+                                      tags$tr(
+                                        tags$div(style = helpStyle,
+                                                 tags$br(HTML("<b>"),"  ",HTML("</b>"))
+                                        )
+                                      ),
+                                      tags$tr(
+                                          tags$div(style = helpStyle,
+                                                 tags$br(HTML("<b>"),"Web information:",HTML("</b>")),
                                                  tags$br(HTML('&emsp;'), a("Here",href="https://doingpsychstats.wordpress.com/resources/brawstats-software/", target="_blank"))
                                         )
                                       )
                            )
                          )
-                )
-                           # ) ) )
+                )                           # ) ) )
  )
 )
