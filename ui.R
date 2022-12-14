@@ -71,37 +71,35 @@ source("uiHypothesisPart.R")
 source("uiEffectPart.R")
 source("uiVariablesPart.R")
 
-gH="25vw"
-rH="17vw"
-gH="50vh"
-rH="25vh"
+graphH="50vh"
+reportH="30vh"
 
 shinyUI(fluidPage(
     useShinyjs(),
     
     tags$style(type="text/css",".recalculating {opacity: 1.0;}" ),   
 
-    tags$head(tags$style(paste0("#SamplePlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#DescriptivePlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#InferentialPlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#ExpectedPlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#ExplorePlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#LikelihoodPlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#MetaAnalysisPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#SamplePlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#DescriptivePlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#InferentialPlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#ExpectedPlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#ExplorePlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#LikelihoodPlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#MetaAnalysisPlot{height:",graphH," !important;}"))),
     
-    tags$head(tags$style(paste0("#HypothesisPlot{height:",gH," !important;}"))),
-    tags$head(tags$style(paste0("#WorldPlot{height:",gH," !important;}"))),
+    tags$head(tags$style(paste0("#HypothesisPlot{height:",graphH," !important;}"))),
+    tags$head(tags$style(paste0("#WorldPlot{height:",graphH," !important;}"))),
     
-    tags$head(tags$style(paste0("#SampleReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#DescriptiveReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#InferentialReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#ExpectedReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#ExploreReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#LikelihoodReport{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#MetaAnalysisReport{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#SampleReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#DescriptiveReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#InferentialReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#ExpectedReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#ExploreReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#LikelihoodReport{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#MetaAnalysisReport{height:",reportH," !important;}"))),
 
-    tags$head(tags$style(paste0("#PopulationPlot{height:",rH," !important;}"))),
-    tags$head(tags$style(paste0("#PredictionPlot{height:",rH," !important;}"))),
+    tags$head(tags$style(paste0("#PopulationPlot{height:",reportH," !important;}"))),
+    tags$head(tags$style(paste0("#PredictionPlot{height:",reportH," !important;}"))),
     
     tags$head(tags$script('
                         var width = 0;
@@ -258,7 +256,7 @@ shinyUI(fluidPage(
     
     
     tags$head( # large Graphs
-      tags$style(type="text/css",paste0('#LGmodalPossible .modal-dialog { width:',LGModalWidth ,' ;}')),
+      tags$style(type="text/css",paste0('#LGmodalPossible .modal-dialog { width:',LGModalWidth ,' ;','}')),
       tags$style(type="text/css",paste0('#LGmodalPossible .modal-body    { width: 100%; height: ', LGModalHeight  ,'; background-color:',maincolours$windowC ,' ;}')),
       tags$style(type="text/css",'#LGmodalPossible .modal-header {border: 0px; padding: 0px}'),
       tags$style(type="text/css",'#LGmodalPossible .modal { text-align: right; padding:0px; border: 0;}'),

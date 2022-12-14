@@ -10,19 +10,17 @@ debug<-FALSE
 fontScale=0.85 # use with 400% zoom in Google Chrome
 fontScale=1.0
 
-fullPanelWidth="16cm"
-graphWidth="14.5cm"
-graphHeight="8.1cm"
-reportHeight="5cm"
-LGGraphHeight="15cm"
-LGGraphHeightTabs="14.5cm"
+# these are minimum widths
+# fullPanelWidth="16cm"
+
+LGGraphHeight="14cm"
+# LGGraphHeightTabs="14.5cm"
 LGPanelHeight="15.3cm"
 LGModalHeight="16.4cm"
+
+# not sure which of these is more useful
 LGModalWidth="30cm"
-diagramPanelWidth="6.9cm"
-diagramPanelWidth="100%"
-diagramUpperPanelHeight=graphHeight
-diagramLowerPanelHeight=reportHeight
+LGModalWidth="95%"
 
 expandLabel<-HTML("&#9974")
 emdash="\u2014"

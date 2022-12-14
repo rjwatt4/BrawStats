@@ -1,28 +1,28 @@
 MainReports <-
   wellPanel(
-    style=paste("min-width:", graphWidth, ";"),
+    # style=paste("min-width:", graphWidth, ";"),
     style = paste("background: ",maincolours$panelC), 
     tabsetPanel(type="tabs",
                 id="Reports",
                 tabPanel("Sample",     
-                         plotOutput("SampleReport",height=reportHeight,width="100%"),
+                         plotOutput("SampleReport"),
                          style =paste("background:", maincolours$graphC, ";")),
                 tabPanel("Describe",   
-                         plotOutput("DescriptiveReport",height=reportHeight,width="100%"),
+                         plotOutput("DescriptiveReport"),
                          style =paste("background:", maincolours$graphC, ";")),
                 tabPanel("Infer",      
-                         plotOutput("InferentialReport",height=reportHeight,width="100%"),
+                         plotOutput("InferentialReport"),
                          style =paste("background:", maincolours$graphC, ";"))
                 ,metaReportPanel
                 ,tabPanel("Expect",value="Expect",   
-                         plotOutput("ExpectedReport",height=reportHeight,width="100%"),
+                         plotOutput("ExpectedReport"),
                          style =paste("background:", maincolours$graphC, ";"))
                 ,tabPanel("Explore",value="Explore",
-                          plotOutput("ExploreReport",height=reportHeight,width="100%"),
+                          plotOutput("ExploreReport"),
                           style =paste("background:", maincolours$graphC, ";"))
                 ,possibleReportPanel
-    ),
-    width=fullPanelWidth
+    )
+    # ,width=fullPanelWidth
   )
 
 

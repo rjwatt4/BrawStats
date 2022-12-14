@@ -3,17 +3,16 @@ if (switches$doWorlds) {
   HypothesisDiagram <-
     
     wellPanel(
-      style=paste("min-width:", diagramPanelWidth, ";"),
       style = paste("background: ",maincolours$panelC), 
       tabsetPanel(type="tabs",
                   id="HypothesisDiagram",
                   tabPanel("Hypothesis",
                            style = paste("background: ",maincolours$graphC), 
-                           plotOutput("HypothesisPlot",height=diagramUpperPanelHeight,width=diagramPanelWidth)
+                           plotOutput("HypothesisPlot")
                   ),
                   tabPanel("World",
                            style = paste("background: ",maincolours$graphC), 
-                           plotOutput("WorldPlot",height=diagramUpperPanelHeight,width=diagramPanelWidth)
+                           plotOutput("WorldPlot")
                   )
       ),
       width="8cm"
@@ -23,13 +22,12 @@ if (switches$doWorlds) {
 HypothesisDiagram <-
   
   wellPanel(
-    style=paste("min-width:", diagramPanelWidth, ";"),
     style = paste("background: ",maincolours$panelC), 
     tabsetPanel(type="tabs",
                 id="HypothesisDiagram",
                 tabPanel("Hypothesis",
                          style = paste("background: ",maincolours$graphC), 
-                         plotOutput("HypothesisPlot",height=diagramUpperPanelHeight,width=diagramPanelWidth)
+                         plotOutput("HypothesisPlot")
                 )
     ),
     width="8cm"
@@ -37,7 +35,7 @@ HypothesisDiagram <-
 
 worldDiagramReserve<-tabPanel("World",
          style = paste("background: ",maincolours$graphC), 
-         plotOutput("WorldPlot",height=diagramUpperPanelHeight,width="100%")
+         plotOutput("WorldPlot")
 )
 
 }

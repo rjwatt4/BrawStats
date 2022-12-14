@@ -158,16 +158,16 @@ LGmodalEvidence <-
                      tabsetPanel(id="LGEvidenceGraphs", type="tabs",
                                  # single tab
                                  tabPanel("Sample",value="Sample",id="uiLGSample",
-                                          plotOutput("LGshowSampleOutput",height=LGGraphHeightTabs)
+                                          plotOutput("LGshowSampleOutput",height=LGGraphHeight)
                                           ),
                                  tabPanel("Describe",value="Describe",id="uiLGDescribe",
-                                          plotOutput("LGshowDescribeOutput",height=LGGraphHeightTabs)
+                                          plotOutput("LGshowDescribeOutput",height=LGGraphHeight)
                                           ),
                                  tabPanel("Infer",value="Infer",id="uiLGInfer",
-                                          plotOutput("LGshowInferOutput",height=LGGraphHeightTabs)
+                                          plotOutput("LGshowInferOutput",height=LGGraphHeight)
                                  ),
                                  tabPanel("Expect",value="Expect",id="uiLGExpect",
-                                          plotOutput("LGshowExpectOutput",height=LGGraphHeightTabs)
+                                          plotOutput("LGshowExpectOutput",height=LGGraphHeight)
                                  )
                      )
               )
