@@ -3,7 +3,11 @@ readWS<-function(session,filename,sheetname){
   if (filename=="clip") {
     raw_data<-read_clip_tbl()
   } else {
-    raw_data<-read_excel(filename,sheet=sheetname)
+    if (isempty(sheetname)) {
+      raw_data<-read_excel(filename)
+    } else {
+      raw_data<-read_excel(filename,sheet=sheetname)
+    }
   }
   if (ncol(raw_data)<3) {return(null)}
   

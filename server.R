@@ -3426,7 +3426,7 @@ inspectHistory<-c()
       # get the raw data
       if (length(sheet_names)<=1){
         mergeVariables<<-FALSE
-        raw_data<-read_excel(input$dataInputFile$datapath,sheet = sheet_names[1])
+        raw_data<-read_excel(input$dataInputFile$datapath)
         if (nrow(raw_data)>0 && ncol(raw_data)>0)
           getNewVariables(raw_data)
       }
@@ -3437,7 +3437,11 @@ inspectHistory<-c()
       mergeVariables<<-FALSE
       # get the raw data
       if (is.character(input$dataInputFile$datapath)) {
-      raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
+        if (isempty(input$dataInputSheet)) {
+          raw_data<-read_excel(input$dataInputFile$datapath)
+        } else {
+          raw_data<-read_excel(input$dataInputFile$datapath,sheet = input$dataInputSheet)
+        }
       if (nrow(raw_data)>0 && ncol(raw_data)>0)
         getNewVariables(raw_data)
       }
