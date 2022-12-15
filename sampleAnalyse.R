@@ -492,7 +492,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
     if (IV$type!="Categorical") {
       anRaw["iv1",]<-anNormC["iv1",]
     }
-    if (IV2$type!="Categorical") {
+    if (!is.null(IV2) && IV2$type!="Categorical") {
       anRaw["iv2",]<-anNormC["iv2",]
     }
     # now we move cells around
@@ -688,8 +688,9 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
                   an_name<-"One-Way ANOVA: Independent Measures"
                 }
                 t_name<-"F"
-                df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df.res[2]),")",sep="")
+                df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df[3]),")",sep="")
                 tval<-anRaw$`F value`[2]
+                result$pIV<-anRaw$"Pr(>F)"[2]
               }
             },
             "Interval Ordinal"={
