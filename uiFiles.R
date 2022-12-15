@@ -68,7 +68,7 @@ wellPanel(
                                     tags$tr(
                                       tags$td(width = "5%", style="border-bottom: 1px solid black;border-left: 1px solid black;", tags$div(style = localStyle, "sheet:")),
                                       tags$td(width = "90%", style="border-bottom: 1px solid black;",
-                                              selectInput("dataInputSheet",label=NULL,choices=c("sheet name"),selectize = FALSE)
+                                              selectInput("dataInputSheet",label=NULL,choices=c(""),selectize = FALSE)
                                       ),
                                       tags$td(width = "5%",style="border-bottom: 1px solid black;border-right: 1px solid black;", 
                                               actionButton("dataInputFileLoad","Load"))

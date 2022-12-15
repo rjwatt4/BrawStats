@@ -3424,7 +3424,7 @@ inspectHistory<-c()
       sheet_names<-excel_sheets(input$dataInputFile$datapath)
       updateSelectInput(session, "dataInputSheet", choices = sheet_names)
       # get the raw data
-      if (length(sheet_names)==1){
+      if (length(sheet_names)<=1){
         mergeVariables<<-FALSE
         raw_data<-read_excel(input$dataInputFile$datapath,sheet = sheet_names[1])
         if (nrow(raw_data)>0 && ncol(raw_data)>0)

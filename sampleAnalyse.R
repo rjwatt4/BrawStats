@@ -770,9 +770,9 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
             "Categorical Categorical"={
               an_name<-"Chi-square test of independence"
               t_name<-"chi2"
-              df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
-              
+
               chiResult<-chisq.test(iv1,dv,correct = FALSE)
+              df<-paste("(",format(chiResult$parameter),",","n=",format(length(result$participant)),")",sep="")
               result$rIV<-sqrt(chiResult$statistic/n)*sign(result$rIV)
               result$pIV<-chiResult$p.value
               result$rFull<-result$rIV
