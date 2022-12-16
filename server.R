@@ -1312,7 +1312,7 @@ inspectHistory<-c()
       if (is.na(use)) return(NULL)
       
       IV<-as.list(variables[use,])
-
+      
       if (IV$type=="Categorical") {
                   cs<-IV$cases
                   cs<-strsplit(cs,",")
@@ -1325,7 +1325,9 @@ inspectHistory<-c()
                     IV$proportions<-as.numeric(unlist(strsplit(IV$proportions,",")))
                   }
       }
-      IV$deploy<-input$sIV1Use
+      if (simData) {
+        IV$deploy<-input$sIV1Use
+      }
       if (debug) print("     updateIV - exit")
       return(IV)
     }
@@ -1358,7 +1360,9 @@ inspectHistory<-c()
         }
         #             IV$proportions<-MV$prop
       }
-      IV2$deploy<-input$sIV2Use
+      if (simData) {
+        IV2$deploy<-input$sIV2Use
+      }
       if (debug) print("     updateIV2 - exit")
       return(IV2)
     }
@@ -1375,6 +1379,7 @@ inspectHistory<-c()
           warn3Ord<<-TRUE
         }
       }
+
       if (DV$type=="Categorical") {
         cs<-DV$cases
         cs<-strsplit(cs,",")
@@ -1560,8 +1565,8 @@ inspectHistory<-c()
       IV2<-updateIV2()
       DV<-updateDV()
       if (variablesHeld=="Data") {
-      if (IV$deploy=="Within" && !isempty(IV$targetDeploys) && !grepl(paste0(",",DV$name,","),IV$targetDeploys)) {
-        hmm(paste0("Warning: ", IV$name," requires matched DV (",substr(IV$targetDeploys,2,nchar(IV$targetDeploys)),")"))
+      if (IV$deploy=="Within" && !grepl(paste0(",",DV$name,","),IV$targetDeploys)) {
+        hmm(paste0("Warning: ", IV$name," requires matched DV (",substr(IV$targetDeploys,2,nchar(IV$targetDeploys)-1),")"))
       }
       if (DV$deploy=="Within") {
         hmm(paste0("Warning: ", DV$name," is a within-participants IV and cannot be used as a DV"))

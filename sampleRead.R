@@ -32,8 +32,11 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
     DVs<-sub("[|]{1}[^[:space:]]{1,}","",vars[withins])
     IVs<-sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins]))
     DVwiths<-unique(sub("[|]{1}[^[:space:]]{1,}","",vars[withins]))
-    IVwiths<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
-    IVwithsadded<-zeros(length(IVwiths),1)
+    IVwiths<-c()
+    IVwithsadded<-c()
+    IVuseDV<-c()
+    # IVwiths<-unique(sub("[=]{1}[^[:space:]]{1,}","",sub("[^[:space:]]{1,}[|]{1}","",vars[withins])))
+    # IVwithsadded<-zeros(length(IVwiths),1)
     z<-raw_data
     for (iDV in 1:length(DVwiths)){
       tempName<-paste("Minions",iDV,sep="")
@@ -52,6 +55,12 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
         # add this variable to z
         # but only if it isn't already there
         use<-which(IVwiths==IVlocal[1])
+        if (isempty(use) || isempty(IVwiths)) {
+          IVwiths<-c(IVwiths,IVlocal[1])
+          use<-which(IVwiths==IVlocal[1])
+          IVwithsadded<-c(IVwithsadded,0)
+          IVuseDV<-c(IVuseDV,"")
+        } 
         if (IVwithsadded[use]==0) {
           # column 1 is participants the last column is the DV
           z<-cbind(z[1],IVlocalcases,z[2:ncol(z)])
@@ -59,6 +68,7 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
           colnames(z)[2]<-IVlocal[1]
           added<-added+1
           IVwithsadded[use]<-1
+          IVuseDV[use]<-paste0(IVuseDV[use],",",DVwiths[iDV])
         }
         # remove the part we have just dealt with
         v1<-sub("[|].[^|]+","",v1)
@@ -75,10 +85,9 @@ readSample<-function(raw_data, doOrdinals=FALSE, maxOrdinal=9, header=c()){
     for (i in 1:length(IVwiths)) {
       change<-which(vars == IVwiths[i])
       deploys[change]<-"Within"
-      targets[change]<-paste0(",",paste(unique(DVs[IVs %in% IVwiths[i]]),collapse=","),",")
+      targets[change]<-paste0(IVuseDV[i],",")
     }
   }
-
   keep<-c()
   for (i in 1:length(vars)){
     data<-raw_data[,i]

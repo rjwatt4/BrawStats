@@ -258,7 +258,13 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                           bins<-bins[use_s]
                           bins[1]<-sRho[si]
                           use_s<-use_s[1:(length(use_s)-1)]
-                        } else {use_s<-(1:ncol(dens))}
+                        } else {
+                          if (!is.matrix(dens)) {
+                            dens<-t(dens)
+                            sDens_r<-t(sDens_r)
+                          } 
+                          use_s<-(1:ncol(dens))
+                        }
                         x1<-as.vector(matrix(c(bins,bins),2,byrow=TRUE))
                       } else {dens<-NULL}
 

@@ -1,5 +1,7 @@
+reportGroupMeans<-TRUE
+
 makeFormula<-function(IV,IV2,DV,result,an_vars){
-  
+
   assign_string = "<<"  
   when_string = "="
   times_string = HTML("&times;")
@@ -158,7 +160,7 @@ reportDescription<-function(IV,IV2,DV,result){
   
   switch (no_ivs,
           { result$rIVse<-r2se(result$rIV,result$nval)
-          outputText<-c(outputText,paste0("\b",IV$name," ="),paste(format(result$rIV,digits=report_precision),
+          outputText<-c(outputText,paste0("\b",IV$name,":"),paste(format(result$rIV,digits=report_precision),
                                                              " +/- ",format(result$rIVse,digits=report_precision),
                                                              sep=""),"","")
           },{
@@ -175,13 +177,14 @@ reportDescription<-function(IV,IV2,DV,result){
   
   an_rt<-format(result$rFull,digits=report_precision) 
   an_rset<-format(result$rFullse,digits=report_precision)
-  outputText<-c(outputText,"\bFull model =",paste(an_rt,"+/-",an_rset),"","")
+  outputText<-c(outputText,"\bFull model:",paste(an_rt,"+/-",an_rset),"","")
   
   switch (no_ivs,
           {
             if (IV$type=="Categorical" && DV$type=="Interval"){
               outputText<-c(outputText,"","","","")
-              # outputText<-c(outputText,"","Mean","SD","")
+              if (reportGroupMeans)
+              outputText<-c(outputText,paste0("\b",IV$name,"="),"\bMean","\bSD","")
               mn<-c()
               cases<-levels(result$iv)
               for (i in 1:IV$ncats){
@@ -189,7 +192,8 @@ reportDescription<-function(IV,IV2,DV,result){
                 v<-result$dv[use]
                 mn[i]<-mean(v,na.rm=TRUE)
                 s<-sd(v,na.rm=TRUE)
-                # outputText<-c(outputText,IV$cases[i],format(mn[i],digits=report_precision),format(s,digits=report_precision),"")
+                if (reportGroupMeans)
+                  outputText<-c(outputText,IV$cases[i],format(mn[i],digits=report_precision),format(s,digits=report_precision),"")
               }
               if (class(result$model)[1]=="lmerMod") {
                 fitted<-fitted(result$model)

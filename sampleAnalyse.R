@@ -137,7 +137,7 @@ model2directeffect<-function(mF){
     names(data1)<-mTerms[1]
     # names(data1)<-colnames(mF$model)[2]
     if (class(mF)[1]=="lmerMod") {
-      nc1<-predict(mF,cbind(data1,data.frame(participant="1")))
+      nc1<-predict(mF,cbind(data1,data.frame(participant=mF@frame$participant[1])))
     } else {
       nc1<-predict.lm(mF,data1)
     }
