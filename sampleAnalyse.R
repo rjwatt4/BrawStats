@@ -760,6 +760,8 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
               t_name<-"chi2"
               df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
               tval<-lmRaw$null.deviance-lmRaw$deviance
+              result$pIV<-1-pchisq(tval,1) # noCases-1
+              
             },
             "Ordinal Categorical"={
               an_name<-"Logistic Regression"
