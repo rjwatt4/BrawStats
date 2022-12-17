@@ -664,7 +664,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
                   an_name<-"t-test: Paired Samples"
                   tv<-t.test(dv~iv1,paired=TRUE,var.equal=!evidence$Welch)
                   tval<-tv$statistic
-                  df<-paste("(",format(anRaw$Df.res[2]),")",sep="")
+                  df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")",sep="")
                   result$pIV<-tv$p.value
                 } else {
                   an_name<-"t-test: Independent Samples"
@@ -759,7 +759,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
               an_name<-"Logistic Regression"
               t_name<-"chi2"
               df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
-              tval<-anRaw$Chisq[2]
+              tval<-lmRaw$null.deviance-lmRaw$deviance
             },
             "Ordinal Categorical"={
               an_name<-"Logistic Regression"

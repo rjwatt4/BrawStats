@@ -121,7 +121,7 @@ reportDescription<-function(IV,IV2,DV,result){
   )
   
   a<-result$normModel
-  if (class(a)=="lmerMod") {
+  if (class(a)[1]=="lmerMod") {
     an_vars<-c("Intercept")
     if (IV$type=="Categorical") {
       for (i in 2:IV$ncats) {
