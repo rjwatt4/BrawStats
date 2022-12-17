@@ -1771,6 +1771,15 @@ inspectHistory<-c()
 #    
     applyingAnalysis<-FALSE
     
+    oldResult<-NULL
+    onlyAnalysis<-FALSE
+    observeEvent(c(input$Welch),{
+      onlyAnalysis<<-TRUE
+    },priority=100)
+    observeEvent(c(input$EvidencenewSample,input$LGEvidencenewSample),{
+      onlyAnalysis<<-FALSE
+    },priority=100)
+    
     # UI changes
     # go to the sample tabs 
     sampleUpdate<-observeEvent(c(input$Single,input$EvidencenewSample,input$EvidenceHypothesisApply),{
@@ -1819,13 +1828,14 @@ inspectHistory<-c()
         }
       }
       
-      result<-runSimulation(IV,IV2,DV,effect,design,evidence)
+      result<-runSimulation(IV,IV2,DV,effect,design,evidence,FALSE,onlyAnalysis,oldResult)
 
       result
     }
 
     # eventReactive wrapper
-    sampleAnalysis<-eventReactive(c(input$EvidenceHypothesisApply,input$EvidencenewSample,input$LGEvidencenewSample),{
+    sampleAnalysis<-eventReactive(c(input$EvidenceHypothesisApply,input$EvidencenewSample,input$LGEvidencenewSample,
+                                    input$Welch),{
       if (any(input$EvidenceHypothesisApply,input$EvidencenewSample,input$LGEvidencenewSample)>0){
         validSample<<-TRUE
         IV<-updateIV()
@@ -1871,7 +1881,8 @@ inspectHistory<-c()
       # make the sample
       result<-sampleAnalysis()
         if (is.null(result) ||  !validSample)  {return(ggplot()+plotBlankTheme)}
-  
+      oldResult<<-result
+      
       # draw the sample
       g<-ggplot()+plotBlankTheme+theme(plot.margin=margin(0,-0.2,0,0,"cm"))+
         scale_x_continuous(limits = c(0,10),labels=NULL,breaks=NULL)+scale_y_continuous(limits = c(0,10),labels=NULL,breaks=NULL)
@@ -2024,7 +2035,7 @@ inspectHistory<-c()
       
     # single inferential graph
    makeInferentialGraph <- function() {
-     doit<-c(input$EvidenceInfer_type,input$LGEvidenceInfer_type,input$evidenceTheory)
+     doit<-c(input$EvidenceInfer_type,input$LGEvidenceInfer_type,input$evidenceTheory,input$Welch)
       if (debug) print("InferentialPlot")
       doIt<-editVar$data
       llrConsts<-c(input$llr1,input$llr2)
@@ -2131,7 +2142,7 @@ inspectHistory<-c()
     # single inferential report
     output$InferentialReport <- renderPlot({
       if (debug) print("InferentialReport")
-      doIt<-editVar$data
+      doIt<-c(editVar$data,input$Welch)
       llrConsts<-c(input$llr1,input$llr2)
       
       # doIt<-input$MVok

@@ -49,8 +49,6 @@ wPlotScale="log10"
 pPlotScale="log10"
 nPlotScale="log10"
 
-anovaSSQType<-2
-
 makeVar<-function(name,type="Interval",
                   mu=0,sd=1,skew=0,kurtosis=3,
                   nlevs=7,iqr=3,median=4,discrete="discrete",ordProportions=NA,

@@ -668,15 +668,16 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
                   result$pIV<-tv$p.value
                 } else {
                   an_name<-"t-test: Independent Samples"
-                  df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")",sep="")
                   if (any(c(sum(iv1==levels(iv1)[1]),sum(iv1==levels(iv1)[2]))<3))
                   {             
                     tval<-0
                     result$pIV<-1
+                    df<-paste("(",format(anRaw$Df[nrow(anRaw)]),")",sep="")
                   } else {
                   tv<-t.test(dv~iv1,var.equal=!evidence$Welch)
                   tval<-tv$statistic
                   result$pIV<-tv$p.value
+                  df<-paste("(",format(tv$parameter),")",sep="")
                   }
                 }
                 t_name<-"t"
@@ -688,9 +689,16 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
                   an_name<-"One-Way ANOVA: Independent Measures"
                 }
                 t_name<-"F"
-                df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df[3]),")",sep="")
-                tval<-anRaw$`F value`[2]
-                result$pIV<-anRaw$"Pr(>F)"[2]
+                if (evidence$Welch) {
+                  tv<-oneway.test(dv~iv1, data = resultRawData, var.equal = FALSE)
+                  tval<-tv$statistic
+                  df<-paste("(",format(tv$parameter[1]),",",format(tv$parameter[2],digits=3),")",sep="")
+                  result$pIV<-tv$p.value
+                } else {
+                  tval<-anRaw$`F value`[2]
+                  df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df[3]),")",sep="")
+                  result$pIV<-anRaw$"Pr(>F)"[2]
+                }
               }
             },
             "Interval Ordinal"={
@@ -852,7 +860,11 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
   
 }
 
-runSimulation<-function(IV,IV2,DV,effect,design,evidence,sig_only=FALSE) {
+runSimulation<-function(IV,IV2,DV,effect,design,evidence,sig_only=FALSE,onlyAnalysis=FALSE,oldResult=NULL) {
+  if (onlyAnalysis && !is.null(oldResult)) {
+    res<-analyseSample(IV,IV2,DV,effect,design,evidence,oldResult)
+    return(res)
+  }
   if (evidence$longHand) {
     sample<-makeSample(IV,IV2,DV,effect,design)
     res<-analyseSample(IV,IV2,DV,effect,design,evidence,sample)
