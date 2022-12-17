@@ -767,7 +767,8 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
               an_name<-"Logistic Regression"
               t_name<-"chi2"
               df<-paste("(",format(anRaw$Df[2]),",","n=",format(lmNormC$df.null+1),")",sep="")
-              tval<-anRaw$Chisq[2]
+              tval<-lmRaw$null.deviance-lmRaw$deviance
+              result$pIV<-1-pchisq(tval,1) # noCases-1
             },
             "Categorical Categorical"={
               an_name<-"Chi-square test of independence"
