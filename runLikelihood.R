@@ -1,4 +1,4 @@
-npops=73 # 2*3*4*n+1
+npops=2*3*4+1 # 2*3*4*n+1
 npoints=501
 
 zdens2rdens<-function(zdens,rvals){
@@ -406,7 +406,7 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   )
   
   # sampling distribution from specified populations (pRho)
-  sDens_z<-c()
+  sDens_z<-matrix(nrow=length(pRho),ncol=length(rs))
   for (ei in 1:length(pRho)){
     if (design$sNRand) {
      d<-0
@@ -418,8 +418,9 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
       d<-zSamplingDistr(rs,pRho[ei],n)
     }
     d<-d/sum(d)
-    sDens_z<-rbind(sDens_z,d*pRhogain[ei])
+    sDens_z[ei,]<-d*pRhogain[ei]
   }
+  sDens_z_plus<-colMeans(sDens_z)
   if (design$sNRand) {
     d<-0
     for (ni in 5+seq(0,10,1/n)*n) {
@@ -474,7 +475,7 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
     for (ei in 1:length(sRho)){
       spDens_z[ei,]<-spDens_z[ei,]*apDens_z
     }
-
+    
   # simulations
   sr_effects<-NULL
   sSimBins<-NULL
@@ -499,13 +500,20 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   s=1/sqrt(n-3)
   switch (likelihood$type,
           "Samples"={
+            if ((doSample || (length(likelihood_S_ResultHold$sSims)>1)) && length(pRho)>10) {
+              use<-seq(1,length(pRho),3)
+              pRho<-pRho[use]
+              pRhogain<-pRhogain[use]
+              sDens_z<-sDens_z[use,]
+            }
             if (doSample) {
               r_effects<-c()
               for (i in 1:length(pRho)) {
                 if (likelihood$likelihoodLongHand){
                   effect1<-effect
                   effect1$rIV<-tanh(pRho[i])
-                  effect1$populationPDF<-"Single"
+                  effect1$world$worldOn<-FALSE
+                  effect1$world$populationPDF<-"Single"
                   res<-multipleAnalysis(IV,NULL,DV,effect1,design,evidence,nsims,appendData=FALSE, earlierResult=c(),sigOnly=FALSE,
                                         showProgress=TRUE,progressPrefix=paste0("Possible Samples ",format(i),"/",format(length(pRho)),":"))
                   r_effects<-rbind(r_effects,t(res$rIV))
@@ -670,6 +678,7 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
 
   # convert from z to r
   sDens_r<-sDens_z
+  sDens_r_plus<-sDens_z_plus
   sDens_r_null<-sDens_z_null
   pDens_r<-pDens_z
   spDens_r<-spDens_z
@@ -683,8 +692,9 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
       spDens_r[ei,]<-zdens2rdens(spDens_z[ei,],rp)
     }
     for (ei in 1:length(pRho)){
-      sDens_r[ei,]<-zdens2rdens(sDens_z[ei,],rp)
+      sDens_r[ei,]<-zdens2rdens(sDens_z[ei,],rs)
     }
+    sDens_r_plus<-zdens2rdens(sDens_z_plus,rs)
     sDens_r_null<-zdens2rdens(sDens_z_null,rs)
     pDens_r<-zdens2rdens(pDens_z,rp)
     apDens_r<-zdens2rdens(apDens_z,rp)
@@ -698,7 +708,6 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   
   dr_gain<-max(sDens_r,na.rm=TRUE)
   sDens_r<-sDens_r/dr_gain # *(1-likelihood$world$populationNullp)
-  sDens_r_plus<-colMeans(sDens_r)
   sDens_r_plus<-sDens_r_plus/sum(sDens_r_plus)*(1-likelihood$world$populationNullp)
   sDens_r_null<-sDens_r_null/sum(sDens_r_null)*(likelihood$world$populationNullp)
   sDens_r_total<-sDens_r_plus+sDens_r_null
@@ -727,12 +736,6 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
     dens_at_zero<-approx(rp,pDens_r,0)$y
   }
 
-  if (length(pRho>300) && any(!is.na(sSimDens))) {
-    use<-seq(1,length(pRho),3)
-    pRho<-pRho[use]
-    sDens_r<-sDens_r[use,]
-    sSimDens<-sSimDens[use,]
-  }
     switch (likelihood$type,
           "Samples"={
             likelihoodResult<-list(likelihood=likelihood,

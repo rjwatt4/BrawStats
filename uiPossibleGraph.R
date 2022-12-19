@@ -11,7 +11,7 @@ if (switches$doLikelihood) {
              style =paste("background:", maincolours$graphC, ";")
     )
   possibleReportPanel<-
-    tabPanel("MetaAnalysis",class="Graphs",
+    tabPanel("Possible",class="Graphs",
              tags$table(width = "100%",class="myTable",
                         tags$tr(
                           tags$td(width = "97%",plotOutput("LikelihoodReport")),

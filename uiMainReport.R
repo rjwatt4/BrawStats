@@ -13,10 +13,10 @@ MainReports <-
                 tabPanel("Infer",      
                          plotOutput("InferentialReport"),
                          style =paste("background:", maincolours$graphC, ";"))
-                ,metaReportPanel
                 ,tabPanel("Expect",value="Expect",   
                          plotOutput("ExpectedReport"),
                          style =paste("background:", maincolours$graphC, ";"))
+                ,metaReportPanel
                 ,tabPanel("Explore",value="Explore",
                           plotOutput("ExploreReport"),
                           style =paste("background:", maincolours$graphC, ";"))
