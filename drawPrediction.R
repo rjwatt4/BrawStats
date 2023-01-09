@@ -62,12 +62,15 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
   if (length(IV$vals)==0){
     d<-rho/sqrt(1-rho^2)/2*xv/(sd(xv)*sqrt(1-1/ncats))
     d<-d*DV$sd+DV$mu
+    se<-rep(DV$sd^2*sqrt(1-rho^2)/sqrt(n/ncats),ncats)
   } else{
     x<-IV$vals
     y<-DV$vals
     d<-array(0,ncats)
+    se<-array(0,ncats)
     for (i in 1:ncats){
       d[i]<-mean(y[x==IV$cases[i]])
+      se[i]<-sd(y[x==IV$cases[i]])
     }
   }
   l<-IV$cases
@@ -75,8 +78,7 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
     l<-sapply(l,shrinkString,ceil(10/length(l)))
   }
   
-  se<-rep(DV$sd^2*sqrt(1-rho^2)/sqrt(n/ncats),ncats)
-  se<-se*2
+  # se<-se*2
   mn_pts<-data.frame(xm=b+xoff,ym=d,se=se)
   g<-g+
     geom_line(data=mn_pts,aes(x=xm,y=ym))+
@@ -460,7 +462,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
     }
   }
   
-  # if (offset<=2){
+  if (offset<=1){
     switch (hypothesisType,
             "Interval Interval"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
@@ -469,7 +471,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
             },
             "Categorical Interval"={
-              g<-g+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*1.5*DV$sd+DV$mu)
+              g<-g+coord_cartesian(xlim = c(0,IV$ncats+1)-1, ylim = c(-1,1)*fullRange*DV$sd+DV$mu)
             },
             "Interval Ordinal"={
               g<-g+coord_cartesian(xlim = c(-1,1)*fullRange*IV$sd+IV$mu, ylim = c(0,DV$nlevs+1))
@@ -502,6 +504,7 @@ drawPrediction<-function(IV,IV2,DV,effect,design,offset=1,g=NULL){
               g<-g+scale_y_continuous(breaks=seq(0,1,0.2))
             }
     )
+  }
   # } else {
   #     if (DV$type=="Categorical") {
   #       g<-g+coord_cartesian(ylim = c(-0.1,1.1))

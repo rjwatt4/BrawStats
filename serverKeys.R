@@ -3,7 +3,6 @@
 
 ascii<-function(ch) strtoi(charToRaw(toupper(ch)),16L)
 
-serverKeys <- function(session,input) {
 if (switches$doKeys) {
   keyrespond<-observeEvent(input$pressedKey,{
     # print(input$keypress)
@@ -209,4 +208,3 @@ if (switches$doKeys) {
   
 }
 
-}

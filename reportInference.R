@@ -53,6 +53,7 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
     
     outputText<-c(outputText,paste0("\b",evidence$analysisType),sub("^","\b",colnames(anova)))
     total_done<-FALSE
+    
     for (i in 1:nrow(anova)){
       vn<-rownames(anova)[i]
       if (vn!="(Intercept)") {
@@ -78,10 +79,10 @@ reportInference<-function(IV,IV2,DV,effect,evidence,result){
       }
     }
     if (!total_done && evidence$analysisType=="Anova") {
-    ssq<-sum(anova[,1])#-result$anova[1,1]
+    ssq<-sum(anova[,1])-anova[1,1]
     if (!is.na(ssq)) {ssq<-format(ssq,digits=report_precision)} else {ssq<-""}
     
-    df<-sum(anova[,2])#-result$anova[1,2]
+    df<-sum(anova[,2])-anova[1,2]
     if (!is.na(df)) {df<-format(df,digits=report_precision)} else {df<-""}
     outputText<-c(outputText,"\bTotal",ssq,df,rep("",nc-3))
     }

@@ -5,9 +5,13 @@ runDebug<-function(IV,IV2,DV,effect,design,evidence,expected,result,expResult=NU
     sqrt((1-r^2)/(n-2))
   }
   
-  r2p<-function(r,n){
+  r2p<-function(r,n,ng=2){
     t_vals<-r/rn2se(r,n)
+    if (ng>2) {
+      (1-pt(t_vals^2,ng-1,n-ng))*2
+    } else {
     (1-pt(abs(t_vals),n-2))*2
+    }
   }
   
   formatR<-function(x,digits=2,t=FALSE,r=FALSE,g=FALSE) {

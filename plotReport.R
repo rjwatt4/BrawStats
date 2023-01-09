@@ -5,7 +5,7 @@ reportPlot<-function(outputText,nc,nr,rd=1){
   margin=0.5
   colSpace=2
   font_size=4
-  top=12*rd
+  top=14*rd
   font_size_extra=0
   characterWidth=1/14/sqrt(rd)
   

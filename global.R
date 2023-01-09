@@ -1,11 +1,10 @@
 switches<-list(doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
-               doWorlds=FALSE,doReplications=FALSE,doMetaAnalysis=FALSE,doLikelihood=FALSE,
+               doWorlds=FALSE,doReplications=FALSE,doMetaAnalysis=FALSE,doLikelihood=TRUE,
                hideWorlds=TRUE,hideReplications=TRUE,hideMetaAnalysis=TRUE,hideLikelihood=TRUE,
                startBlank=FALSE,doBootstrap=TRUE,doCheating=TRUE,
                showAnimation=TRUE,
                importOrdinals=TRUE,
                rigidWithin=TRUE)
-debug<-FALSE
 
 fontScale=0.85 # use with 400% zoom in Google Chrome
 fontScale=1.0
@@ -127,6 +126,8 @@ evidence<-list(rInteractionOn=TRUE,
                           populationNullp=0)
 )
 
+result<-c()
+
 metaAnalysis<-list(nstudies=100,
                    meta_fixedAnal="random",
                    sig_only=FALSE,
@@ -216,3 +217,5 @@ if (is_local) {
     # evidence$showTheory<-TRUE
   } 
 }
+
+debug<-FALSE
