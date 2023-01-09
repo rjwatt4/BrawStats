@@ -20,12 +20,14 @@ r2p<-function(r,n,df1=1){
     print("r2p n-exception")
     n[n<3]<-4
   }
-  t_vals<-r/r2se(r,n)
-  # if (df1>1) {
-    (1-pf((t_vals^2),df1,n-(sum(df1)+1)))
-  # } else {
-  # (1-pt(abs(t_vals),n-(df1+1)))*2
-  # }
+  df2<-n-(sum(df1)+1)
+  if (any(df1>1)) {
+    Fvals<-r^2/(1-r^2)*df2/df1
+    (1-pf(Fvals,df1,df2))
+  } else {
+    t_vals<-r/r2se(r,n)
+    (1-pt(abs(t_vals),df2))*2
+  }
   
 }
 
@@ -162,70 +164,83 @@ model2directeffect<-function(mF){
 
   if (any(mTerms=="iv1")) {
     if (is.numeric(v1)){
-      DV1var<-wsd(v1*mF$coefficients[["iv1"]])
+      DV1var<-wsd(v1*mF$coefficients[["iv1"]])*sign(mF$coefficients[["iv1"]])
     } else {
       nlev1<-length(levels(v1))
       v1a<-0
+      c1<-0
       for (i in 2:nlev1) {
-        v1a<-v1a+(v1==levels(v1)[i])*mF$coefficients[[paste0("iv1",i-1)]]
+        coeff<-mF$coefficients[[paste0("iv1",levels(v1)[i])]]
+        c1<-c(c1,coeff)
+        v1a<-v1a+(v1==levels(v1)[i])*coeff
       }
-      DV1var<-wsd(v1a)
+      DV1var<-wsd(v1a)*sign(sum(diff(c1)))
     }
   } else DV1var<-0
+  
   if (any(mTerms=="iv2")) {
     if (is.numeric(v2)){
-      DV2var<-wsd(v2*mF$coefficients[["iv2"]])
+      DV2var<-wsd(v2*mF$coefficients[["iv2"]])*sign(mF$coefficients[["iv2"]])
     } else {
       nlev2<-length(levels(v2))
       v2a<-0
+      c2<-0
       for (i in 2:nlev2) {
-        v2a<-v2a+(v2==levels(v2)[i])*mF$coefficients[[paste0("iv2",i-1)]]
+        coeff<-mF$coefficients[[paste0("iv2",levels(v2)[i])]]
+        c2<-c(c2,coeff)
+        v2a<-v2a+(v2==levels(v2)[i])*coeff
       }
-      DV2var<-wsd(v2a)
+      DV2var<-wsd(v2a)*sign(sum(diff(c2)))
     }
   } else DV2var<-0
   
   if (any(mTerms=="iv1:iv2")) {
     if (is.numeric(v1) && is.numeric(v2)) {
-      DV12var<-wsd(v1*v2*mF$coefficients[["iv1:iv2"]])
+      DV12var<-wsd(v1*v2*mF$coefficients[["iv1:iv2"]])*sign(mF$coefficients[["iv1:iv2"]])
     } 
     if (!is.numeric(v1) && is.numeric(v2)) {
       nlev1<-length(levels(v1))
       v12a<-0
+      c12<-0
       for (i in 2:nlev1) {
-        coeff<-mF$coefficients[[paste0("iv1",i-1,":","iv2")]]
+        coeff<-mF$coefficients[[paste0("iv1",levels(v1)[i],":","iv2")]]
         if (is.na(coeff)) coeff<-0
+        c12<-c(c12,coeff)
         v12a<-v12a+v2*(v1==levels(v1)[i])*coeff
       }
-      DV12var<-wsd(v12a)
+      DV12var<-wsd(v12a)*sign(sum(diff(c12)))
     } 
     if (is.numeric(v1) && !is.numeric(v2)) {
       nlev2<-length(levels(v2))
       v12a<-0
+      c12<-0
       for (i in 2:nlev2) {
-        coeff<-mF$coefficients[[paste0("iv1",":","iv2",i-1)]]
+        coeff<-mF$coefficients[[paste0("iv1",":","iv2",levels(v2)[i])]]
         if (is.na(coeff)) coeff<-0
+        c12<-c(c12,coeff)
         v12a<-v12a+v1*(v2==levels(v2)[i])*coeff
       }
-      DV12var<-wsd(v12a)
+      DV12var<-wsd(v12a)*sign(sum(diff(c12)))
     } 
     if (!is.numeric(v1) && !is.numeric(v2)) {
       nlev1<-length(levels(v1))
       nlev2<-length(levels(v2))
       v12a<-0
+      c12<-0
       for (i1 in 2:nlev1) {
         for (i2 in 2:nlev2) {
-          coeff<-mF$coefficients[[paste0("iv1",i1-1,":","iv2",i2-1)]]
+          coeff<-mF$coefficients[[paste0("iv1",levels(v1)[i1],":","iv2",levels(v2)[i2])]]
           if (is.na(coeff)) coeff<-0
+          c12<-c(c12,coeff)
           v12a<-v12a+(v1==levels(v1)[i1])*(v2==levels(v2)[i2])*coeff
         }
       }
-      DV12var<-wsd(v12a)
-      if (is.na(DV12var)) browser()
+      DV12var<-wsd(v12a)*sign(sum(diff(c12)))
+      # if (is.na(DV12var)) browser()
     }
   } else DV12var<-0
-  
-if (1==2)
+
+if (1==1)
   switch (length(mTerms), 
           {return(DV12var/DVgain)},
           {return(c(DV1var, DV2var)/DVgain)},
@@ -681,7 +696,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
             
             # 1. direct effect sizes for individual IVs
             #  IV first
-            directEffects<-model2directeffect(lmNormC)
+            directEffects<-model2directeffect(lmNorm)
             if (any(abs(directEffects)>1)) {print("direct")}
             result$rIV<-directEffects[1]
             result$pIV<-r2p(result$rIV,n,df1)
@@ -723,14 +738,14 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
             rIV2total<-model2directeffect(lm2total)
             rIVIV2DVtotal<-model2directeffect(lm12total)
             totalEffects<-c(rIV1total,rIV2total,rIVIV2DVtotal)
-            if (any(abs(totalEffects)>1)) {print("total")}
+            if (any(abs(totalEffects)>1,na.rm=TRUE)) {print("total")}
             
             # get the unique effects
             if (grepl("Intercept",rownames(anU)[[1]])) {n1<-2} else {n1<-1}
             n2<-nrow(anU)
             uniqueEffects<-sqrt(anU$`Sum Sq`[n1:(n2-1)]/sum(anU$`Sum Sq`[n1:n2]))
             uniqueEffects<-uniqueEffects*sign(directEffects)
-            if (any(abs(uniqueEffects)>1)) {print("unique")}
+            if (any(abs(uniqueEffects)>1,na.rm=TRUE)) {print("unique")}
             
             r.direct<-directEffects
             r.unique<-uniqueEffects
