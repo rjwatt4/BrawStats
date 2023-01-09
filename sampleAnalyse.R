@@ -240,7 +240,7 @@ model2directeffect<-function(mF){
     }
   } else DV12var<-0
 
-if (1==1)
+if (1==2)
   switch (length(mTerms), 
           {return(DV12var/DVgain)},
           {return(c(DV1var, DV2var)/DVgain)},
