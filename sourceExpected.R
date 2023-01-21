@@ -166,7 +166,8 @@ makeExpectedGraph <- function() {
   if (validExpected) {
     
     if (switches$showAnimation && evidence$longHand) {
-      ns<-10^(min(2,floor(log10(max(1,expectedResult$count)))))
+      # ns<-10^(min(2,floor(log10(max(1,expectedResult$count)))))
+      ns<-10^(min(2,floor(log10(max(expectedResult$nsims/10,expectedResult$count)))))
       if (expectedResult$count+ns>expectedResult$nsims) {
         ns<-expectedResult$nsims-expectedResult$count
       }
@@ -189,7 +190,8 @@ makeExpectedGraph <- function() {
     }
     if (!effect$world$worldOn  && expected$type=="NHSTErrors" && expectedResult$nullcount<expectedResult$nsims) {
       if (switches$showAnimation) {
-        ns<-10^(min(2,floor(log10(max(1,expectedResult$nullcount)))))
+        # ns<-10^(min(2,floor(log10(max(1,expectedResult$nullcount)))))
+        ns<-10^(min(2,floor(log10(max(expectedResult$nsims/10,expectedResult$nullcount)))))
         if (expectedResult$nullcount+ns>expectedResult$nsims) {
           ns<-expectedResult$nsims-expectedResult$nullcount
         }

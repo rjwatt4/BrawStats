@@ -15,6 +15,7 @@ r2p<-function(r,n,df1=1){
   if (any(abs(r)>1)) {
     print(paste("r2p r-exception",format(max(abs(r)),digits=3)))
     r[r>1]<-1
+    r[r < -1]<- -1
   }
   if (any(abs(n)<3)) {
     print("r2p n-exception")
@@ -34,7 +35,8 @@ r2p<-function(r,n,df1=1){
 r2se<-function(r,n){
   if (any(abs(r)>1)) {
     print(paste("r2se r-exception",format(max(abs(r)),digits=3)))
-    r[abs(r)>1]<-1
+    r[r>1]<-1
+    r[r < -1]<- -1
   }
   if (any(abs(n)<3)) {
     print("r2se n-exception")
@@ -46,7 +48,8 @@ r2se<-function(r,n){
 r2ci<-function(r,n,s=0){
   if (any(abs(r)>1)) {
     print(paste("r2ci r-exception",format(max(abs(r)),digits=3)))
-    r[abs(r)>1]<-1
+    r[r>1]<-1
+    r[r < -1]<- -1
   }
   if (any(abs(n)<3)) {
     print("r2ci n-exception")
@@ -68,7 +71,8 @@ res2llr<-function(result,method=STMethod) {
 r2llr<-function(r,n,method=STMethod,llr=list(e1=c(),e2=0),world=NULL) {
   if (any(abs(r)>1)) {
     print(paste("r2llr r-exception",format(max(abs(r)),digits=3)))
-    r[abs(r)>1]<-1
+    r[r>1]<-1
+    r[r < -1]<- -1
   }
   if (any(abs(n)<3)) {
     print("r2llr n-exception")

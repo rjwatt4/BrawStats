@@ -103,7 +103,7 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
             }
           },
           "FDR"={
-            extra_y_label<-"Type II errors"
+            extra_y_label<-"Misses"
             y50<-c()
             y25<-c()
             y75<-c()
@@ -232,7 +232,10 @@ reportExplore<-function(Iv,IV2,DV,effect,design,explore,exploreResult){
   }
   
   if (explore$Explore_show=="NHSTErrors" || explore$Explore_show=="FDR") {
-    extra_y_label<-"Type I errors"
+    switch(explore$Explore_show,
+           "NHSTErrors"={extra_y_label<-"Type I errors"},
+           "FDR"={extra_y_label<-"False Discovery"}
+    )
     if (is.null(IV2)){
       rVals<-exploreResult$nullresult$rIVs
       pVals<-exploreResult$nullresult$pIVs

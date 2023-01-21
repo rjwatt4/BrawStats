@@ -220,7 +220,8 @@ makeExploreGraph <- function() {
     if (explore$Explore_family!="MetaAnalysis" && !explore$ExploreLongHand) {
       ns<-10^(min(3,floor(log10(max(100,exploreResult$result$count)))))
     } else {
-      ns<-10^(min(2,floor(log10(max(1,exploreResult$result$count)))))
+      # ns<-10^(min(2,floor(log10(max(1,exploreResult$result$count)))))
+      ns<-10^(min(2,floor(log10(max(exploreResult$nsims/10,exploreResult$result$count)))))
     }
   } else {
     ns<-exploreResult$nsims-exploreResult$result$count

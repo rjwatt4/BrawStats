@@ -58,14 +58,14 @@ reportPlot<-function(outputText,nc,nr,rd=1){
   }
   if (any(boldlabels & rightlabels)) {
     use<-which(boldlabels & rightlabels)+1
-    pts1<-data.frame(x=x_gap1[use],y=d$y[boldlabels & rightlabels],labels=outputText[boldlabels & rightlabels])
-    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1.25, vjust=0, size=font_size+font_size_extra, fill=bg,fontface="bold",
+    pts1<-data.frame(x=x_gap1[use]-characterWidth*4,y=d$y[boldlabels & rightlabels],labels=outputText[boldlabels & rightlabels])
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1, vjust=0, size=font_size+font_size_extra, fill=bg,fontface="bold",
                     label.size=NA,label.padding=unit(0,"lines"))
   }
   if (any(rightlabels & !boldlabels)){
     use<-which(!boldlabels & rightlabels)+1
-    pts1<-data.frame(x=x_gap1[use],y=d$y[rightlabels & !boldlabels],labels=outputText[rightlabels & !boldlabels])
-    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1.25, vjust=0, size=font_size+font_size_extra, fill=bg,
+    pts1<-data.frame(x=x_gap1[use]-characterWidth*4,y=d$y[rightlabels & !boldlabels],labels=outputText[rightlabels & !boldlabels])
+    g<-g+geom_label(data=pts1,aes(x=x+1, y=top+1-y, label=labels), hjust=1, vjust=0, size=font_size+font_size_extra, fill=bg,
                     label.size=NA,label.padding=unit(0,"lines"))
   }
   if (any(redlabels)) {

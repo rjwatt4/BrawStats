@@ -1,4 +1,5 @@
 min_p=0.0001
+truncate_p=TRUE
 max_s=6
 min_nw=10
 max_nw=10000
@@ -49,6 +50,10 @@ collectData<-function(result) {
               ps<-rbind(result$p$direct)
             }
     )
+  }
+  if (truncate_p) {
+    ps[ps<min_p]<-min_p
+    po[po<min_p]<-min_p
   }
   out<-list(rs=rs,ps=ps,ns=ns,rp=rp,ro=ro,po=po)
 }
@@ -104,15 +109,16 @@ get_lowerEdge<-function(nsvals,vals) {
 getBins<-function(vals,nsvals,target,minVal,maxVal,fixed=FALSE) {
   nv=max(length(nsvals),length(vals))
   nb<-round(sqrt(nv)*0.75)
+  if (min(vals,na.rm=TRUE)==max(vals,na.rm=TRUE)) {nb<-3}
   # nb<-51
   
-  high_p<-max(vals,na.rm=TRUE)+0.001
-  low_p<-min(vals,na.rm=TRUE)-0.001
+  high_p<-max(vals,na.rm=TRUE)+0.2
+  low_p<-min(vals,na.rm=TRUE)-0.2
   if (!is.null(minVal)) {
-    low_p<-min(max(minVal,low_p,na.rm=TRUE),target)
+    low_p<-min(max(minVal-0.2,low_p,na.rm=TRUE),target)
   }
   if (!is.null(maxVal)) {
-    high_p<-min(maxVal,high_p,na.rm=TRUE)
+    high_p<-min(maxVal+0.2,high_p,na.rm=TRUE)
   }
   if ((length(nsvals)==0) || (length(nsvals)==length(vals))){
     bins<-seq(low_p,high_p,length.out=nb)
@@ -201,7 +207,6 @@ expected_hist<-function(vals,nsvals,valType){
   x<-as.vector(matrix(c(bins,bins),2,byrow=TRUE))
   y1<-c(0,as.vector(matrix(c(dens,dens),2,byrow=TRUE)),0)
   y2<-c(0,as.vector(matrix(c(nsdens,nsdens),2,byrow=TRUE)),0)
-  
   data.frame(y1=c(-y1,rev(y1)), y2=c(-y2,rev(y2)), x=c(x,rev(x)))
 }
 
@@ -490,15 +495,15 @@ r_plot<-function(result,IV,IV2=NULL,DV,effect,expType="r",logScale=FALSE){
         labelPt3<-paste0(labelPt2,"  (",format(sum(resSig,na.rm=TRUE)),"/",format(length(pvals)),")")
       }
       if (length(xoff)>1) {
-        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt2)
+        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[2],label = labelPt2)
       } else {
-        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label = labelPt3)
+        lpts<-data.frame(x = xoff[i]-0.95, y = ylim[2],label = labelPt3)
       }
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label=label), hjust=0, vjust=0, fill = "white",size=3)
     }
     
     if (is.element(expType,c("r","ci1","ci2"))) {
-      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[1],label=paste("actual =",format(rActual[i],digits=graph_precision)))
+      lpts<-data.frame(x = xoff[i]-0.95, y = ylim[2],label=paste("actual =",format(rActual[i],digits=graph_precision)))
       g<-g+geom_label(data=lpts,aes(x = x, y = y, label = label), hjust=0, vjust=0, fill = "white",size=3)
     }
   }
@@ -552,6 +557,7 @@ llrd_plot<-function(result,IV,IV2=NULL,DV,effect){
 }
 
 p_plot<-function(result,IV,IV2=NULL,DV,effect,ptype="p"){
+
   g<-r_plot(result,IV,IV2,DV,effect,ptype,pPlotScale=="log10")
   
   if (pPlotScale=="log10") {

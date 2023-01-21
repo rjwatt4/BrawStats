@@ -109,16 +109,16 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
                    r3=list(direct=c(),unique=c(),total=c())
                    )
   
-    for (i in 1:length(vals)){
-      if (showProgress) {
-        if (doingNull) {
-          label<-paste("Explore/Null(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims)," [",format(i),"]",sep="")
-          showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
-        } else {
-          label<-paste("Explore(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims)," [",format(i),"]",sep="")
-          showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
-        }
+    if (showProgress) {
+      if (doingNull) {
+        label<-paste("Explore/Null(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims),sep="")
+        showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
+      } else {
+        label<-paste("Explore(",explore$Explore_family,")",":  n=",format(nc+ni),"/",format(exploreResult$nsims),sep="")
+        showNotification(label,id="counting",duration=Inf,closeButton = FALSE,type = "message")
       }
+    }
+    for (i in 1:length(vals)){
       
     switch (explore$Explore_type,
             "IVType"={

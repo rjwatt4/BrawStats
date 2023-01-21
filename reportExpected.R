@@ -8,7 +8,11 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   if (expected$type=="NHSTErrors" || expected$type=="FDR"){nc=4}
   
   # header
-  outputText<-c("\bExpected",paste("nsims=",format(length(result$rIV)),sep=""),rep("",nc-2))
+  if (length(nullresult$rIV)>0) {
+    outputText<-c("\bExpected",paste("nsims=",format(length(result$rIV)),"+",format(length(nullresult$rIV)),sep=""),rep("",nc-2))
+  } else {
+    outputText<-c("\bExpected",paste("nsims=",format(length(result$rIV)),sep=""),rep("",nc-2))
+  }
   outputText<-c(outputText,rep("",nc))
   if (!(is.null(IV2) | is.null(result$rIVIV2DV))){
     outputText<-c(outputText,"","\b Main Effect 1","","","\b Main Effect 2","")
@@ -42,7 +46,7 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   }
   
   # column labels
-  if (expected$type=="NHSTErrors") {outputText1<-c("\bErrors:","\bI","\bII","All")}
+  if (expected$type=="NHSTErrors") {outputText1<-c("\bErrors:","\bI","\bII"," ")}
   else {
     if(expected$type=="CILimits") {outputText1<-c("   ","lower","upper")}
     else {
@@ -54,25 +58,33 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
   if (expected$type=="NHSTErrors"){
     nullSig<-isSignificant(STMethod,nullresult$pIV,nullresult$rIV,nullresult$nval,nullresult$evidence)
     resSig<-isSignificant(STMethod,result$pIV,result$rIV,result$nval,result$evidence)
-      e1=paste(format(mean(nullSig)*100,digits=report_precision),"%")
-      e2=paste(format(mean(!resSig)*100,digits=report_precision),"%")
-      outputText<-c(outputText," ",e1,e2,"")
+      e1=paste0(format(mean(nullSig)*100,digits=report_precision),"%")
+      e2=paste0(format(mean(!resSig)*100,digits=report_precision),"%")
       if (result$effect$world$worldOn) {
-        outputText<-c(outputText,"\bFalse Discovery:","","","")
-        e1=paste0(format(sum(nullSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      e2=paste0(format(sum(!resSig)/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"All:",e1,e2,"")
-      
-      e1n=paste0("\b",format(sum(nullSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
-      e1=paste0(format(sum(resSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
-      e1a=paste0(format((sum(nullSig)+sum(resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"Sig:",e1n,e1,e1a)
-      
-      e2n=paste0(format(sum(!nullSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
-      e2=paste0("\b",format(sum(!resSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
-      e2a=paste0(format((sum(!nullSig)+sum(!resSig))/(length(nullresult$pIV)+length(result$pIV))*100,digits=report_precision),"%")
-      outputText<-c(outputText,"Not Sig:",e2n,e2,e2a)
-    } 
+        nr<-(length(nullresult$pIV)+length(result$pIV))
+        ea=paste0("Combined: ",format((sum(nullSig)+sum(!resSig))/nr*100,digits=report_precision),"%")
+        outputText<-c(outputText," ",e1,e2,ea)
+        outputText<-c(outputText," ","","","")
+        outputText<-c(outputText,"!j\bOutcomes:","\bFalse","\bValid","")
+        
+        e1a=paste0("\b",format((sum(nullSig)+sum(!resSig))/nr*100,digits=report_precision),"%")
+        e2a=paste0(format((sum(!nullSig)+sum(resSig))/nr*100,digits=report_precision),"%")
+        outputText<-c(outputText,"!jAll:",e1a,e2a,"")
+        
+        e1a=paste0("(",format((sum(nullSig)+sum(resSig))/nr*100,digits=report_precision),"%)")
+        e2a=paste0("(",format((sum(!nullSig)+sum(!resSig))/nr*100,digits=report_precision),"%)")
+        
+        
+        e1n=paste0("\b",format(sum(nullSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
+        e1=paste0(format(sum(resSig)/(sum(nullSig)+sum(resSig))*100,digits=report_precision),"%")
+        outputText<-c(outputText,paste0("!jSig ",e1a,":"),e1n,e1," ")
+        
+        e2n=paste0(format(sum(!nullSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
+        e2=paste0("\b",format(sum(!resSig)/(sum(!nullSig)+sum(!resSig))*100,digits=report_precision),"%")
+        outputText<-c(outputText,paste0("!jNot Sig ",e2a,":"),e2,e2n," ")
+      } else {
+        outputText<-c(outputText," ",e1,e2," ")
+    }
       
   }else{
     
@@ -151,6 +163,12 @@ reportExpected<-function(IV,IV2,DV,effect,evidence,expected,result,nullresult){
       }
     }
     outputText<-c(outputText,ot1,ot2,rep("  ",nc),ot4,ot5,ot6)
+    if (expected$Expected_par1=="p") {
+      outputText<-c(outputText,rep("  ",nc),"p(sig)",paste0(format(mean(p<alpha)*100,digits=report_precision),"%"),rep(" ",nc-2))
+    }
+    if (expected$Expected_par2=="p") {
+      outputText<-c(outputText,rep("  ",nc),"p(sig)"," ",paste0(format(mean(p<alpha)*100,digits=report_precision),"%"),rep(" ",nc-3))
+    }
   }
   
   nr<-length(outputText)/nc
