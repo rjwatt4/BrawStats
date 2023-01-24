@@ -29,7 +29,7 @@ inspectDiagram <-
                    ),
             ),
             column(width=6,conditionalPanel(condition="input.showResiduals",
-                           sliderInput("ResidVal",label=NULL,value=-0.8,min=-1,max=1, step=0.05, ticks=FALSE, width="100%")
+                           sliderInput("ResidVal",label=NULL,value=-0.8,min=-1,max=1, step=0.1, ticks=FALSE, width="100%")
                            )
             ),
             column(offset=1,width=3,htmlOutput("explainResiduals")

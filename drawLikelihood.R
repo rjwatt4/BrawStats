@@ -135,7 +135,7 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
             ticks.y<-trans3d(view_lims[2]+tick_length*charExp+0.02,plot_ticks-0.02,0,mapping)
             pos.y<-trans3d(1.3*view_lims[2],view_lims[1]/2,0,mapping)
             
-            pos.z<-trans3d(-1*view_lims[2],-1.1*view_lims[2],0.5,mapping)
+            pos.z<-trans3d(-1*view_lims[2],-1.05*view_lims[2],0.5,mapping)
             
             segments(tick.x.start$x, tick.x.start$y, tick.x.end$x, tick.x.end$y)
             segments(tick.y.start$x, tick.y.start$y, tick.y.end$x, tick.y.end$y)

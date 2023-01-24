@@ -2,22 +2,27 @@ inspectMainGraph<-function(inspect) {
   
   var<-inspect$var
   data<-inspect$data
-
+  data<-data[!is.na(data)]
+  
   # start
   g<-ggplot()
   
   if (!is.null(data)) {
-    if (var$type=="Categorical") {data<-as.numeric(data)}
-    # data points
     
+    g<-showMean(g,inspect)
+    g<-showSD(g,inspect)    
+    
+    if (var$type=="Categorical") {data<-as.numeric(data)+runif(length(data),-1,1)*0.1}
+    # data points
     switch(inspect$inspectOrder,
-           "unsorted"={y<-1:inspect$n},
+           "unsorted"={y<-1:length(data)},
            "sorted"={y<-rank(data,ties.method="first")},
            "piled"={y<-pile(data)}
            )
     
+    ptSize<-max(3,min(8,sqrt(42)*8/sqrt(length(data))))
     pts<-data.frame(x=data,y=y)
-    g<-g+geom_point(data=pts,aes(x=x,y=y),shape=shapes$data, colour="black", fill=plotcolours$sampleC,size=7)
+    g<-g+geom_point(data=pts,aes(x=x,y=y),shape=shapes$data, colour="black", fill=plotcolours$sampleC,size=ptSize)
     mn<-mean(data)
     
     # showing the residuals
@@ -30,25 +35,26 @@ inspectMainGraph<-function(inspect) {
               },
               "Ordinal"={
                 for (i in 1:inspect$n) {
-                  col<-sign(inspect$ResidVal-data[i])
+                  if (!is.na(data[i])) {
+                    col<-sign(inspect$ResidVal-data[i])
                   col<-col/2+0.5
                   col<-rgb(col,col,col)
                   g<-g+geom_segment(data=data.frame(x=data[i],xend=inspect$ResidVal,y=y[i],yend=y[i]),aes(x=x,y=y,xend=xend,yend=yend), colour=col, lwd=1  )
+                  }
                 }
               },
               "Interval"={
                 for (i in 1:inspect$n) {
-                  col=(inspect$ResidVal-data[i])/var$sd/2
-                  col=max(min(col/2+0.5,1),0)
-                  col=rgb(col,col,col)
-                  g<-g+geom_segment(data=data.frame(x=data[i],xend=inspect$ResidVal,y=y[i],yend=y[i]),aes(x=x,y=y,xend=xend,yend=yend), colour=col, lwd=1  )
+                  if (!is.na(data[i])) {
+                    col=(inspect$ResidVal-data[i])/var$sd/2
+                    col=max(min(col/2+0.5,1),0)
+                    col=rgb(col,col,col)
+                    g<-g+geom_segment(data=data.frame(x=data[i],xend=inspect$ResidVal,y=y[i],yend=y[i]),aes(x=x,y=y,xend=xend,yend=yend), colour=col, lwd=1  )
+                  }
                 }
               }
       )
     }
-
-    g<-showMean(g,inspect)
-    g<-showSD(g,inspect)    
   }
   
   # wind up
@@ -75,13 +81,17 @@ inspectPenaltyGraph<-function(inspect) {
 
   var<-inspect$var
   data<-inspect$data
+  data<-data[!is.na(data)]
   
   if (!is.null(data) && inspect$showResiduals) {
-      # vertical line
+    g<-ggplot()
+    g<-showMean(g,inspect)
+    g<-showSD(g,inspect)    
+    
+    # vertical line
     if (inspect$inspectHistory[length(inspect$inspectHistory)]!=inspect$ResidVal)
     {inspect$inspectHistory<-c(inspect$inspectHistory,inspect$ResidVal)}
     
-    g<-ggplot()
     y=c()
     x<-sort(inspect$inspectHistory)
     
@@ -107,15 +117,15 @@ inspectPenaltyGraph<-function(inspect) {
                "Ordinal"={
                  # sum(outside iqr)-sum(inside iqr)
                  if (var$discrete) {mval<-round(x[i])} else {mval<-x[i]}
-                 q1<-median(data[data<mval])
-                 q2<-median(data[data>mval])
-                 r1=sum(data<q1)+sum(data>q2)
-                 r2<-sum(data>q1 & data<q2)
+                 q1<-median(data[data<mval],na.rm=TRUE)
+                 q2<-median(data[data>mval],na.rm=TRUE)
+                 r1=sum(data<q1,na.rm=TRUE)+sum(data>q2,na.rm=TRUE)
+                 r2<-sum(data>q1 & data<q2,na.rm=TRUE)
                  val<-r1-r2
                },
                "Interval"={
                  # squared residual
-                 val<-mean((data-x[i])^2)/2/2/var$sd/var$sd
+                 val<-mean((data-x[i])^2,na.rm=TRUE)/2/2/var$sd/var$sd
                }
         )
       }
@@ -132,9 +142,6 @@ inspectPenaltyGraph<-function(inspect) {
         g<-g+geom_segment(data=pts,aes(x=x,y=y,xend=xend,yend=yend),colour="yellow",lwd=0.5)
       }
     }
-    g<-showMean(g,inspect)
-    g<-showSD(g,inspect)    
-    
   } else {
     return(ggplot()+plotBlankTheme)
   }
@@ -184,7 +191,7 @@ pile<-function(data) {
       }
     }
   }
-  return(y*length(data))
+  return(y/max(y)*length(data))
 }
 
 
@@ -192,6 +199,7 @@ showMean<-function(g,inspect) {
   if (inspect$showMean) {
     var<-inspect$var
     data<-inspect$data
+    data<-data[!is.na(data)]
     if (var$type=="Categorical") {data<-as.numeric(data)}
     # show mean
     # vertical line
@@ -214,6 +222,7 @@ showSD<-function(g,inspect) {
   if (inspect$showSd) {
     var<-inspect$var
     data<-inspect$data
+    data<-data[!is.na(data)]
     if (var$type=="Categorical") {data<-as.numeric(data)}
     # show sd
     # vertical lines

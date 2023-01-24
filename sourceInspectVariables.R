@@ -29,7 +29,7 @@ inspectVariable<-function(var) {
             updateCheckboxInput(session,"showMean",label="Mode")
             updateCheckboxInput(session,"showSD",label=" ")
             # c(1,var$ncats)+c(-1,1)*(var$ncats-1)/10
-            updateSliderInput(session,"ResidVal",min=1-(var$ncats-1)/10,max=var$ncats+(var$ncats-1)/10,value=1.7)
+            updateSliderInput(session,"ResidVal",min=1-(var$ncats-1)/10,max=var$ncats+(var$ncats-1)/10,value=1.7,step=0.25)
             updateSelectInput(session,"inspectOrder",choices=c("unsorted","piled"),selected="unsorted")
             shinyjs::hideElement(id= "showSD")
           },
@@ -37,14 +37,14 @@ inspectVariable<-function(var) {
             updateCheckboxInput(session,"showMean",label="Median")
             updateCheckboxInput(session,"showSD",label="IQR")
             # c(1,var$nlevs)+c(-1,1)*(var$nlevs-1)/10
-            updateSliderInput(session,"ResidVal",min=1-(var$nlevs-1)/10,max=var$nlevs+(var$nlevs-1)/10,value=1.7)
+            updateSliderInput(session,"ResidVal",min=1-(var$nlevs-1)/10,max=var$nlevs+(var$nlevs-1)/10,value=1.7,step=0.25)
             updateSelectInput(session,"inspectOrder",choices=c("unsorted","sorted","piled"),selected="unsorted")
             shinyjs::showElement(id= "showSD")
           },
           "Interval"={
             updateCheckboxInput(session,"showMean",label="Mean")
             updateCheckboxInput(session,"showSD",label="SD")
-            updateSliderInput(session,"ResidVal",min=var$mu-var$sd*3,max=var$mu+var$sd*3,value=var$mu-var$sd)
+            updateSliderInput(session,"ResidVal",min=var$mu-var$sd*3,max=var$mu+var$sd*3,value=var$mu-var$sd,step=var$sd/4)
             updateSelectInput(session,"inspectOrder",choices=c("unsorted","sorted","piled"),selected="unsorted")
             shinyjs::showElement(id= "showSD")
           }

@@ -185,25 +185,25 @@ warnOrd<-FALSE
 warn3Ord<-FALSE
 
 showPossible<-"Samples"
-is_local <- Sys.getenv('SHINY_PORT') == ""
-
-# screen<-c(1220,520)
-# screen<-c(100,100)
-# graphAspect<-0.67
 
 # the stop running mechanism is complex
-# at its heart is a call to invalidate to trigger the next cycle
-# these stack up, so it is important not to invalidate before the current one is done
+# at its heart is a call to invalidate(ms) to trigger the next cycle
+# if the stop button is pressed, the calls to invalidate() stop
+# But these calls queue up, if one is called before the previous one has finished.
+# For the stop to be (nearly) immediate, we have to make sure there is never a queue.
+# For this, it is important not to invalidate() before the current one is done.
 #
-# so it times the first few runs (cycles2observe)
-# and uses that as a good guess for how long subsequent cycles will last
-# it then calls for the next cycle with an additional time of pauseWait ms
+# To achieve this, the duration ms is set slightly longer than the time it takes to 
+# do a cycle. This is established by timing the first few runs (cycles2observe)
+# and uses that as a good guess for how long subsequent cycles will last.
+# It then calls for the next cycle with an additional time of pauseWait ms
 # this guarantees a gap between cycles for the stop button to be registered
 doStop<-TRUE
 stopLabel<-"Stop"
 pauseWait<-300
 cycles2observe<-5
 
+is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
   switches$doClipboard<-TRUE
 
@@ -211,7 +211,6 @@ if (is_local) {
     switches$doBatchFiles<-TRUE
     switches$doReplications<-TRUE
     switches$doMetaAnalysis<-TRUE
-    switches$doLikelihood<-TRUE
     switches$doWorlds<-TRUE
     
     # evidence$showTheory<-TRUE
