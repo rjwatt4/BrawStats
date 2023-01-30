@@ -421,6 +421,9 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
     sDens_z[ei,]<-d*pRhogain[ei]
   }
   sDens_z_plus<-colMeans(sDens_z)
+  if (source$populationPDF=="Single" && source$populationNull>0) {
+    sDens_z_plus<-sDens_z[2,]
+  }
   if (design$sNRand) {
     d<-0
     for (ni in 5+seq(0,10,1/n)*n) {

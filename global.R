@@ -156,7 +156,7 @@ explore<-list(Explore_type="IV",
 likelihood<-
   list(type=c(),
        UsePrior="none", UseSource="world",
-       prior=list(worldOn=FALSE,populationPDF="Uniform",populationPDFk=0.2,populationRZ="r",populationNullp=0),
+       prior=list(worldOn=TRUE,populationPDF="Uniform",populationPDFk=0.2,populationRZ="r",populationNullp=0),
        world=effect$world,
        design=list(sampleN=design$sN,sampleNRand=design$sNRand,sampleNRandK=design$sNRandK),
        targetSample=c(),targetPopulation=0,

@@ -115,7 +115,7 @@ updateLikelihood<-function(){
               list(type=showPossible,
                    UsePrior=input$likelihoodUsePrior,
                    UseSource=input$likelihoodUseSource,
-                   prior=list(populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, 
+                   prior=list(worldOn=TRUE,populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, 
                               populationPDFk=input$likelihoodPrior_distr_k,
                               populationNullp=input$likelihoodPrior_Nullp
                    ),
@@ -135,7 +135,7 @@ updateLikelihood<-function(){
               list(type=showPossible,
                    UsePrior=input$likelihoodUsePrior,
                    UseSource=input$likelihoodUseSource,
-                   prior=list(populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, populationPDFk=input$likelihoodPrior_distr_k,
+                   prior=list(worldOn=TRUE,populationPDF=input$likelihoodPrior_distr,populationRZ=input$likelihoodPrior_distr_rz, populationPDFk=input$likelihoodPrior_distr_k,
                               populationNullp=input$likelihoodPrior_Nullp),
                    world=world,
                    design=list(sampleN=input$sN,sampleNRand=input$sNRand,sampleNRandK=input$sNRandK),

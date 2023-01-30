@@ -125,7 +125,7 @@ inspectPenaltyGraph<-function(inspect) {
                },
                "Interval"={
                  # squared residual
-                 val<-mean((data-x[i])^2,na.rm=TRUE)/2/2/var$sd/var$sd
+                 val<-sqrt(mean((data-x[i])^2,na.rm=TRUE))/2/var$sd
                }
         )
       }

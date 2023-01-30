@@ -126,6 +126,60 @@ getTypecombination<-function(HypType) {
               DV$cases<-"E1,E2"
               DV$proportions<-"1,1"
             },
+    
+    "wii"={ #print(12)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      IV$deploy<-"Within"
+      IV2$type<-"Interval"
+      DV$type<-"Interval"
+    },
+    "iwi"={ #print(13)
+      IV$type<-"Interval"
+      IV2$type<-"Categorical"
+      IV2$ncats<-3
+      IV2$cases<-"D1,D2,D3"
+      IV2$proportions<-"1,1,1"
+      IV2$deploy<-"Within"
+      DV$type<-"Interval"
+    },
+    "wci"={ #print(14)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      IV$deploy<-"Within"
+      IV2$type<-"Categorical"
+      IV2$ncats<-3
+      IV2$cases<-"D1,D2,D3"
+      IV2$proportions<-"1,1,1"
+      DV$type<-"Interval"
+    },
+    "wwi"={ #print(14)
+      IV$type<-"Categorical"
+      IV$ncats<-3
+      IV$cases<-"C1,C2,C3"
+      IV$proportions<-"1,1,1"
+      IV$deploy<-"Within"
+      IV2$type<-"Categorical"
+      IV2$ncats<-3
+      IV2$cases<-"D1,D2,D3"
+      IV2$proportions<-"1,1,1"
+      IV2$deploy<-"Within"
+      DV$type<-"Interval"
+    },
+    
+    "iic"={ #print(15)
+      IV$type<-"Interval"
+      IV2$type<-"Interval"
+      DV$type<-"Categorical"
+      DV$ncats<-2
+      DV$cases<-"E1,E2"
+      DV$proportions<-"1,1"
+    },
+    
        "cic"={ #print(16)
               IV$type<-"Categorical"
               IV$ncats<-3

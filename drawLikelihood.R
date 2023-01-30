@@ -75,8 +75,9 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
   
   # make the back wall sample distributions
   rsw<-likelihoodResult$Theory$rs
-  rsw_dens<-likelihoodResult$Theory$sDens_r_total
-  rsw_dens1<-likelihoodResult$Theory$sDens_r_null
+  rsw_dens_plus<-likelihoodResult$Theory$sDens_r_plus
+  rsw_dens_null<-likelihoodResult$Theory$sDens_r_null
+  rsw_dens<-rsw_dens_plus+rsw_dens_null
   
   view_lims<-c(-1,1)
   if (likelihood$viewRZ=="z") {
@@ -89,10 +90,10 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
   dens_at_peak<-rp_stats$dens_at_peak
 
   rpw_dens[rpw_dens>1 | is.na(rpw_dens)]<-1
-  rsw_dens<-rsw_dens/max(rsw_dens,na.rm=TRUE)
-  
+  rsw_dens_plus<-rsw_dens_plus/max(rsw_dens_plus+rsw_dens_null,na.rm=TRUE)
+  rsw_dens_null<-rsw_dens_null/max(rsw_dens_plus+rsw_dens_null,na.rm=TRUE)
   populationBackwall<-list(rpw=rpw,rpw_dens=rpw_dens,pDens_r=pDens_r,rp=rp)
-  sampleBackwall<-list(rsw=rsw,rsw_dens=rsw_dens,rsw_dens1=rsw_dens1,rs=rs)
+  sampleBackwall<-list(rsw=rsw,rsw_dens_plus=rsw_dens_plus,rsw_dens_null=rsw_dens_null,rs=rs)
   
   n<-likelihoodResult$n[1]
   si<-1
@@ -175,16 +176,17 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
             # sample wall
               y<-sampleBackwall$rsw
               x<-y*0+view_lims[1]
-              z<-sampleBackwall$rsw_dens-sampleBackwall$rsw_dens1
-              if (!any(is.na(sampleBackwall$rsw_dens1))) {
-                z1 <- sampleBackwall$rsw_dens1
+              ztotal<-sampleBackwall$rsw_dens_plus+sampleBackwall$rsw_dens_null
+              if (!any(is.na(sampleBackwall$rsw_dens_null))) {
+                znull <- sampleBackwall$rsw_dens_null
               } else {
-                z1<-0
+                znull<-0
               }
-              polygon(trans3d(x=c(x[1],x,x[length(x)]),y=c(y[1],y,y[length(y)]),z=c(0,z+z1,0)*wallHeight,pmat=mapping),col=addTransparency(colS,0.95))
+              zplus<-sampleBackwall$rsw_dens_plus
+              polygon(trans3d(x=c(x[1],x,x[length(x)]),y=c(y[1],y,y[length(y)]),z=c(0,ztotal,0)*wallHeight,pmat=mapping),col=addTransparency(colS,0.95))
               if (likelihood$world$worldOn) {
-                lines(trans3d(x=x,y=y,z=z1*wallHeight,pmat=mapping),col=colNullS,lwd=2)
-                lines(trans3d(x=x,y=y,z=z*wallHeight,pmat=mapping),col=colDistS,lwd=2)
+                lines(trans3d(x=x,y=y,z=znull*wallHeight,pmat=mapping),col=colNullS,lwd=2)
+                lines(trans3d(x=x,y=y,z=zplus*wallHeight,pmat=mapping),col=colDistS,lwd=2)
               }
               
               if (likelihood$likelihoodTheory){
@@ -208,14 +210,16 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                               }
                               
                               # show likelihood on sample back wall
-                              zb<-approx(y,z,sRho[si])$y
-                              if (length(z1)==length(z)) {
-                                za<-approx(y,z1,sRho[si])$y
+                              zb<-approx(y,zplus,sRho[si])$y
+                              if (length(znull)==length(zplus)) {
+                                za<-approx(y,znull,sRho[si])$y
                                 llrNull<-log(za/zb)
                                 if (za>=zb) {
                                   lines(trans3d(x=c(0,0)+view_lims[1],y=c(sRho[si],sRho[si]),z=c(0,za)*wallHeight,pmat=mapping),col=colNullS,lwd=2)
+                                  lines(trans3d(x=c(0,0)+view_lims[1],y=c(sRho[si],sRho[si]),z=c(0,zb)*wallHeight,pmat=mapping),col=colDistS,lwd=2)
                                 } else {
                                   lines(trans3d(x=c(0,0)+view_lims[1],y=c(sRho[si],sRho[si]),z=c(0,zb)*wallHeight,pmat=mapping),col=colDistS,lwd=2)
+                                  lines(trans3d(x=c(0,0)+view_lims[1],y=c(sRho[si],sRho[si]),z=c(0,za)*wallHeight,pmat=mapping),col=colNullS,lwd=2)
                                 }
                               } else  {
                                 lines(trans3d(x=c(0,0)+view_lims[1],y=c(sRho[si],sRho[si]),z=c(0,zb)*wallHeight,pmat=mapping),col=colDistS,lwd=2)
@@ -250,7 +254,8 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                         bins<-likelihoodResult$Sims$sSimBins
                         dens<-likelihoodResult$Sims$sSimDens
                         hgain<-sum(sDens_r)*diff(rs[c(1,2)])/sum(dens)/diff(bins[c(1,2)])
-                        dens<-dens*hgain*(1-likelihood$world$populationNullp)
+                          hgain<-hgain*(1-likelihood$world$populationNullp)
+                        dens<-dens*hgain
                         theoryAlpha<-0.25
                         if (likelihood$cutaway) {
                           waste<-sum(bins<=sRho[si])

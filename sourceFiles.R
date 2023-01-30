@@ -12,7 +12,6 @@ getNewVariables<-function(raw_data,header=c()){
   
   # save the current set of variables
   defaultVariables<<-variables
-  
   # store the variables in global workspace
   if (mergeVariables){
     variables<<-rbind(newVariables,variables)
