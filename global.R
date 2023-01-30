@@ -211,7 +211,7 @@ if (is_local) {
     switches$doBatchFiles<-TRUE
     switches$doReplications<-TRUE
     switches$doMetaAnalysis<-TRUE
-    switches$doWorlds<-TRUE
+    # switches$doWorlds<-TRUE
     
     # evidence$showTheory<-TRUE
   } 

@@ -86,7 +86,7 @@ r2llr<-function(r,n,method=STMethod,llr=list(e1=c(),e2=0),world=NULL) {
     if (!is.matrix(n)) {
       n<-matrix(n,ncol=1)
     }
-    if (!world$worldOn) {
+    if (is.null(world) || is.null(world$worldOnworld$worldOn) || !world$worldOn) {
       world$populationPDF<-"Single"
       world$populationNullp<-0.5
     }
