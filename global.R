@@ -206,7 +206,8 @@ cycles2observe<-5
 is_local <- Sys.getenv('SHINY_PORT') == ""
 if (is_local) {
   switches$doClipboard<-TRUE
-
+print(Sys.getenv("USERNAME"))
+print(Sys.info()["user"])
   if (Sys.getenv("USERNAME")=="rjwatt42" || Sys.info()["user"]=="rogerwatt") {
     # switches$doBatchFiles<-TRUE
     # switches$doReplications<-TRUE

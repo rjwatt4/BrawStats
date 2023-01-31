@@ -216,6 +216,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
         iv2<-0
       }
       dv<-lastSample$dv[use]
+      rho<-0
       sampleRho<-0
       samplePval<-0
       
