@@ -199,6 +199,7 @@ showPossible<-"Samples"
 # It then calls for the next cycle with an additional time of pauseWait ms
 # this guarantees a gap between cycles for the stop button to be registered
 doStop<-TRUE
+silentTime<-0
 stopLabel<-"Stop"
 pauseWait<-300
 cycles2observe<-5
