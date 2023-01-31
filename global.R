@@ -208,9 +208,9 @@ if (is_local) {
   switches$doClipboard<-TRUE
 
   if (Sys.getenv("USERNAME")=="rjwatt42" || Sys.info()["user"]=="rogerwatt") {
-    switches$doBatchFiles<-TRUE
-    switches$doReplications<-TRUE
-    switches$doMetaAnalysis<-TRUE
+    # switches$doBatchFiles<-TRUE
+    # switches$doReplications<-TRUE
+    # switches$doMetaAnalysis<-TRUE
     # switches$doWorlds<-TRUE
     
     # evidence$showTheory<-TRUE

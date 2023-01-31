@@ -24,6 +24,7 @@ source("drawLikelihood.R")
 
 source("sampleMake.R")
 source("sampleAnalyse.R")
+source("sampleLikelihood.R")
 source("samplePower.R")
 source("sampleRead.R")
 source("sampleCheck.R")

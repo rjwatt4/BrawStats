@@ -109,6 +109,10 @@ updateEvidence<-function(){
                                populationNullp=input$likelihoodPrior_Nullp)
          }
   )
+  if (!switches$doWorlds) {
+    evidence$prior$worldOn<-FALSE
+  }
+  
   if (debug) print("     updateEvidence - exit")
   evidence
 }
