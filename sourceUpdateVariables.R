@@ -5,7 +5,7 @@ updateIV<-function(){
   if (debug) print("     updateIV")
   use<-match(input$IVchoice,variables$name)
   if (is.na(use)) return(NULL)
-  
+
   IV<-as.list(variables[use,])
   
   if (IV$type=="Categorical") {

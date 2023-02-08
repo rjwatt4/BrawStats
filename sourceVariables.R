@@ -87,7 +87,7 @@ observeEvent(input$MVok, {
                nlevs=input$MVnlevs,median=input$MVcentre,iqr=checkNumber(input$MVspread),discrete=input$MVdiscrete,
                ncats=input$MVncats,cases=input$MVcases,proportions=checkNumber(input$MVprop),source=input$MVsource,
                deploy=MV$deploy,process=MV$process)
-  
+
   switch (modalVar,
           "IV" ={
             MV$deploy<<-input$sIV1Use

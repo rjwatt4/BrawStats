@@ -63,7 +63,6 @@ doSampleAnalysis<-function(IV,IV2,DV,effect,design,evidence){
       }
     }
   }
-  
   result<-runSimulation(IV,IV2,DV,effect,design,evidence,FALSE,onlyAnalysis,oldResult)
   if (debug) print("doSampleAnalysis - exit")
   

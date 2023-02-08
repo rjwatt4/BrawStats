@@ -390,7 +390,7 @@ makeSample<-function(IV,IV2,DV,effect,design){
       id<-factor(1:n)
       
       # make iv
-      data<-makeSampleVar(design,n,MV)
+      data<-makeSampleVar(design,n,IV)
       ivr<-data$ivr
       dvr_m<-data$dvr_m
       dvr_s<-data$dvr_s
