@@ -36,6 +36,8 @@ if (switches$doKeys) {
         insertTab("Hypothesis",worldPanelReserve,"Effects","after",select=FALSE,session)
         insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
         exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
+        updateSelectInput(session,"likelihoodUseSource",choices=c("world","prior"))
+        updateSelectInput(session,"likelihoodUsePrior",choices=c("none","world","prior"))
       }
       # cheating
       if (!switches$doCheating) {
@@ -46,11 +48,52 @@ if (switches$doKeys) {
         shinyjs::showElement(id="LGlikelihoodCheating")
         exploreDesignChoices<<-c(exploreDesignChoices,"Cheating")
       }
+      # meta-analysis
+      if (!switches$doMetaAnalysis) {
+        switches$doMetaAnalysis<<-TRUE
+        insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
+        insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
+        insertTab("Graphs",metaGraphPanel(),"Expect","after",select=FALSE,session)
+        insertTab("Reports",metaReportPanel(),"Expect","after",select=FALSE,session)
+      }
       # explore
       updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2)
       updateSelectInput(session,"LGExplore_typeH",choices=hypothesisChoices2)
       updateSelectInput(session,"Explore_typeD",choices=designChoices)
       updateSelectInput(session,"LGExplore_typeD",choices=designChoices)
+      
+      showInfer<-list("p-value" = "p",
+                      "p(sig)" = "p(sig)",
+                      "Power" = "w",
+                      "NHST errors" = "NHSTErrors")
+        showInfer<-c(showInfer,list("False Discovery" = "FDR"))
+        showInfer<-c(showInfer,list("log(lrs)" = "log(lrs)",
+                                    "log(lrd)" = "log(lrd)"))
+      showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
+                       "Infer" = showInfer
+      )
+      updateSelectInput(session,"Explore_showH",choices=designChoices)
+      updateSelectInput(session,"LGExplore_showH",choices=designChoices)
+      updateSelectInput(session,"Explore_showD",choices=designChoices)
+      updateSelectInput(session,"LGExplore_showD",choices=designChoices)
+      
+      inferType<-list("Basic"=basicType,"Power"=powerType)
+      inferType<-c(inferType,list("Likelihood"=likeType))
+      inferType<-c(inferType,list("World"=worldType))
+      inferType<-c(inferType,list("Replication"=replicationType))
+      
+      singleType<-list("Basic" = "EffectSize","Power" = "Power")
+      singleType<-c(singleType,list("Likelihood"=likeType))
+      
+      multipleType<-list("Basic" = "EffectSize","Power" = "Power","NHST errors" = "NHSTErrors","CI limits" = "CILimits")
+      multipleType<-c(multipleType,likeType)
+      multipleType<-c(multipleType,"2D"="2D")
+      
+      updateSelectInput(session,"EvidenceInfer_type",choices=singleType)
+      updateSelectInput(session,"EvidenceExpected_type",choices=multipleType)
+      updateSelectInput(session,"EvidenceExpected_par1",choices=inferType)
+      updateSelectInput(session,"EvidenceExpected_par2",choices=inferType)
+      
     }
     
     # control-V

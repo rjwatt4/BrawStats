@@ -354,8 +354,8 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   design$sN<-n
   
   # note that we do everything in z and then, if required transform to r at the end
-  
   switch(likelihood$UseSource,
+         "hypothesis"={source<-likelihood$world},
          "world"={source<-likelihood$world},
          "prior"={source<-likelihood$prior}
   )
