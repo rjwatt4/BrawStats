@@ -208,7 +208,9 @@ makeExploreGraph <- function() {
   effect<-updateEffect()
   design<-updateDesign()
   evidence<-updateEvidence()
-  metaAnalysis<-updateMetaAnalysis()
+  if (switches$doMetaAnalysis) {
+    metaAnalysis<-updateMetaAnalysis()
+  }
   
   # this guarantees that we update without recalculating if possible
   explore<-updateExplore()
@@ -335,7 +337,7 @@ output$ExploreReport <- renderPlot({
   evidence<-updateEvidence()
   
   explore<-updateExplore()
-  
+  validExplore<-FALSE
   if (!validExplore || is.null(IV) || is.null(DV)) {return(ggplot()+plotBlankTheme)}
   
   reportExplore(IV,IV2,DV,effect,design,explore,exploreResult)
