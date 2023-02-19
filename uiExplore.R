@@ -67,16 +67,28 @@ effectChoices=list("IV1-DV"="MainEffectIV",
                    "IV2-DV"="MainEffectIV2",
                    "IV1xIV2-DV"="InteractionEffect")
 
-showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
-              "Infer" = list("p-value" = "p",
-                             "p(sig)" = "p(sig)",
-                             "Power" = "w",
-                             "NHST errors" = "NHSTErrors",
-                             "False Discovery" = "FDR",
-                             "log(lrs)" = "log(lrs)",
-                             "log(lrd)" = "log(lrd)"
-              )
-)
+showInfer<-list("p-value" = "p",
+                "p(sig)" = "p(sig)",
+                "Power" = "w",
+                "NHST errors" = "NHSTErrors")
+if (switches$doWorlds) {
+  showInfer<-c(showInfer,list("False Discovery" = "FDR"))
+}
+if (switches$doLikelihood) {
+  showInfer<-c(showInfer,list("log(lrs)" = "log(lrs)",
+                              "log(lrd)" = "log(lrd)"))
+}
+if (switches$doVariablesExplore) {
+  showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
+                   "Infer" = showInfer,
+                   "Variables"= list("mean(IV)","sd(IV)","skew(IV)","kurtosis(IV)",
+                                     "mean(DV)","sd(DV)","skew(DV)","kurtosis(DV)")
+  )
+} else {
+  showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
+                   "Infer" = showInfer
+  )
+}
 extraShowChoices=c("direct"="direct",
                    "unique"="unique",
                    "total"="total",
@@ -220,7 +232,7 @@ ExploreTab <-
                                               )
                                    ))
                         ),                        
-                        exploreMeta,
+                        exploreMeta(),
                         tabPanel("#",
                                  style = paste("background: ",subpanelcolours$exploreC), 
                                  wellPanel(

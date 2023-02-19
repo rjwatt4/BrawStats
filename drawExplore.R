@@ -53,6 +53,9 @@ drawExplore<-function(IV,IV2,DV,effect,design,explore,exploreResult){
             g<-g+scale_y_continuous(limits=ylim,sec.axis=sec_axis(~ 1-.,name="Type II"))
             g<-g+theme(axis.title.y.left = element_text(color="darkgreen"),axis.title.y.right = element_text(color="darkred"))
           },
+          "p(samp)"={
+            ylabel<-paste0("p(r_s=",format(0.123,digits=3),")")
+          },
           "FDR"={
             ylim<-c(0,1)
             ylabel<-"False Discovery"
@@ -88,7 +91,18 @@ drawExplore<-function(IV,IV2,DV,effect,design,explore,exploreResult){
             ylim<-c(min(exploreResult$result$Ss),max(exploreResult$result$Ss))
             ylabel<-"S"
             g<-g+scale_y_continuous(limits=ylim)
-          }
+          },
+          "mean(IV)"={
+            ylabel<-"mean(IV)"
+            ylim<-c(-1,1)
+            },
+          "sd(IV)"={ylabel<-"sd(IV)"},
+          "skew(IV)"={ylabel<-"skew(IV)"},
+          "kurtosis(IV)"={ylabel<-"kurtosis(IV)"},
+          "mean(DV)"={ylabel<-"mean(DV)"},
+          "sd(DV)"={ylabel<-"sd(DV)"},
+          "skew(DV)"={ylabel<-"skew(DV)"},
+          "kurtosis(DV)"={ylabel<-"kurtosis(DV)"}
   )
 
   if (!is.null(IV2) && is.element(explore$Explore_show,c("EffectSize","p","w","p(sig)"))) {
@@ -281,7 +295,7 @@ drawExplore<-function(IV,IV2,DV,effect,design,explore,exploreResult){
                     alpha<<-exploreResult$result$vals[i]
                     alphaLLR<<-0.5*qnorm(1-alpha/2)^2
                   }
-                  p<-mean(isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
+                  p<-mean(!isSignificant(STMethod,pVals[,i],rVals[,i],nVals[,i],exploreResult$evidence),na.rm=TRUE)
                   y50[i]<-p
                   y75[i]<-p+sqrt(p*(1-p)/length(pVals[,i]))
                   y25[i]<-p-sqrt(p*(1-p)/length(pVals[,i]))
@@ -505,10 +519,16 @@ drawExplore<-function(IV,IV2,DV,effect,design,explore,exploreResult){
               lines<-c()
               col<-"white"
               colFill<-col
+            },
+            "mean(IV)"={
+              showVals<-rVals
+              col<-"yellow"
+                colFill<-col
+                lines<-c()
             }
     )
   
-    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lrs)","log(lrd)","k","S","pNull"))) {
+    if (is.element(explore$Explore_show,c("EffectSize","p","w","log(lrs)","log(lrd)","k","S","pNull","mean(IV)"))) {
       quants<-explore$Explore_quants/2
       y75<-c()
       y62<-c()

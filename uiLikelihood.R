@@ -13,7 +13,15 @@ PlikelihoodLengthChoices=c("10" = "10",
                           "10000" = "10000"
 )
 
-if (switches$doLikelihood) {
+if (switches$doWorlds) {
+  source2<-c("null","world","prior")
+  source1<-c("none","world","prior")
+} else {
+  source2<-c("null","hypothesis","prior")
+  source1<-c("none","prior")
+}
+
+if (switches$doPossible) {
 LikelihoodTab <-
 
   wellPanel(ID="MainLikelihood",
@@ -37,7 +45,7 @@ LikelihoodTab <-
                                       tags$td(width = "20%", numericInput("likelihoodSampRho", label=NULL,min=-1,max=1, step=0.1,value=likelihood$targetSample)),
                                       tags$td(width = "15%",tags$div(style = localStyle, "from:")),
                                       tags$td(width = "25%",selectInput("likelihoodUseSource",label=NULL,
-                                                                        choices=c("world","prior"),selected=likelihood$UseSource,
+                                                                        choices=source2,selected=likelihood$UseSource,
                                                                         selectize=FALSE)
                                       ),
                                     ),
@@ -72,7 +80,7 @@ LikelihoodTab <-
                                       tags$td(width = "20%", numericInput("likelihoodPSampRho", label=NULL,min=-1,max=1, step=0.05,value=likelihood$targetSample)),
                                       tags$td(width = "15%",tags$div(style = localStyle, "prior:")),
                                       tags$td(width = "25%",selectInput("likelihoodUsePrior",label=NULL,
-                                                                        choices=c("none","world","prior"),selected=likelihood$UsePrior,
+                                                                        choices=source1,selected=likelihood$UsePrior,
                                                                         selectize=FALSE)
                                               ),
                                     )

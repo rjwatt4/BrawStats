@@ -355,6 +355,13 @@ likelihood_run <- function(IV,DV,effect,design,evidence,likelihood,doSample=TRUE
   
   # note that we do everything in z and then, if required transform to r at the end
   switch(likelihood$UseSource,
+         "null"={source<-list(
+           worldOn=FALSE,
+           populationPDF="Single",
+           populationPDFk=0,
+           populationRZ="r",
+           populationNullp=0
+         )},
          "hypothesis"={source<-likelihood$world},
          "world"={source<-likelihood$world},
          "prior"={source<-likelihood$prior}

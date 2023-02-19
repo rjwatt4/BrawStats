@@ -20,6 +20,12 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
   }
 
   switch(likelihood$UseSource,
+         "null"={
+           text0<-paste0("Hypothesis","(",format(0,digits=3),")")
+         },
+         "hypothesis"={
+           text0<-paste0("Hypothesis","(",format(effect$rIV,digits=3),")")
+         },
          "world"={
            if (effect$world$worldOn) {
              text0<-paste0(effect$world$populationPDF,"(",format(effect$world$populationPDFk,digits=3),")","+Null(",format(effect$world$populationNullp),")")

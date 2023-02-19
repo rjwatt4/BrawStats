@@ -1,7 +1,7 @@
 switches<-list(doKeys=TRUE,doClipboard=FALSE,doBatchFiles=FALSE,doLarge=TRUE,
-               doWorlds=FALSE,doReplications=FALSE,doMetaAnalysis=FALSE,doLikelihood=TRUE,
-               hideWorlds=TRUE,hideReplications=TRUE,hideMetaAnalysis=TRUE,hideLikelihood=TRUE,
+               doWorlds=FALSE,doReplications=FALSE,doMetaAnalysis=FALSE,doPossible=TRUE,doLikelihood=FALSE,
                startBlank=FALSE,doBootstrap=TRUE,doCheating=TRUE,
+               doVariablesExplore=FALSE,
                showAnimation=TRUE,
                importOrdinals=TRUE,
                rigidWithin=TRUE)
@@ -215,6 +215,7 @@ if (is_local) {
     # switches$doWorlds<-TRUE
     
     # evidence$showTheory<-TRUE
+    switches$doVariablesExplore<-TRUE
   } 
 }
 

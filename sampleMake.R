@@ -19,7 +19,7 @@ makeSampleVals<-function(n,mn,sdv,MV,distr="normal"){
             ivr+mn
           },
           "uniform"={
-            ivr=runif(n,min=-1,max=1)*sdv/sqrt(3)+mn
+            ivr=runif(n,min=-1,max=1)*sdv*sqrt(3)+mn
           },
           "Cauchy"={
             ivr=rcauchy(n,location=0,scale=1)*qnorm(0.75)

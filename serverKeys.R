@@ -36,7 +36,7 @@ if (switches$doKeys) {
         insertTab("Hypothesis",worldPanelReserve,"Effects","after",select=FALSE,session)
         insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
         exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
-        updateSelectInput(session,"likelihoodUseSource",choices=c("world","prior"))
+        updateSelectInput(session,"likelihoodUseSource",choices=c("null","world","prior"))
         updateSelectInput(session,"likelihoodUsePrior",choices=c("none","world","prior"))
       }
       # cheating
@@ -72,10 +72,10 @@ if (switches$doKeys) {
       showChoices=list("Describe" = list("Effect Size" = "EffectSize"),
                        "Infer" = showInfer
       )
-      updateSelectInput(session,"Explore_showH",choices=designChoices)
-      updateSelectInput(session,"LGExplore_showH",choices=designChoices)
-      updateSelectInput(session,"Explore_showD",choices=designChoices)
-      updateSelectInput(session,"LGExplore_showD",choices=designChoices)
+      updateSelectInput(session,"Explore_showH",choices=showChoices)
+      updateSelectInput(session,"LGExplore_showH",choices=showChoices)
+      updateSelectInput(session,"Explore_showD",choices=showChoices)
+      updateSelectInput(session,"LGExplore_showD",choices=showChoices)
       
       inferType<-list("Basic"=basicType,"Power"=powerType)
       inferType<-c(inferType,list("Likelihood"=likeType))
@@ -91,8 +91,8 @@ if (switches$doKeys) {
       
       updateSelectInput(session,"EvidenceInfer_type",choices=singleType)
       updateSelectInput(session,"EvidenceExpected_type",choices=multipleType)
-      updateSelectInput(session,"EvidenceExpected_par1",choices=inferType)
-      updateSelectInput(session,"EvidenceExpected_par2",choices=inferType)
+      updateSelectInput(session,"EvidenceExpected_par1",choices=inferType,selected="r")
+      updateSelectInput(session,"EvidenceExpected_par2",choices=inferType,selected="p")
       
     }
     

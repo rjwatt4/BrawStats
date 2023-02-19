@@ -105,6 +105,9 @@ doExpectedAnalysis<-function(IV,IV2,DV,effect,design,evidence,expected,result,ns
   
   append<-TRUE
   # if (evidence$longHand || design$sReplicationOn) {
+  if (IV$process=="data" && DV$process=="data"){
+    design$sMethod="Resample"
+  }
   result<-multipleAnalysis(IV,IV2,DV,effect,design,evidence,nsim,append,result,sigOnly=FALSE,showProgress=!showProgress)
   # } else {
   #   result<-sampleShortCut(IV,IV2,DV,effect,design,evidence,nsim,append,result,sigOnly=FALSE)
