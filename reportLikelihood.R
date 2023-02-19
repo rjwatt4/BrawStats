@@ -74,7 +74,7 @@ reportLikelihood<-function(Iv,DV,effect,design,likelihood,likelihoodResult){
               xi<-likelihoodResult$Theory$rs
               yi<-cumsum(likelihoodResult$Theory$sDens_r_plus)
               yi<-yi/sum(likelihoodResult$Theory$sDens_r_plus)
-              theory<-1-approx(xi,yi,likelihood$targetSample)$y+approx(xi,yi,-likelihood$targetSample)$y
+              theory<-1-approx(xi,yi,abs(likelihood$targetSample))$y+approx(xi,yi,-abs(likelihood$targetSample))$y
               if (length(likelihoodResult$Sims$sSims)>0) {
                 sims<-mean(abs(likelihoodResult$Sims$sSims)>abs(likelihood$targetSample))
               } else {sims<-0}
