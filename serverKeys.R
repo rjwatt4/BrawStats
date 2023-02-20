@@ -29,17 +29,14 @@ loadExtras<-function(){
   }
   # meta-analysis
   if (!switches$doMetaAnalysis) {
-    source("runMetaAnalysis.R")
-    # source("drawMeta.R")
-    source("reportMetaAnalysis.R")
-    source("uiMetaAnalysis.R")
-    source("uiMetaGraph.R")
-    source("uiExploreMeta.R")
-    switches$doMetaAnalysis<<-TRUE
+    # source("uiMetaAnalysis.R")
+    # source("uiMetaGraph.R")
+    # source("uiExploreMeta.R")
     insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
-    insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
+    # insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
     insertTab("Graphs",metaGraphPanel(),"Expect","after",select=FALSE,session)
     insertTab("Reports",metaReportPanel(),"Expect","after",select=FALSE,session)
+    switches$doMetaAnalysis<<-TRUE
   }
   # explore
   updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2)
