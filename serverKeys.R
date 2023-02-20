@@ -49,7 +49,7 @@ if (switches$doKeys) {
         exploreDesignChoices<<-c(exploreDesignChoices,"Cheating")
       }
       # meta-analysis
-      if (!switches$doMetaAnalysis) {
+      if (1==2 && !switches$doMetaAnalysis) {
         switches$doMetaAnalysis<<-TRUE
         insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
         insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
