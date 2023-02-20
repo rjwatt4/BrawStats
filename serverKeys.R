@@ -28,7 +28,8 @@ loadExtras<-function(){
     switches$doCheating<<-TRUE
   }
   # meta-analysis
-  if (1==2 && !switches$doMetaAnalysis) {
+  if (!switches$doMetaAnalysis) {
+    source("uiExploreMeta.R")
     switches$doMetaAnalysis<<-TRUE
     insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
     insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
