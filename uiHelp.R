@@ -130,7 +130,8 @@ wellPanel(id="HelpTabset",
                 tabPanel("#",id="#",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
-                           style = paste("background: ",subpanelcolours$hypothesisC,";"),
+                           
+                           style = paste("background: ",maincolours$graphC,";"),
                            tags$table(width = "100%",class="myTable",
                                       tags$tr(
                                         tags$td(width="20%",tags$div(style = localPlainStyle, "Load extras:")),
