@@ -48,12 +48,12 @@ if (switches$doKeys) {
         switches$doCheating<<-TRUE
       }
       # meta-analysis
-      if (1==2 && !switches$doMetaAnalysis) {
+      if (!switches$doMetaAnalysis) {
+        switches$doMetaAnalysis<<-TRUE
         insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
         insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
         insertTab("Graphs",metaGraphPanel(),"Expect","after",select=FALSE,session)
         insertTab("Reports",metaReportPanel(),"Expect","after",select=FALSE,session)
-        switches$doMetaAnalysis<<-TRUE
       }
       # explore
       updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2)

@@ -297,7 +297,11 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
                           polygon (trans3d(x = rs_use*0+pRho[i], y = rs_use, z = c(0,sDens_r[i,use_r],0)*gain, pmat = mapping), col = col, lwd=1)
                         }
                         # vertical lines
-                        z<-approx(rs,sDens_r[i,],sRho[si])$y
+                        if (length(sRho)==1) {
+                          z<-1
+                        } else {
+                          z<-approx(rs,sDens_r[i,],sRho[si])$y
+                        }
                         lines(trans3d(x=c(pRho[i],pRho[i]),y=c(sRho[si],sRho[si]),z=c(0,z)*gain,pmat=mapping),col=colVline, lwd=3)
                         # connecting lines
                         if (doConnecting && length(pRho)>5 && i<length(pRho)) {
@@ -465,6 +469,7 @@ drawLikelihood <- function(IV,DV,effect,design,likelihood,likelihoodResult){
               }
             }
     )
+    lines(x=c(0,0)+sRho[1],y=c(0,1),col=colP, lwd=1)
     
     if (likelihood$likelihoodTheory){
       switch (likelihood$type,
