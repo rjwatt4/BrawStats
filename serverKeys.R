@@ -31,7 +31,7 @@ loadExtras<-function(){
   if (!switches$doMetaAnalysis) {
     source("runMetaAnalysis.R")
     # source("drawMeta.R")
-    # source("reportMetaAnalysis.R")
+    source("reportMetaAnalysis.R")
     source("uiMetaAnalysis.R")
     source("uiMetaGraph.R")
     source("uiExploreMeta.R")
