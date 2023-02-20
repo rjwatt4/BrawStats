@@ -1,6 +1,8 @@
 ####################################
 #KEYBOARD: capture keyboard events
 
+source("uiExploreMeta.R")
+
 ascii<-function(ch) strtoi(charToRaw(toupper(ch)),16L)
 
 if (switches$doKeys) {
