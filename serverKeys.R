@@ -11,11 +11,6 @@ if (switches$doKeys) {
     if (input$keypress==17) controlKeyOn<<-TRUE
     if (input$keypress==18) altKeyOn<<-TRUE
 
-    if (controlKeyOn && altKeyOn) {
-      print(input$keypress)
-      print(ascii("a"))
-    }
-    
     # control-alt-n - switch to online version
     if (is_local && input$keypress==ascii("n") && controlKeyOn && altKeyOn){
       switches$doReplications<<-FALSE

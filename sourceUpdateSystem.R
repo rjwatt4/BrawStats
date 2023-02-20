@@ -7,9 +7,7 @@
 # PREDICTION & DESIGN & EVIDENCE
 updateEffect<-function(type=0){
   if (debug) print("     updateEffect")
-  if (is.null(switches$doWorlds)) {
-    print("null doWorlds")
-  }
+  
   if (switches$doWorlds) {
     world<-list(worldOn=input$world_on,populationPDF=input$world_distr,
                 populationPDFk=input$world_distr_k,populationRZ=input$world_distr_rz,
@@ -17,15 +15,8 @@ updateEffect<-function(type=0){
   } else {
     world<-list(worldOn=FALSE,populationPDF="Single",populationPDFk=NA,populationRZ=NA,populationNullp=NA)
   }
+  if (is.null(world$worldOn)) {world$worldOn<-FALSE}
   
-  if (is.null(world$worldOn)) {
-    print("null worldOn")
-  }
-  if (is.null(world$worldOn)) world$worldOn<-FALSE
-  
-  if (is.null(type)) {
-    print("null type")
-  }
   if (is.null(type)) {
     effect<-list(rIV=0,rIV2=0,rIVIV2=0,rIVIV2DV=0,
                  Heteroscedasticity=input$Heteroscedasticity,Welch=input$Welch,ResidDistr=input$ResidDistr,
