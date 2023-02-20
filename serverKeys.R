@@ -29,6 +29,7 @@ loadExtras<-function(){
   }
   # meta-analysis
   if (!switches$doMetaAnalysis) {
+    source("uiMetaGraph.R")
     source("uiExploreMeta.R")
     switches$doMetaAnalysis<<-TRUE
     insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
