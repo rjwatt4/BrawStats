@@ -232,7 +232,7 @@ ExploreTab <-
                                               )
                                    ))
                         ),                        
-                        exploreMeta(),
+                        # exploreMeta(),
                         tabPanel("#",
                                  style = paste("background: ",subpanelcolours$exploreC), 
                                  wellPanel(
