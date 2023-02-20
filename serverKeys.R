@@ -1,7 +1,7 @@
 ####################################
 #KEYBOARD: capture keyboard events
 
-loadExtras<-function(){
+loadExtras<-function(which=0){
   
   # replications
   if (!switches$doReplications) {
@@ -28,7 +28,7 @@ loadExtras<-function(){
     switches$doCheating<<-TRUE
   }
   # meta-analysis
-  if (!switches$doMetaAnalysis) {
+  if (which==1 && !switches$doMetaAnalysis) {
     # source("uiMetaAnalysis.R")
     # source("uiMetaGraph.R")
     # source("uiExploreMeta.R")
@@ -99,8 +99,13 @@ if (switches$doKeys) {
     }
     
     # control-alt-m - switch to offline version
-    if (input$keypress==ascii("m") && controlKeyOn){
+    if (input$keypress==ascii("x") && controlKeyOn){
       loadExtras()
+    }
+    
+    # control-alt-m - switch to offline version
+    if (input$keypress==ascii("m") && controlKeyOn){
+      loadExtras(1)
     }
     
     # control-V
