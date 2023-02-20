@@ -27,7 +27,7 @@ if (switches$doKeys) {
     }
     
     # control-alt-m - switch to offline version
-    if (input$keypress==ascii("m") && controlKeyOn && altKeyOn){
+    if (input$keypress==ascii("m") && controlKeyOn){
       # replications
       if (!switches$doReplications) {
         insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
