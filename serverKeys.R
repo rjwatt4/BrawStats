@@ -29,10 +29,9 @@ loadExtras<-function(){
   }
   # meta-analysis
   if (!switches$doMetaAnalysis) {
-    source("sourceMetaAnalysis.R")
     source("runMetaAnalysis.R")
-    source("drawMeta.R")
-    source("reportMetaAnalysis.R")
+    # source("drawMeta.R")
+    # source("reportMetaAnalysis.R")
     source("uiMetaAnalysis.R")
     source("uiMetaGraph.R")
     source("uiExploreMeta.R")
