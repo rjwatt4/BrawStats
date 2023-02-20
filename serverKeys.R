@@ -1,8 +1,6 @@
 ####################################
 #KEYBOARD: capture keyboard events
 
-source("uiExploreMeta.R")
-
 ascii<-function(ch) strtoi(charToRaw(toupper(ch)),16L)
 
 if (switches$doKeys) {
@@ -50,7 +48,7 @@ if (switches$doKeys) {
         switches$doCheating<<-TRUE
       }
       # meta-analysis
-      if (!switches$doMetaAnalysis) {
+      if (1==2 && !switches$doMetaAnalysis) {
         switches$doMetaAnalysis<<-TRUE
         insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
         insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
