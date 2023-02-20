@@ -26,35 +26,35 @@ if (switches$doKeys) {
     if (input$keypress==77 && controlKeyOn && altKeyOn){
       # replications
       if (!switches$doReplications) {
-        switches$doReplications<<-TRUE
         insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
         exploreDesignChoices<<-c(exploreDesignChoices,"Replications")
+        switches$doReplications<<-TRUE
       }
       # worlds
       if (!switches$doWorlds) {
-        switches$doWorlds<<-TRUE
         insertTab("Hypothesis",worldPanelReserve,"Effects","after",select=FALSE,session)
         insertTab("HypothesisDiagram",worldDiagramReserve,"Hypothesis","after",select=FALSE,session)
         exploreHypothesisChoices<<-c(exploreHypothesisChoices,"Worlds")
         updateSelectInput(session,"likelihoodUseSource",choices=c("null","world","prior"))
         updateSelectInput(session,"likelihoodUsePrior",choices=c("none","world","prior"))
+        switches$doWorlds<<-TRUE
       }
       # cheating
       if (!switches$doCheating) {
-        switches$doCheating<<-TRUE
         shinyjs::showElement(id="Cheating")
         shinyjs::showElement(id="LGEvidenceCheating")
         shinyjs::showElement(id="LGExploreCheating")
         shinyjs::showElement(id="LGlikelihoodCheating")
         exploreDesignChoices<<-c(exploreDesignChoices,"Cheating")
+        switches$doCheating<<-TRUE
       }
       # meta-analysis
       if (1==2 && !switches$doMetaAnalysis) {
-        switches$doMetaAnalysis<<-TRUE
         insertTab("Evidence",metaPanel(),"Multiple","after",select=FALSE,session)
         insertTab("Explore",exploreMeta(),"Design","after",select=FALSE,session)
         insertTab("Graphs",metaGraphPanel(),"Expect","after",select=FALSE,session)
         insertTab("Reports",metaReportPanel(),"Expect","after",select=FALSE,session)
+        switches$doMetaAnalysis<<-TRUE
       }
       # explore
       updateSelectInput(session,"Explore_typeH",choices=hypothesisChoices2)
