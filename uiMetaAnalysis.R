@@ -69,10 +69,11 @@ metaPanel<-function(prefix="",asTable=FALSE,doAnyway=FALSE) {
                         style = paste("background: ",subpanelcolours$evidenceC),
                         metaTable)
   }
-  if (switches$doMetaAnalysis || doAnyway){
-    return(metaTable)
-  } else {
-    return(c())
-  }
+  return(metaTable)
+  # if (switches$doMetaAnalysis || doAnyway){
+  #   return(metaTable)
+  # } else {
+  #   return(c())
+  # }
 }
 

@@ -109,8 +109,8 @@ EvidenceTab <-
                                                       )
                                            )
                                  )
-                        ),
-                        metaPanel()
+                        )#,
+                        # metaPanel()
                         # options tab
                         ,tabPanel("#",id="EvidenceOptions",
                                   style = paste("background: ",subpanelcolours$simulateC),
