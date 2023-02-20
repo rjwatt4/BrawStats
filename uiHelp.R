@@ -29,7 +29,7 @@ wellPanel(id="HelpTabset",
                 ),
 
                 # Step 1 tab
-                tabPanel("Step 1",id="Step1",
+                tabPanel("Step1",id="Step1",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$hypothesisC,";"),
@@ -46,7 +46,7 @@ wellPanel(id="HelpTabset",
                 ),
 
                 # Step 2 tab
-                tabPanel("Step 2",id="Step2",
+                tabPanel("Step2",id="Step2",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$designC,";"),
@@ -63,7 +63,7 @@ wellPanel(id="HelpTabset",
                 ),
 
                 # Step 3 tab
-                tabPanel("Step 3",id="Step3",
+                tabPanel("Step3",id="Step3",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$simulateC,";"),
@@ -80,7 +80,7 @@ wellPanel(id="HelpTabset",
                 ),
                 
                 # Step 4 tab
-                tabPanel("Step 4",id="Step4",
+                tabPanel("Step4",id="Step4",
                          style = paste("background: ",maincolours$graphC),
                          wellPanel(
                            style = paste("background: ",subpanelcolours$exploreC,";"),
@@ -120,13 +120,26 @@ wellPanel(id="HelpTabset",
                                         )
                                       ),
                                       tags$tr(
-                                          tags$div(style = helpStyle,
-                                                 tags$br(HTML("<b>"),"Web information:",HTML("</b>")),
-                                                 tags$br(HTML('&emsp;'), a("Here",href="https://doingpsychstats.wordpress.com/resources/brawstats-software/", target="_blank"))
+                                          tags$div(width="50%",style = helpStyle,
+                                                HTML("<b>Web information:</b>&emsp;<a href='https://doingpsychstats.wordpress.com/resources/brawstats-software/' target='_blank'>Here</a>")
                                         )
                                       )
                            )
                          )
-                )                           # ) ) )
- )
+                ),
+                tabPanel("#",id="#",
+                         style = paste("background: ",maincolours$graphC),
+                         wellPanel(
+                           style = paste("background: ",subpanelcolours$hypothesisC,";"),
+                           tags$table(width = "100%",class="myTable",
+                                      tags$tr(
+                                        tags$td(width="20%",tags$div(style = localPlainStyle, "Load extras:")),
+                                        tags$td(width="10%",checkboxInput("LoadExtras", label=NULL))
+                                      )
+                           )
+                         )
+                )
+                )
 )
+
+

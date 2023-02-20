@@ -18,7 +18,7 @@ source("drawPrediction.R")
 source("drawSample.R")
 source("drawDescription.R")
 source("drawInference.R")
-if (switches$doMetaAnalysis) {source("drawMeta.R")}
+source("drawMeta.R")
 source("drawExplore.R")
 source("drawLikelihood.R")
 
@@ -35,11 +35,11 @@ source("reportSample.R")
 source("reportDescription.R")
 source("reportInference.R")
 source("reportExpected.R")
-if (switches$doMetaAnalysis) {source("reportMetaAnalysis.R")}
+source("reportMetaAnalysis.R")
 source("reportExplore.R")
 source("reportLikelihood.R")
 
-if (switches$doMetaAnalysis) {source("runMetaAnalysis.R")}
+source("runMetaAnalysis.R")
 source("runExplore.R")
 source("runLikelihood.R")
 source("runBatchFiles.R")
@@ -96,6 +96,11 @@ shinyServer(function(input, output, session) {
   
   source("serverKeys.R",local=TRUE)
 
+  observeEvent(input$LoadExtras,
+               {
+                 if (input$LoadExtras)
+                 loadExtras()
+               })
 ####################################
 # other housekeeping
   observeEvent(input$allScatter,{
@@ -284,7 +289,7 @@ source("sourceUpdateData.R",local=TRUE)
   source("sourceSystemDiagrams.R",local=TRUE)
   
   source("sourceSingle.R",local=TRUE)
-  if (switches$doMetaAnalysis) source("sourceMetaAnalysis.R",local=TRUE)
+  source("sourceMetaAnalysis.R",local=TRUE)
   source("sourceExpected.R",local=TRUE)
   
   source("sourceExplore.R",local=TRUE)
