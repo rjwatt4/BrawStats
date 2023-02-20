@@ -76,6 +76,12 @@ plotcolours<-list(sampleC="#FFCC00",descriptionC="#FF8833",
 
 shapes<-list(data=21,study=22,parameter=21,meta=24)
 
+basicType<-list("r"="r","p"="p")
+likeType<-list("log(lrs)"="log(lrs)","log(lrd)"="log(lrd)")
+powerType<-list("w"="w","nw"="nw")
+worldType<-list("n"="n","rp"="rp","wp"="wp")
+replicationType<-list("r1"="r1","p1"="p1")
+
 labelStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: left;")
 localStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:bold;text-align: right;")
 localPlainStyle=paste0("font-size:",format(8*fontScale) ,"pt;font-weight:normal;text-align: right;")
@@ -215,7 +221,7 @@ if (is_local) {
     # switches$doWorlds<-TRUE
     
     # evidence$showTheory<-TRUE
-    switches$doVariablesExplore<-TRUE
+    # switches$doVariablesExplore<-TRUE
   } 
 }
 

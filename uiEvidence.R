@@ -1,5 +1,19 @@
 source("uiMetaAnalysis.R")
 
+
+inferType<-list("Basic"=basicType,"Power"=powerType)
+if (switches$doLikelihood) inferType<-c(inferType,list("Likelihood"=likeType))
+if (switches$doWorlds) inferType<-c(inferType,list("World"=worldType))
+if (switches$doReplications) inferType<-c(inferType,list("Replication"=replicationType))
+
+singleType<-list("Basic" = "EffectSize","Power" = "Power")
+if (switches$doLikelihood) singleType<-c(singleType,list("Likelihood"=likeType))
+
+multipleType<-list("Basic" = "EffectSize","Power" = "Power","NHST errors" = "NHSTErrors","CI limits" = "CILimits")
+if (switches$doLikelihood) multipleType<-c(multipleType,likeType)
+multipleType<-c(multipleType,"2D"="2D")
+
+
 EvidenceTab <-
   
   wellPanel(id="EvidenceMain",
@@ -19,11 +33,7 @@ EvidenceTab <-
                                                         tags$td(width = "15%", tags$div(style = localStyle, "Show:")),
                                                         tags$td(width = "35%", 
                                                                 selectInput("EvidenceInfer_type",label=NULL,
-                                                                            c("Basic" = "EffectSize",
-                                                                              "Power" = "Power",
-                                                                              "log(lrs)" = "log(lrs)",
-                                                                              "log(lrd)" = "log(lrd)"
-                                                                            ),
+                                                                            singleType,
                                                                             selectize=FALSE)
                                                         ),
                                                         # tags$td(width = "10%", tags$div(style = localStyle, "")),
@@ -43,36 +53,21 @@ EvidenceTab <-
                                                         tags$td(width = "10%", tags$div(style = localStyle, "Show:")),
                                                         tags$td(width = "40%", 
                                                                 selectInput("EvidenceExpected_type",label=NULL,
-                                                                            c("Basic" = "EffectSize",
-                                                                              "Power" = "Power",
-                                                                              "NHST errors" = "NHSTErrors",
-                                                                              "CI limits" = "CILimits",
-                                                                              "log(lrs)" = "log(lrs)",
-                                                                              "log(lrd)" = "log(lrd)",
-                                                                              "2D" = "2D"
-                                                                            ),
+                                                                            multipleType,
                                                                             selected="Basic",
                                                                             selectize=FALSE)
                                                         ),
                                                         tags$td(width = "25%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
                                                                 selectInput("EvidenceExpected_par1", label=NULL, 
-                                                                            list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
-                                                                                 "Power"=list("w"="w","nw"="nw"),
-                                                                                 "World"=list("n"="n","rp"="rp","wp"="wp"),
-                                                                                 "Replication"=list("r1"="r1","p1"="p1")
-                                                                            ),
+                                                                            inferType,
                                                                             selected="r", selectize=FALSE)
                                                                 # ),
                                                         ),
                                                         tags$td(width = "25%",
                                                                 # conditionalPanel(condition="input.EvidenceExpected_type=='2D'",
                                                                 selectInput("EvidenceExpected_par2", label=NULL, 
-                                                                            list("Basic"=list("r"="r","p"="p","log(lrs)"="log(lrs)","log(lrd)"="log(lrd)"),
-                                                                                 "Power"=list("w"="w","nw"="nw"),
-                                                                                 "World"=list("n"="n","rp"="rp","wp"="wp"),
-                                                                                 "Replication"=list("r1"="r1","p1"="p1")
-                                                                            ),
+                                                                            inferType,
                                                                             selected="p", selectize=FALSE)
                                                                 # ),
                                                         )

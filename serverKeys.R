@@ -5,15 +5,19 @@ ascii<-function(ch) strtoi(charToRaw(toupper(ch)),16L)
 
 if (switches$doKeys) {
   keyrespond<-observeEvent(input$pressedKey,{
-    # print(input$keypress)
+    # 
     
     if (input$keypress==16) shiftKeyOn<<-TRUE
     if (input$keypress==17) controlKeyOn<<-TRUE
     if (input$keypress==18) altKeyOn<<-TRUE
-    
+
+    if (controlKeyOn && altKeyOn) {
+      print(input$keypress)
+      print(ascii("a"))
+    }
     
     # control-alt-n - switch to online version
-    if (is_local && input$keypress==78 && controlKeyOn && altKeyOn){
+    if (is_local && input$keypress==ascii("n") && controlKeyOn && altKeyOn){
       switches$doReplications<<-FALSE
       switches$doWorlds<<-FALSE
       removeTab("Design","Replicate",session)
@@ -23,7 +27,7 @@ if (switches$doKeys) {
     }
     
     # control-alt-m - switch to offline version
-    if (input$keypress==77 && controlKeyOn && altKeyOn){
+    if (input$keypress==ascii("m") && controlKeyOn && altKeyOn){
       # replications
       if (!switches$doReplications) {
         insertTab("Design",replicationTabReserve,"Anomalies","after",select=FALSE,session)
@@ -97,7 +101,7 @@ if (switches$doKeys) {
     }
     
     # control-V
-    if (is_local && input$keypress==86 && controlKeyOn){
+    if (is_local && input$keypress==ascii("v") && controlKeyOn){
       mergeVariables<<-FALSE
       # get the raw data
       raw_h1<-read_clip()
@@ -110,7 +114,7 @@ if (switches$doKeys) {
     }
     
     # control-c
-    if (is_local && input$keypress==67 && controlKeyOn){
+    if (is_local && input$keypress==ascii("c") && controlKeyOn){
       data<-exportData()
       write_clip(data,allow_non_interactive = TRUE)
     }
