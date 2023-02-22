@@ -2,15 +2,15 @@ source("uiMetaAnalysis.R")
 
 
 inferType<-list("Basic"=basicType,"Power"=powerType)
-if (switches$doLikelihood) inferType<-c(inferType,list("Likelihood"=likeType))
+if (switches$doLikelihoodInfer) inferType<-c(inferType,list("Likelihood"=likeType))
 if (switches$doWorlds) inferType<-c(inferType,list("World"=worldType))
 if (switches$doReplications) inferType<-c(inferType,list("Replication"=replicationType))
 
 singleType<-list("Basic" = "EffectSize","Power" = "Power")
-if (switches$doLikelihood) singleType<-c(singleType,list("Likelihood"=likeType))
+if (switches$doLikelihoodInfer) singleType<-c(singleType,list("Likelihood"=likeType))
 
 multipleType<-list("Basic" = "EffectSize","Power" = "Power","NHST errors" = "NHSTErrors","CI limits" = "CILimits")
-if (switches$doLikelihood) multipleType<-c(multipleType,likeType)
+if (switches$doLikelihoodInfer) multipleType<-c(multipleType,likeType)
 multipleType<-c(multipleType,"2D"="2D")
 
 

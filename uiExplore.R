@@ -74,7 +74,7 @@ showInfer<-list("p-value" = "p",
 if (switches$doWorlds) {
   showInfer<-c(showInfer,list("False Discovery" = "FDR"))
 }
-if (switches$doLikelihood) {
+if (switches$doLikelihoodInfer) {
   showInfer<-c(showInfer,list("log(lrs)" = "log(lrs)",
                               "log(lrd)" = "log(lrd)"))
 }
