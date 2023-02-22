@@ -1,5 +1,5 @@
 
-if (switches$doLikelihood) {
+if (switches$doPossible) {
   possibleGraphPanel<-
     tabPanel("Possible",class="Graphs",
              tags$table(width = "100%",class="myTable",
