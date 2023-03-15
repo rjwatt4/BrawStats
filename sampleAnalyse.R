@@ -814,6 +814,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
                   result$pIV<-tv$p.value
                 } else {
                   tval<-anRaw$`F value`[2]
+                  if (is.null(tval)) {tval<-anRaw$F[2]}
                   df<-paste("(",format(anRaw$Df[2]),",",format(anRaw$Df[3]),")",sep="")
                   result$pIV<-anRaw$"Pr(>F)"[2]
                 }
