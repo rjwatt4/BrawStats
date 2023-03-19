@@ -110,6 +110,8 @@ defaultVars<-list(
   makeVar(name="IV2",type="Interval",mu=0,sd=1,ncats=2,cases="D1,D2"),
   makeVar(name="DV",type="Interval",mu=0,sd=1,ncats=2,cases="E1,E2"),
 
+  makeVar(name="Treatment",type="Categorical",ncats=2,cases="before,after",proportions="1,1"),
+  makeVar(name="Treatment?",type="Categorical",ncats=2,cases="no,yes",proportions="1,1"),
   makeVar(name="IQ",type="Interval",mu=100,sd=15),
   makeVar(name="Diligence",type="Interval",mu=0,sd=2),
   makeVar(name="Perfectionism",type="Interval",mu=0,sd=2),
@@ -164,12 +166,13 @@ varTypes<- c("Interval" = "Interval",
 )
 
 #because numericInput with "0." returns NA
-checkNumber<-function(a,b=a) {
+checkNumber<-function(a,b=a,c=0) {
   if (!isempty(a)) {
-    if (is.na(a) || is.null(a)) {a<-0}
+    if (is.na(a) || is.null(a)) {a<-c}
   }
   a
 }
+
 oldEffect<-effect
 oldDesign<-design
 oldEvidence<-evidence
@@ -189,5 +192,5 @@ likelihood_S_ResultHold<-c()
 
 exploreDesignChoices<-c("Sampling","Anomalies")
 exploreHypothesisChoices<-c("Variables","Effects")
-worldPanelReserve<-worldPanel("",asTable=FALSE,doAnyway=TRUE)
+# worldPanelReserve<-worldPanel("",asTable=FALSE,doAnyway=TRUE)
 

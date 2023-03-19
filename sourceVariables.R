@@ -17,6 +17,16 @@ observeEvent(input$IVchoice,{
       updateSelectInput(session, "DVchoice", choices = DVchoices, selected = DVchoices[length(DVchoices)])
     }
   }
+  
+  switch (newMV$type,
+          "Interval"={
+            shinyjs::disable(id= "sIV1Use")
+          },
+          "Categorical"={
+            shinyjs::enable(id= "sIV1Use")
+          }
+  )
+  
 })
 
 observeEvent(input$IV2choice,{
