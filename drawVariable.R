@@ -47,8 +47,8 @@ drawCategorical<-function(var){
   }
 
   l<-var$cases[1:ng]
-  if (sum(sapply(l,nchar))>10) {
-    l<-sapply(l,shrinkString,ceil(10/ng))
+  if (sum(sapply(l,nchar))>12) {
+    l<-sapply(l,shrinkString,ceil(12/ng))
   }
 
   xlim<-c(-ng,ng)+c(-1,1)*ng/10

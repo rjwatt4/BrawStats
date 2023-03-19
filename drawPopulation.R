@@ -84,8 +84,8 @@ drawOrdParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
 drawCatParPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats<-IV$ncats
   l<-IV$cases
-  if (sum(sapply(l,nchar))>10) {
-    l<-sapply(l,shrinkString,ceil(10/length(l)))
+  if (sum(sapply(l,nchar))>12) {
+    l<-sapply(l,shrinkString,ceil(12/length(l)))
   }
   pp<-CatProportions(IV)
   b<-(1:ncats)-1
@@ -173,8 +173,8 @@ drawCatOrdPopulation<-function(IV,DV,rho,Heteroscedasticity,alpha){
   ncats1<-IV$ncats
   pp1<-CatProportions(IV)
   l1=IV$cases
-  if (sum(sapply(l1,nchar))>10) {
-    l1<-sapply(l1,shrinkString,ceil(10/length(l1)))
+  if (sum(sapply(l1,nchar))>12) {
+    l1<-sapply(l1,shrinkString,ceil(12/length(l1)))
   }
   b1<-(1:ncats1)-1
   

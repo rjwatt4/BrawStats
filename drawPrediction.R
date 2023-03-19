@@ -74,8 +74,8 @@ drawCatParPrediction<-function(g,IV,DV,rho,n,offset= 1){
     }
   }
   l<-IV$cases
-  if (sum(sapply(l,nchar))>10) {
-    l<-sapply(l,shrinkString,ceil(10/length(l)))
+  if (sum(sapply(l,nchar))>12) {
+    l<-sapply(l,shrinkString,ceil(12/length(l)))
   }
   
   # se<-se*2
