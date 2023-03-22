@@ -492,6 +492,7 @@ exploreSimulate <- function(IV,IV2,DV,effect,design,evidence,metaAnalysis,explor
       
     } else {
       exploreResult$rIVs<-rbind(exploreResult$rIVs,main_res$rval)
+      if (!is.null(exploreResult$rpIVs))
       exploreResult$rpIVs<-rbind(exploreResult$rpIVs,main_res$rpval)
       exploreResult$pIVs<-rbind(exploreResult$pIVs,main_res$pval)
         exploreResult$nvals<-rbind(exploreResult$nvals,main_res$nval)

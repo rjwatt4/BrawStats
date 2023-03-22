@@ -484,6 +484,7 @@ analyseSample<-function(IV,IV2,DV,effect,design,evidence,result){
   if (is.factor(iv1) && all(iv1==iv1[1])) {
     result$rIV<-NA
     result$pIV<-NA
+    result$rpIV<-NA
     return(result)
     }
   # if (is.factor(iv2) && all(iv2==iv2[1])) {return(NA)}
